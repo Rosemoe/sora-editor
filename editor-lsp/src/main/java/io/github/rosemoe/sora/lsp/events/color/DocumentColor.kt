@@ -66,6 +66,7 @@ class DocumentColorEvent : AsyncEventListener() {
 
     private fun getOrCreateFlow(
         coroutineScope: CoroutineScope,
+        context: EventContext,
         uri: FileUri
     ): MutableSharedFlow<DocumentColorRequest> {
         return requestFlows.getOrPut(uri) {
@@ -79,7 +80,7 @@ class DocumentColorEvent : AsyncEventListener() {
                 flow
                     .debounce(50)
                     .collect { request ->
-                        processInlayHintRequest(request)
+                        processDocumentColorRequest(request, context)
                     }
             }
 
@@ -91,11 +92,14 @@ class DocumentColorEvent : AsyncEventListener() {
         val editor = context.get<LspEditor>("lsp-editor")
         val uri = editor.uri
 
-        val flow = getOrCreateFlow(editor.coroutineScope, uri)
+        val flow = getOrCreateFlow(editor.coroutineScope, context, uri)
         flow.tryEmit(DocumentColorRequest(editor, uri))
     }
 
-    private suspend fun processInlayHintRequest(request: DocumentColorRequest) =
+    private suspend fun processDocumentColorRequest(
+        request: DocumentColorRequest,
+        context: EventContext
+    ) =
         withContext(Dispatchers.IO) {
             val editor = request.editor
 
@@ -109,9 +113,14 @@ class DocumentColorEvent : AsyncEventListener() {
 
             val documentColors: List<ColorInformation>?
 
-            withTimeout(Timeout[Timeouts.DOC_HIGHLIGHT].toLong()) {
-                documentColors =
-                    future.await()
+            try {
+                withTimeout(Timeout[Timeouts.DOC_HIGHLIGHT].toLong()) {
+                    documentColors =
+                        future.await()
+                }
+            } catch (e: Exception) {
+                onException(context, e)
+                return@withContext
             }
 
             if (documentColors.isNullOrEmpty()) {

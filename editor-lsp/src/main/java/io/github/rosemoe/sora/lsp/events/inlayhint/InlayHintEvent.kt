@@ -70,6 +70,7 @@ class InlayHintEvent : AsyncEventListener() {
 
     private fun getOrCreateFlow(
         coroutineScope: CoroutineScope,
+        context: EventContext,
         uri: String
     ): MutableSharedFlow<InlayHintRequest> {
         return requestFlows.getOrPut(uri) {
@@ -83,7 +84,7 @@ class InlayHintEvent : AsyncEventListener() {
                 flow
                     .debounce(50)
                     .collect { request ->
-                        processInlayHintRequest(request)
+                        processInlayHintRequest(request, context)
                     }
             }
 
@@ -97,11 +98,11 @@ class InlayHintEvent : AsyncEventListener() {
 
         val uri = editor.uri.toString()
 
-        val flow = getOrCreateFlow(editor.coroutineScope, uri)
+        val flow = getOrCreateFlow(editor.coroutineScope, context, uri)
         flow.tryEmit(InlayHintRequest(editor, position))
     }
 
-    private suspend fun processInlayHintRequest(request: InlayHintRequest) =
+    private suspend fun processInlayHintRequest(request: InlayHintRequest, context: EventContext) =
         withContext(Dispatchers.IO) {
             val editor = request.editor
             val position = request.position
@@ -133,8 +134,13 @@ class InlayHintEvent : AsyncEventListener() {
 
             val inlayHints: List<InlayHint>?
 
-            withTimeout(Timeout[Timeouts.INLAY_HINT].toLong()) {
-                inlayHints = future.await()
+            try {
+                withTimeout(Timeout[Timeouts.INLAY_HINT].toLong()) {
+                    inlayHints = future.await()
+                }
+            } catch (e: Exception) {
+                onException(context, e)
+                return@withContext
             }
 
             if (inlayHints.isNullOrEmpty()) {
