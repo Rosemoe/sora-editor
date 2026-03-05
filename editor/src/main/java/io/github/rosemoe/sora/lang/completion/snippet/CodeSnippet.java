@@ -25,8 +25,9 @@ package io.github.rosemoe.sora.lang.completion.snippet;
 
 
 import androidx.annotation.NonNull;
+import androidx.collection.IntObjectMap;
+import androidx.collection.MutableIntObjectMap;
 
-import io.github.rosemoe.sora.text.TextUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -78,11 +79,11 @@ public class CodeSnippet implements Cloneable {
     @NonNull
     @Override
     public CodeSnippet clone() {
-        var defs = new ArrayList<PlaceholderDefinition>(placeholders.size());
+        var definitions = new ArrayList<PlaceholderDefinition>(placeholders.size());
         var map = new HashMap<PlaceholderDefinition, PlaceholderDefinition>();
         for (PlaceholderDefinition placeholder : placeholders) {
             var n = new PlaceholderDefinition(placeholder.getId(), placeholder.getChoices(), placeholder.getElements(), placeholder.getTransform());
-            defs.add(n);
+            definitions.add(n);
             map.put(placeholder, n);
         }
         var itemsClone = new ArrayList<SnippetItem>(items.size());
@@ -95,13 +96,40 @@ public class CodeSnippet implements Cloneable {
                 }
             }
         }
-        return new CodeSnippet(itemsClone, defs);
+        return new CodeSnippet(itemsClone, definitions);
+    }
+
+    /**
+     * Specific method for LSP code snippets to generate default insert text when snippet edit
+     * is not available in editor.
+     */
+    public String toInsertTextForLsp() {
+        var sb = new StringBuilder();
+        var defaultValues = new MutableIntObjectMap<String>();
+        for (SnippetItem item : items) {
+            if (item instanceof PlainTextItem text) {
+                sb.append(text.getText());
+            } else if (item instanceof PlaceholderItem placeholder) {
+                var id = placeholder.getDefinition().getId();
+                if (!defaultValues.contains(id)) {
+                    var value = new StringBuilder();
+                    for (PlaceHolderElement element : placeholder.getDefinition().getElements()) {
+                        if (element instanceof PlainPlaceholderElement plain) {
+                            value.append(plain.getText());
+                        }
+                    }
+                    defaultValues.put(id, value.toString());
+                }
+                sb.append(defaultValues.get(id));
+            }
+        }
+        return sb.toString();
     }
 
     public static class Builder {
 
         private final List<PlaceholderDefinition> definitions;
-        private List<SnippetItem> items = new ArrayList<>();
+        private final List<SnippetItem> items = new ArrayList<>();
         private int index;
 
         public Builder() {
@@ -113,9 +141,8 @@ public class CodeSnippet implements Cloneable {
         }
 
         public Builder addPlainText(String text) {
-            if (!items.isEmpty() && items.get(items.size() - 1) instanceof PlainTextItem) {
+            if (!items.isEmpty() && items.get(items.size() - 1) instanceof PlainTextItem item) {
                 // Merge plain texts
-                var item = (PlainTextItem) items.get(items.size() - 1);
                 item.setText(item.getText() + text);
                 item.setIndex(item.getStartIndex(), item.getEndIndex() + text.length());
                 index += text.length();
