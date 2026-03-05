@@ -156,13 +156,19 @@ internal fun List<Diagnostic>.transformToEditorDiagnostics(editor: CodeEditor): 
     val result = ArrayList<DiagnosticRegion>()
     var id = 0L
     for (diagnosticSource in this) {
+        val message = if (diagnosticSource.message.isLeft) {
+            diagnosticSource.message.left
+        } else {
+            // TODO Support markdown in editor core
+            diagnosticSource.message.right.value
+        }
         val diagnostic = DiagnosticRegion(
             diagnosticSource.range.start.getIndex(editor),
             diagnosticSource.range.end.getIndex(editor),
             diagnosticSource.severity.toEditorLevel(),
             id++,
             DiagnosticDetail(
-                diagnosticSource.severity.name, diagnosticSource.message, null, diagnosticSource
+                diagnosticSource.severity.name, message, null, diagnosticSource
             )
         )
         result.add(diagnostic)
