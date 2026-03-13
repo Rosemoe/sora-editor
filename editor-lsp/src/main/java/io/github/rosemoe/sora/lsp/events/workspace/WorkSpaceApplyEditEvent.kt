@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.lsp.events.workspace
 
+import io.github.rosemoe.sora.lang.completion.snippet.parser.CodeSnippetParser
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.LspProject
 import io.github.rosemoe.sora.lsp.events.EventContext
@@ -37,6 +38,8 @@ import io.github.rosemoe.sora.lsp.utils.toFileUri
 import io.github.rosemoe.sora.lsp.utils.toURI
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams
 import org.eclipse.lsp4j.ResourceOperation
+import org.eclipse.lsp4j.SnippetTextEdit
+import org.eclipse.lsp4j.StringValueKind
 import org.eclipse.lsp4j.TextDocumentEdit
 import org.eclipse.lsp4j.TextEdit
 import org.eclipse.lsp4j.jsonrpc.messages.Either
@@ -86,8 +89,20 @@ class WorkSpaceApplyEditEvent : EventListener {
         val editor = project.getEditor(uri)
             ?: throw LSPException("The url ${textDocument.uri} is not opened.")
 
-        applySingleChange(editor, uri, textDocumentEdit.edits)
-
+        // TODO Start interactive snippet edit in future
+        applySingleChange(editor, uri, textDocumentEdit.edits.map {
+            if (it.isLeft) {
+                it.left
+            } else {
+                TextEdit(
+                    it.right.range, if (it.right.snippet.kind == StringValueKind.SNIPPET) {
+                        CodeSnippetParser.parse(it.right.snippet.value).toInsertTextForLsp()
+                    } else {
+                        it.right.snippet.value
+                    }
+                )
+            }
+        })
     }
 
     private fun applyChanges(context: EventContext, changes: Map<String, List<TextEdit>>) {
