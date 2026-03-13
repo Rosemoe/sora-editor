@@ -265,19 +265,32 @@ class MonarchAnalyzer(
                 }
             }
 
-            val span = SpanFactory.obtainNoExt(
-                startIndex, TextStyle.makeStyle(
-                    foreground + 255,
-                    0,
-                    (fontStyle and FontStyle.Bold) != 0,
-                    (fontStyle and FontStyle.Italic) != 0,
-                    false
+            val hasUnderline = (fontStyle and FontStyle.Underline) != 0
+            val span = if (hasUnderline) {
+                SpanFactory.obtain(
+                    startIndex, TextStyle.makeStyle(
+                        foreground + 255,
+                        0,
+                        (fontStyle and FontStyle.Bold) != 0,
+                        (fontStyle and FontStyle.Italic) != 0,
+                        false
+                    )
                 )
-            )
+            } else {
+                SpanFactory.obtainNoExt(
+                    startIndex, TextStyle.makeStyle(
+                        foreground + 255,
+                        0,
+                        (fontStyle and FontStyle.Bold) != 0,
+                        (fontStyle and FontStyle.Italic) != 0,
+                        false
+                    )
+                )
+            }
 
             span.extra = tokenType
 
-            if ((fontStyle and FontStyle.Underline) != 0) {
+            if (hasUnderline) {
                 val color = theme.value.colorMap.getColor(foreground)
                 if (color != null) {
                     span.setUnderlineColor(Color.parseColor(color))
