@@ -240,11 +240,14 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
                     }
                 }
             }
-            Span span = SpanFactory.obtainNoExt(startIndex, TextStyle.makeStyle(foreground + 255, 0, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false));
+            boolean needUnderline = (fontStyle & FontStyle.Underline) != 0;
+            Span span = needUnderline
+                ? SpanFactory.obtain(startIndex, TextStyle.makeStyle(foreground + 255, 0, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false))
+                : SpanFactory.obtainNoExt(startIndex, TextStyle.makeStyle(foreground + 255, 0, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false));
 
             span.setExtra(tokenType);
 
-            if ((fontStyle & FontStyle.Underline) != 0) {
+            if (needUnderline) {
                 String color = theme.getColor(foreground);
                 if (color != null) {
                     span.setUnderlineColor(Color.parseColor(color));
