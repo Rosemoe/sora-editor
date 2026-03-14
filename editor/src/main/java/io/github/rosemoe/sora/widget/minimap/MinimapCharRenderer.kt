@@ -32,7 +32,11 @@ import io.github.rosemoe.sora.graphics.SingleCharacterWidths
 import kotlin.math.max
 
 /**
+ * Character renderer for minimap.
  *
+ * For performance concerns, only visible ASCII characters are actually rendered. Other characters are
+ * replaced by a mapped ASCII visible character.
+ * Also, pixels of ASCII characters are cached, and pasted to the right position when drawn.
  */
 internal class MinimapCharRenderer(private val charHeight: Int) {
 
@@ -116,7 +120,7 @@ internal class MinimapCharRenderer(private val charHeight: Int) {
         val width = max(1, widths.measureChar(ch, paint).toInt())
         val bitmap = Bitmap.createBitmap(width, charHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        val baseline = charHeight - paint.fontMetricsInt.descent.toFloat()
+        val baseline = charHeight - paint.descent()
         canvas.drawColor(Color.TRANSPARENT, android.graphics.PorterDuff.Mode.CLEAR)
         canvas.drawText(ch.toString(), 0f, baseline, paint)
         val rawPixels = IntArray(width * charHeight)
@@ -133,7 +137,7 @@ internal class MinimapCharRenderer(private val charHeight: Int) {
 
     private fun modulateColorAlpha(color: Int, alpha: Int): Int {
         val baseAlpha = Color.alpha(color)
-        val mergedAlpha = baseAlpha * alpha / 255
+        val mergedAlpha = (baseAlpha * alpha) shr 8
         return Color.argb(mergedAlpha, Color.red(color), Color.green(color), Color.blue(color))
     }
 }
