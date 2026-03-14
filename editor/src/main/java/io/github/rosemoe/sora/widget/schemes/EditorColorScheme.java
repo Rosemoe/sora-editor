@@ -175,6 +175,10 @@ public class EditorColorScheme {
     public static final int TEXT_ACTION_WINDOW_BACKGROUND = 65;
     public static final int TEXT_ACTION_WINDOW_ICON_COLOR = 66;
 
+    public static final int MINIMAP_BACKGROUND = 81;
+    public static final int MINIMAP_VIEWPORT = 82;
+    public static final int MINIMAP_VIEWPORT_BORDER = 83;
+
     /**
      * Min pre-defined color id
      */
@@ -183,7 +187,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 80;
+    protected static final int END_COLOR_ID = 83;
 
 
     /**
@@ -294,6 +298,15 @@ public class EditorColorScheme {
             case COMPLETION_WND_BACKGROUND:
             case COMPLETION_WND_CORNER:
                 color = isDark() ? BACKGROUND_COLOR_DARK : 0xffffffff;
+                break;
+            case MINIMAP_BACKGROUND:
+                color = ((isDark() ? BACKGROUND_COLOR_DARK : 0xffffffff) & 0x00ffffff) | 0xa0000000;
+                break;
+            case MINIMAP_VIEWPORT:
+                color = isDark() ? 0x30ffffff : 0x30333333;
+                break;
+            case MINIMAP_VIEWPORT_BORDER:
+                color = isDark() ? 0xb0ffffff : 0xb0333333;
                 break;
             case LINE_NUMBER_PANEL_TEXT:
                 color = 0xffffffff;

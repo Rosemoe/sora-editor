@@ -568,4 +568,16 @@ public class DirectAccessProps implements Serializable {
      */
     public boolean selectCompletionItemOnEnterForSoftKbd = true;
 
+    /**
+     * Show minimap for content
+     */
+    @Experimental
+    public boolean showMinimap = false;
+
+    /**
+     * Draw text as block (rect) instead of glyphs in minimap
+     */
+    @Experimental
+    public boolean minimapDrawTextAsBlocks = false;
+
 }

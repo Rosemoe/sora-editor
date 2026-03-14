@@ -90,6 +90,7 @@ import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.util.TemporaryCharBuffer;
 import io.github.rosemoe.sora.widget.layout.Row;
 import io.github.rosemoe.sora.widget.layout.RowIterator;
+import io.github.rosemoe.sora.widget.minimap.MinimapRenderer;
 import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
 import io.github.rosemoe.sora.widget.rendering.TextAdvancesCache;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
@@ -144,6 +145,7 @@ public class EditorRenderer {
     protected Content content;
     private volatile boolean renderingFlag;
     protected boolean forcedRecreateLayout;
+    private MinimapRenderer minimapRenderer;
 
     public EditorRenderer(@NonNull CodeEditor editor) {
         this.editor = editor;
@@ -172,6 +174,7 @@ public class EditorRenderer {
         lineBreakGraph = editor.getContext().getDrawable(R.drawable.line_break);
         softwrapLeftGraph = editor.getContext().getDrawable(R.drawable.softwrap_left);
         softwrapRightGraph = editor.getContext().getDrawable(R.drawable.softwrap_right);
+        minimapRenderer = new MinimapRenderer(editor);
 
         onEditorFullTextUpdate();
     }
@@ -629,7 +632,7 @@ public class EditorRenderer {
         }
 
         drawStuckLineNumbers(canvas, stuckLines, offsetX, lineNumberWidth, editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER));
-        drawScrollBars(canvas);
+        drawScrollBarsAndMinimap(canvas);
         drawEdgeEffect(canvas);
 
         releasePreloadedData();
@@ -2041,18 +2044,17 @@ public class EditorRenderer {
      *
      * @param canvas The canvas to draw
      */
-    protected void drawScrollBars(Canvas canvas) {
+    protected void drawScrollBarsAndMinimap(Canvas canvas) {
+        var minimapWidth = minimapRenderer.onDrawToCanvas(canvas, editor.getWidth(), displayTimestamp);
         verticalScrollBarRect.setEmpty();
         horizontalScrollBarRect.setEmpty();
-        if (!editor.getEventHandler().shouldDrawScrollBarForTouch() && !(editor.isInMouseMode() && editor.getProps().mouseModeAlwaysShowScrollbars)) {
-            return;
-        }
+        boolean shouldShowScrollbars = editor.getEventHandler().shouldDrawScrollBarForTouch() || (editor.isInMouseMode() && editor.getProps().mouseModeAlwaysShowScrollbars);
         var percentage = editor.getEventHandler().getScrollBarFadeOutPercentageForTouch();
-        if (editor.isInMouseMode() && editor.getProps().mouseModeAlwaysShowScrollbars) {
+        if (shouldShowScrollbars && editor.isInMouseMode() && editor.getProps().mouseModeAlwaysShowScrollbars) {
             percentage = 0f;
         }
         var size = editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP;
-        if (editor.isHorizontalScrollBarEnabled() && !editor.isWordwrap() && editor.getScrollMaxX() > editor.getWidth() * 3 / 4) {
+        if (shouldShowScrollbars && editor.isHorizontalScrollBarEnabled() && !editor.isWordwrap() && editor.getScrollMaxX() > editor.getWidth() * 3 / 4) {
             canvas.save();
             canvas.translate(0f, size * percentage);
 
@@ -2061,7 +2063,8 @@ public class EditorRenderer {
 
             canvas.restore();
         }
-        if (editor.isVerticalScrollBarEnabled() && editor.getScrollMaxY() > editor.getHeight() / 2) {
+        boolean shouldShowVerticalScrollbar = shouldShowScrollbars && !editor.getProps().showMinimap;
+        if (shouldShowVerticalScrollbar && editor.isVerticalScrollBarEnabled() && editor.getScrollMaxY() > editor.getHeight() / 2) {
             canvas.save();
             canvas.translate(size * percentage, 0f);
 
@@ -2069,6 +2072,14 @@ public class EditorRenderer {
             drawScrollBarVertical(canvas);
 
             canvas.restore();
+        }
+
+        if (minimapWidth != 0) {
+            getVerticalScrollBarRect(tmpRect, minimapWidth);
+            verticalScrollBarRect.set(tmpRect);
+            if (editor.getEventHandler().holdVerticalScrollBar()) {
+                drawLineInfoPanel(canvas, tmpRect.top, tmpRect.height(), minimapWidth + 5 * editor.getDpUnit());
+            }
         }
     }
 
@@ -2092,27 +2103,33 @@ public class EditorRenderer {
         }
     }
 
+    private void getVerticalScrollBarRect(RectF rect, float width) {
+        int height = editor.getHeight();
+        float all = editor.getScrollMaxY() + height;
+        float length = Math.max(height / all * height, editor.getDpUnit() * RenderingConstants.SCROLLBAR_LENGTH_MIN_DIP);
+        float topY = editor.getOffsetY() * 1.0f / editor.getScrollMaxY() * (height - length);
+        rect.right = editor.getWidth();
+        rect.left = editor.getWidth() - width;
+        rect.top = topY;
+        rect.bottom = topY + length;
+    }
+
     /**
      * Draw vertical scroll bar
      *
      * @param canvas Canvas to draw
      */
     protected void drawScrollBarVertical(Canvas canvas) {
-        int height = editor.getHeight();
-        float all = editor.getScrollMaxY() + height;
-        float length = Math.max(height / all * height, editor.getDpUnit() * RenderingConstants.SCROLLBAR_LENGTH_MIN_DIP);
-        float topY = editor.getOffsetY() * 1.0f / editor.getScrollMaxY() * (height - length);
-        if (editor.getEventHandler().holdVerticalScrollBar()) {
-            drawLineInfoPanel(canvas, topY, length);
-        }
-        tmpRect.right = editor.getWidth();
-        tmpRect.left = editor.getWidth() - editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP;
-        tmpRect.top = topY;
-        tmpRect.bottom = topY + length;
+        getVerticalScrollBarRect(tmpRect, editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP);
         verticalScrollBarRect.set(tmpRect);
+        if (editor.getEventHandler().holdVerticalScrollBar()) {
+            drawLineInfoPanel(canvas, tmpRect.top, tmpRect.height(), 30 * editor.getDpUnit());
+        }
         if (verticalScrollbarThumbDrawable != null) {
             verticalScrollbarThumbDrawable.setState(editor.getEventHandler().holdVerticalScrollBar() ? PRESSED_DRAWABLE_STATE : DEFAULT_DRAWABLE_STATE);
-            verticalScrollbarThumbDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
+            verticalScrollbarThumbDrawable.setBounds((int) verticalScrollBarRect.left,
+                    (int) verticalScrollBarRect.top, (int) verticalScrollBarRect.right,
+                    (int) verticalScrollBarRect.bottom);
             verticalScrollbarThumbDrawable.draw(canvas);
         } else {
             drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdVerticalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
@@ -2126,7 +2143,7 @@ public class EditorRenderer {
      * @param topY   The y at the top of the vertical scrollbar
      * @param length The length of vertical scrollbar
      */
-    protected void drawLineInfoPanel(Canvas canvas, float topY, float length) {
+    protected void drawLineInfoPanel(Canvas canvas, float topY, float length, float rightMargin) {
         if (!editor.isDisplayLnPanel()) {
             return;
         }
@@ -2173,8 +2190,8 @@ public class EditorRenderer {
             drawColorRound(canvas, editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_PANEL), tmpRect);
         } else {
             float[] radii = null;
-            tmpRect.right = editor.getWidth() - 30 * editor.getDpUnit();
-            tmpRect.left = editor.getWidth() - 30 * editor.getDpUnit() - expand * 2 - textWidth;
+            tmpRect.right = editor.getWidth() - rightMargin;
+            tmpRect.left = tmpRect.right - expand * 2 - textWidth;
             if (position == LineInfoPanelPosition.TOP) {
                 tmpRect.top = topY;
                 tmpRect.bottom = topY + editor.getRowHeight() + 2 * expand;
