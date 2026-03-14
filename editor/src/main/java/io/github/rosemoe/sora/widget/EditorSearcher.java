@@ -77,6 +77,7 @@ public class EditorSearcher {
      */
     protected LongArrayList lastResults;
     private boolean cyclicJumping = true;
+    private boolean ensureOccurrenceVisible = false;
 
     EditorSearcher(@NonNull CodeEditor editor) {
         this.editor = editor;
@@ -102,6 +103,23 @@ public class EditorSearcher {
      */
     public boolean isCyclicJumping() {
         return cyclicJumping;
+    }
+
+    /**
+     * Set whether the editor should automatically scroll to the nearest occurrence
+     * when executing a search.
+     *
+     * @see #isEnsureOccurrenceVisible()
+     */
+    public void setEnsureOccurrenceVisible(boolean ensureOccurrenceVisible) {
+        this.ensureOccurrenceVisible = ensureOccurrenceVisible;
+    }
+
+    /**
+     * @see #setEnsureOccurrenceVisible(boolean)
+     */
+    public boolean isEnsureOccurrenceVisible() {
+        return ensureOccurrenceVisible;
     }
 
     /**
@@ -611,6 +629,19 @@ public class EditorSearcher {
                         editor.invalidate();
                         editor.dispatchEvent(new PublishSearchResultEvent(editor));
                         currentThread = null;
+                        if (ensureOccurrenceVisible && results.size() > 0) {
+                            var right = editor.getCursor().getRight();
+                            var index = results.lowerBoundByFirst(right);
+
+                            if (index >= results.size()) {
+                                index = results.size() - 1;
+                            }
+
+                            var match = results.get(index);
+                            var start = IntPair.getFirst(match);
+                            var startPos = editor.getText().getIndexer().getCharPosition(start);
+                            editor.ensurePositionVisible(startPos.line, startPos.column);
+                        }
                     }
                 });
             }
