@@ -69,6 +69,8 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
 
     private static boolean useShallowCopyByDefault = false;
 
+    private static boolean updateStylesDuringAnalysis = true;
+
     /**
      * Use shallow copy for initial text copying. Memory usage will be much lower than full copy at the beginning.
      * <p>
@@ -86,6 +88,18 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
      */
     public static boolean isUseShallowCopyByDefault() {
         return useShallowCopyByDefault;
+    }
+
+    /**
+     * Update styles during initial styles analysis. This is useful for long files to show analyzed
+     * lines quickly, instead of showing the result after initial analysis.
+     */
+    public static void setUpdateStylesDuringAnalysis(boolean sendStylesAsAnalysis) {
+        AsyncIncrementalAnalyzeManager.updateStylesDuringAnalysis = sendStylesAsAnalysis;
+    }
+
+    public static boolean isUpdateStylesDuringAnalysis() {
+        return updateStylesDuringAnalysis;
     }
 
     public AsyncIncrementalAnalyzeManager() {
@@ -487,6 +501,11 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                 states.add(result.clearSpans());
                 onAddState(result.state);
                 mdf.addLineAt(i, spans);
+                if (isUpdateStylesDuringAnalysis() && i > 0 && i % 1000 == 0 && !abort) {
+                    var tmpStyles = new Styles();
+                    tmpStyles.spans = styles.spans;
+                    sendNewStyles(tmpStyles);
+                }
             }
             styles.blocks = computeBlocks(shadowed, delegate);
             styles.setSuppressSwitch(delegate.suppressSwitch);
