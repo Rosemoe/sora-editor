@@ -136,7 +136,8 @@ public class Styles {
      * Adjust styles on insert.
      */
     public void adjustOnInsert(@NonNull CharPosition start, @NonNull CharPosition end) {
-        spans.adjustOnInsert(start, end);
+        if (spans != null)
+            spans.adjustOnInsert(start, end);
         var delta = end.line - start.line;
         if (delta == 0) {
             return;
@@ -157,7 +158,8 @@ public class Styles {
      * Adjust styles on delete.
      */
     public void adjustOnDelete(@NonNull CharPosition start, @NonNull CharPosition end) {
-        spans.adjustOnDelete(start, end);
+        if (spans != null)
+            spans.adjustOnDelete(start, end);
         var delta = start.line - end.line;
         if (delta == 0) {
             return;
