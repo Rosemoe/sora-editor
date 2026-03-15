@@ -28,6 +28,7 @@ import android.graphics.RenderNode
 import android.os.Build
 import androidx.annotation.RequiresApi
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange
+import io.github.rosemoe.sora.lang.styling.CodeBlock
 import io.github.rosemoe.sora.lang.styling.EmptyReader
 import io.github.rosemoe.sora.widget.CodeEditor
 import java.util.Collections
@@ -76,7 +77,7 @@ class RenderNodeHolder(private val editor: CodeEditor) {
         val size = cache.size
         for (i in 0 until size) {
             val node = cache[i]
-            if (node!!.line == line) {
+            if (node.line == line) {
                 Collections.swap(cache, 0, i)
                 return node
             }
@@ -88,13 +89,16 @@ class RenderNodeHolder(private val editor: CodeEditor) {
         return node
     }
 
-    fun keepCurrentInDisplay(start: Int, end: Int) {
+    fun keepCurrentInDisplay(start: Int, end: Int, stuckLines: List<CodeBlock>?) {
+        val stuckLineNumbers =
+            if (stuckLines.isNullOrEmpty()) emptySet() else stuckLines.map { it.startLine }.toSet()
         val itr = cache.iterator()
         while (itr.hasNext()) {
             val node = itr.next()
-            if (node.line < start || node.line > end) {
+            if (node.line !in start..end && !stuckLineNumbers.contains(node.line)) {
                 itr.remove()
                 node.renderNode.discardDisplayList()
+                pool.push(node)
             }
         }
     }

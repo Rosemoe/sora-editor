@@ -145,7 +145,7 @@ public class EditorRenderer {
     protected Content content;
     private volatile boolean renderingFlag;
     protected boolean forcedRecreateLayout;
-    private MinimapRenderer minimapRenderer;
+    private final MinimapRenderer minimapRenderer;
 
     public EditorRenderer(@NonNull CodeEditor editor) {
         this.editor = editor;
@@ -512,7 +512,7 @@ public class EditorRenderer {
         canvas.save();
         float stuckLineBottom = getStuckLineBottom(stuckLines);
         canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
-        drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines, firstLn);
+        drawRows(canvas, textOffset, postDrawLineNumbers, postDrawCursor, postDrawCurrentLines, firstLn, stuckLines);
         patchHighlightedDelimiters(canvas, textOffset);
         drawDiagnosticIndicators(canvas, offsetX);
         canvas.restore();
@@ -1143,7 +1143,9 @@ public class EditorRenderer {
      * @param postDrawLineNumbers Line numbers to be drawn later
      * @param postDrawCursor      Cursors to be drawn later
      */
-    protected void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers, List<DrawCursorTask> postDrawCursor, MutableIntList postDrawCurrentLines, MutableInt requiredFirstLn) {
+    protected void drawRows(Canvas canvas, float offset, LongArrayList postDrawLineNumbers,
+                            List<DrawCursorTask> postDrawCursor, MutableIntList postDrawCurrentLines,
+                            MutableInt requiredFirstLn, List<CodeBlock> stuckLines) {
         int firstVis = editor.getFirstVisibleRow();
         RowIterator rowIterator = editor.getLayout().obtainRowIterator(firstVis, preloadedLines);
         Spans spans = editor.getStyles() == null ? null : editor.getStyles().spans;
@@ -1168,7 +1170,7 @@ public class EditorRenderer {
             circleRadius = Math.min(editor.getRowHeight(), spaceWidth) * RenderingConstants.NON_PRINTABLE_CIRCLE_RADIUS_FACTOR;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !editor.isWordwrap() && canvas.isHardwareAccelerated() && editor.isHardwareAcceleratedDrawAllowed()) {
-            editor.getRenderContext().getRenderNodeHolder().keepCurrentInDisplay(firstVis, editor.getLastVisibleRow());
+            editor.getRenderContext().getRenderNodeHolder().keepCurrentInDisplay(firstVis, editor.getLastVisibleRow(), stuckLines);
         }
         float offset2 = editor.getOffsetX() - editor.measureTextRegionOffset();
 
