@@ -137,10 +137,7 @@ class MonarchLanguage(
     ) {
         val grammar = grammarRegistry.findGrammar(languageScopeName)
             ?: throw IllegalArgumentException(
-                String.format(
-                    "Language with %s scope name not found",
-                    grammarRegistry
-                )
+                "Language with $grammarRegistry scope name $languageScopeName not found"
             )
 
         val languageConfiguration =
@@ -170,10 +167,7 @@ class MonarchLanguage(
         ): MonarchLanguage {
             val grammar = grammarRegistry.findGrammar(languageScopeName)
                 ?: throw IllegalArgumentException(
-                    String.format(
-                        "Language with %s scope name not found",
-                        languageScopeName
-                    )
+                    "Language with $grammarRegistry scope name $languageScopeName not found"
                 )
 
             val languageConfiguration =
