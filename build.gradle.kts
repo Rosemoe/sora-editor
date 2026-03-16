@@ -25,7 +25,9 @@
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
+import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import com.vanniktech.maven.publish.SourcesJar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidExtension
 
@@ -99,8 +101,8 @@ subprojects {
                 configure(
                     AndroidSingleVariantLibrary(
                         variant = "release",
-                        sourcesJar = true,
-                        publishJavadocJar = false
+                        sourcesJar = SourcesJar.Sources(),
+                        javadocJar = JavadocJar.None()
                     )
                 )
             }
