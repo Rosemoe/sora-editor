@@ -249,7 +249,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
 
             if (needUnderline) {
                 String color = theme.getColor(foreground);
-                if (color != null) {
+                if (color != null && !"@default".equals(color)) {
                     span.setUnderlineColor(Color.parseColor(color));
                 }
             }
