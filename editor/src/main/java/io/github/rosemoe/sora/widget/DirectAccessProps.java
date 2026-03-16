@@ -35,6 +35,7 @@ import java.io.Serializable;
 
 import io.github.rosemoe.sora.annotations.Experimental;
 import io.github.rosemoe.sora.annotations.InvalidateRequired;
+import io.github.rosemoe.sora.widget.minimap.MinimapConfig;
 
 /**
  * Direct-access properties.
@@ -572,12 +573,15 @@ public class DirectAccessProps implements Serializable {
      * Show minimap for content
      */
     @Experimental
+    @InvalidateRequired
     public boolean showMinimap = false;
 
     /**
-     * Draw text as block (rect) instead of glyphs in minimap
+     * Minimap config
      */
     @Experimental
-    public boolean minimapDrawTextAsBlocks = false;
+    @InvalidateRequired
+    @NonNull
+    public MinimapConfig minimapConfig = MinimapConfig.Companion.getDefaultConfig();
 
 }

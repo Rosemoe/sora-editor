@@ -71,6 +71,7 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
     private var lastRenderTimestamp = Long.MIN_VALUE
     private var dirty = true
     private var closed = false
+    private var lastMinimapConfig: MinimapConfig? = null
 
     private val subscriptions = ArrayList<SubscriptionReceipt<*>>(4).apply {
         add(editor.subscribeAlways<ContentChangeEvent> { dirty = true })
@@ -123,7 +124,8 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
             bitmapRowCount == rowCount &&
             bitmapWidth == requiredWidth &&
             bitmapHeight == requiredHeight &&
-            lastScrollBucket == scrollBucket
+            lastScrollBucket == scrollBucket &&
+            lastMinimapConfig == editor.props.minimapConfig
         ) {
             return
         }
@@ -137,6 +139,7 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         bitmapRowCount = rowCount
         lastScrollBucket = scrollBucket
         lastRenderTimestamp = renderTimestamp
+        lastMinimapConfig = editor.props.minimapConfig
         dirty = false
     }
 
@@ -249,7 +252,7 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
 
     private fun renderAsciiCharacter(ch: Char, x: Int, top: Int, bottom: Int, color: Int): Int {
         val width = charRenderer.getGlyphWidth(ch)
-        if (editor.props.minimapDrawTextAsBlocks) {
+        if (editor.props.minimapConfig.minimapDrawTextAsBlocks) {
             fillRect(x, top, min(bitmapWidth, x + width), bottom, color)
         } else {
             charRenderer.blitGlyph(
@@ -274,7 +277,7 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         color: Int
     ): Int {
         val singleWidth = charRenderer.getGlyphWidth(ch)
-        if (editor.props.minimapDrawTextAsBlocks) {
+        if (editor.props.minimapConfig.minimapDrawTextAsBlocks) {
             fillRect(x, top, min(bitmapWidth, x + singleWidth), bottom, color)
             fillRect(x + singleWidth, top, min(bitmapWidth, x + singleWidth * 2), bottom, color)
         } else {
