@@ -24,7 +24,6 @@
 
 plugins {
     id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
 }
 
 android {
@@ -44,12 +43,16 @@ android {
 }
 
 dependencies {
-    api(libs.androidx.annotation)
-    implementation(libs.androidx.collection)
-    implementation(libs.kotlin.stdlib)
+
+
+    // material und androidx
+    api(libs.bundles.google.androidx)
+
+
     testImplementation(libs.junit)
     testImplementation(libs.tests.google.truth)
-    testImplementation(libs.tests.robolectric)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
+    testImplementation(libs.org.robolectric)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

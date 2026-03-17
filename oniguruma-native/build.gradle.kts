@@ -24,7 +24,6 @@
 
 plugins {
     id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
 }
 
 android {
@@ -45,7 +44,7 @@ android {
         }
     }
 
-    ndkVersion = "29.0.14206865"
+    ndkVersion = "29.0.13113456"
 
     externalNativeBuild {
         cmake {
@@ -57,6 +56,6 @@ android {
 
 dependencies {
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

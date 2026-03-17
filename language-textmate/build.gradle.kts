@@ -24,7 +24,6 @@
 
 plugins {
     id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
 }
 
 android {
@@ -53,10 +52,10 @@ android {
 }
 
 dependencies {
-    compileOnly(projects.editor)
-    compileOnly(projects.onigurumaNative)
+    compileOnly(projects.github.soraEditor.editor)
+    compileOnly(projects.github.soraEditor.onigurumaNative)
 
-    implementation(libs.gson)
+    implementation(libs.com.google.code.gson)
     implementation(libs.jcodings)
     implementation(libs.joni)
 
@@ -64,6 +63,6 @@ dependencies {
     implementation(libs.jdt.annotation)
 
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

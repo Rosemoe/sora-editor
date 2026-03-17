@@ -24,7 +24,6 @@
 
 plugins {
     id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
 }
 
 android {
@@ -48,7 +47,7 @@ android {
 }
 
 dependencies {
-    compileOnly(projects.editor)
+    compileOnly(projects.github.soraEditor.editor)
     api(libs.monarch.code)
     api(libs.monarch.json)
     api(libs.regex.onig)
@@ -57,6 +56,6 @@ dependencies {
     implementation(libs.moshi)
 
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.junit)
-    androidTestImplementation(libs.androidx.test.espresso)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }
