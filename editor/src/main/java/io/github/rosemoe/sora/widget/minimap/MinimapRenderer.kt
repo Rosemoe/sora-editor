@@ -55,6 +55,7 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         const val CharHeight = 10
         const val WidthRatio = 0.12f
         const val MaxWidthDp = 120
+        const val MinWidthDp = 15
         const val ContentAlpha = 180
     }
 
@@ -146,7 +147,8 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
     private fun computeBitmapWidth(): Int {
         val ratioWidth = (editor.width * WidthRatio).toInt()
         val maxWidth = (editor.dpUnit * MaxWidthDp).toInt()
-        return max(1, min(ratioWidth, maxWidth))
+        val minWidth = (editor.dpUnit * MinWidthDp).toInt()
+        return ratioWidth.coerceIn(minWidth, maxWidth).coerceAtLeast(1)
     }
 
     private fun computeScrollBucket(rowCount: Int, targetHeight: Int): Int {
