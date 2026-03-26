@@ -37,6 +37,8 @@ import kotlin.math.max
  * For performance concerns, only visible ASCII characters are actually rendered. Other characters are
  * replaced by a mapped ASCII visible character.
  * Also, pixels of ASCII characters are cached, and pasted to the right position when drawn.
+ *
+ * @author Rosemoe
  */
 internal class MinimapCharRenderer(private val charHeight: Int) {
 
@@ -60,6 +62,9 @@ internal class MinimapCharRenderer(private val charHeight: Int) {
     private val widths = SingleCharacterWidths(4)
     private val glyphs = arrayOfNulls<Glyph>(Constants.CHAR_COUNT)
 
+    /**
+     * Updates the typeface used for cached glyphs.
+     */
     fun updateTypeface(typeface: Typeface) {
         if (typeface != paint.typeface) {
             paint.typeface = typeface
@@ -67,10 +72,16 @@ internal class MinimapCharRenderer(private val charHeight: Int) {
         }
     }
 
+    /**
+     * Checks whether the character is a visible ASCII character.
+     */
     fun isVisibleAscii(ch: Char): Boolean {
         return ch.code in Constants.FIRST_VISIBLE_ASCII..Constants.LAST_VISIBLE_ASCII
     }
 
+    /**
+     * Maps the given character to a visible ASCII character.
+     */
     fun getMappedVisibleAscii(ch: Char): Char {
         if (isVisibleAscii(ch)) {
             return ch
@@ -79,10 +90,16 @@ internal class MinimapCharRenderer(private val charHeight: Int) {
         return (Constants.FIRST_VISIBLE_ASCII + mapped).toChar()
     }
 
+    /**
+     * Returns the cached glyph width for the character.
+     */
     fun getGlyphWidth(ch: Char): Int {
         return getGlyph(getMappedVisibleAscii(ch)).width
     }
 
+    /**
+     * Draws a glyph into the target pixel buffer.
+     */
     fun blitGlyph(
         pixels: IntArray,
         stride: Int,
@@ -114,6 +131,9 @@ internal class MinimapCharRenderer(private val charHeight: Int) {
         }
     }
 
+    /**
+     * Returns the cached glyph for the given character.
+     */
     private fun getGlyph(ch: Char): Glyph {
         val index = ch.code - Constants.FIRST_VISIBLE_ASCII
         glyphs[index]?.let { return it }
@@ -135,6 +155,9 @@ internal class MinimapCharRenderer(private val charHeight: Int) {
         }
     }
 
+    /**
+     * Applies the glyph alpha to the target color.
+     */
     private fun modulateColorAlpha(color: Int, alpha: Int): Int {
         val baseAlpha = Color.alpha(color)
         val mergedAlpha = (baseAlpha * alpha) shr 8

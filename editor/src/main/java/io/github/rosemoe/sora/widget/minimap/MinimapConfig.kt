@@ -35,7 +35,7 @@ data class MinimapConfig(
 
     companion object {
         /**
-         * Default config
+         * Default minimap configuration.
          */
         val DefaultConfig = MinimapConfig()
     }

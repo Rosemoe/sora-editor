@@ -46,7 +46,9 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Experimental minimap
+ * Experimental minimap renderer.
+ *
+ * @author Rosemoe
  */
 @Experimental
 class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
@@ -81,6 +83,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         add(editor.subscribeAlways<EditorReleaseEvent> { close() })
     }
 
+    /**
+     * Clears cached rendering state.
+     */
     fun reset() {
         lastScrollBucket = Int.MIN_VALUE
         lastRenderTimestamp = Long.MIN_VALUE
@@ -93,6 +98,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         dirty = true
     }
 
+    /**
+     * Draws the minimap and returns its rendered width.
+     */
     fun onDrawToCanvas(canvas: Canvas, rectRight: Int, renderTimestamp: Long): Int {
         if (closed) {
             return 0
@@ -115,6 +123,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         return renderedBitmap.width
     }
 
+    /**
+     * Rebuilds the cached bitmap when the minimap state changes.
+     */
     private fun updateBitmapIfNeeded(renderTimestamp: Long) {
         val rowCount = editor.layout.rowCount
         val requiredWidth = computeBitmapWidth()
@@ -144,6 +155,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         dirty = false
     }
 
+    /**
+     * Computes the bitmap width from editor size constraints.
+     */
     private fun computeBitmapWidth(): Int {
         val ratioWidth = (editor.width * WidthRatio).toInt()
         val maxWidth = (editor.dpUnit * MaxWidthDp).toInt()
@@ -151,6 +165,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         return ratioWidth.coerceIn(minWidth, maxWidth).coerceAtLeast(1)
     }
 
+    /**
+     * Maps the editor scroll offset to a minimap row bucket.
+     */
     private fun computeScrollBucket(rowCount: Int, targetHeight: Int): Int {
         val contentHeight = rowCount * CharHeight
         val maxMinimapScroll = max(0, contentHeight - targetHeight)
@@ -166,6 +183,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         return mappedScroll.toInt() / CharHeight
     }
 
+    /**
+     * Ensures that the backing bitmap matches the required size.
+     */
     private fun ensureBitmap(width: Int, height: Int) {
         val current = bitmap
         if (current != null && current.width == width && current.height == height) {
@@ -179,6 +199,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         pixelBuffer = IntArray(max(1, width * height))
     }
 
+    /**
+     * Renders visible rows into the pixel buffer.
+     */
     private fun renderRows(rowCount: Int, scrollOffset: Int) {
         val spanReader = editor.styles?.spans?.read() ?: EmptyReader.getInstance()
         try {
@@ -204,6 +227,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         }
     }
 
+    /**
+     * Renders a single layout row.
+     */
     private fun renderRow(
         line: CharSequence,
         startColumn: Int,
@@ -230,6 +256,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         }
     }
 
+    /**
+     * Renders one logical character and returns its drawn width.
+     */
     private fun renderCharacter(ch: Char, x: Int, top: Int, bottom: Int, color: Int): Int {
         if (ch == ' ') {
             return charRenderer.getGlyphWidth(' ')
@@ -252,6 +281,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         }
     }
 
+    /**
+     * Renders a visible ASCII character.
+     */
     private fun renderAsciiCharacter(ch: Char, x: Int, top: Int, bottom: Int, color: Int): Int {
         val width = charRenderer.getGlyphWidth(ch)
         if (editor.props.minimapConfig.minimapDrawTextAsBlocks) {
@@ -271,6 +303,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         return width
     }
 
+    /**
+     * Renders a mapped wide character as two adjacent glyphs.
+     */
     private fun renderMappedDoubleCharacter(
         ch: Char,
         x: Int,
@@ -307,6 +342,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         return singleWidth * 2
     }
 
+    /**
+     * Fills a clipped rectangle in the pixel buffer.
+     */
     private fun fillRect(left: Int, top: Int, right: Int, bottom: Int, color: Int) {
         if (right <= left || bottom <= top) {
             return
@@ -323,6 +361,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         }
     }
 
+    /**
+     * Finds the active span index for the given column.
+     */
     private fun findSpanIndex(spans: List<Span>, column: Int): Int {
         if (spans.isEmpty()) {
             return 0
@@ -337,6 +378,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         return result
     }
 
+    /**
+     * Draws the minimap background.
+     */
     private fun drawBackground(canvas: Canvas) {
         val color = editor.colorScheme.getColor(EditorColorScheme.MINIMAP_BACKGROUND)
         val oldColor = canvas.drawFilter
@@ -347,6 +391,9 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         canvas.drawFilter = oldColor
     }
 
+    /**
+     * Draws the viewport indicator on the minimap.
+     */
     private fun drawViewportIndicator(canvas: Canvas) {
         val renderedBitmap = bitmap ?: return
         val height = editor.height
@@ -377,10 +424,16 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
         canvas.drawRect(dstRect.left, top, dstRect.right, bottom, paint)
     }
 
+    /**
+     * Replaces the color alpha channel with the given value.
+     */
     private fun applyAlpha(color: Int, alpha: Int): Int {
         return Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
     }
 
+    /**
+     * Releases cached resources and subscriptions.
+     */
     override fun close() {
         subscriptions.forEach(SubscriptionReceipt<*>::unsubscribe)
         subscriptions.clear()
