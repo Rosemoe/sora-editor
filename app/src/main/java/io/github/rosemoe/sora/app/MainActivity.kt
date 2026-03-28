@@ -657,7 +657,16 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.write {
-            putString("text", binding.editor.text.toString())
+            // For production, you may need to store the text to external storage to avoid data loss
+            val text = binding.editor.text.toString().let {
+                val limit = 128 * 1024
+                if (it.length > limit) {
+                    it.substring(0, limit)
+                } else {
+                    it
+                }
+            }
+            putString("text", text)
             putFloat("font.size", binding.editor.textSizePx)
             putInt("position.left", binding.editor.cursor.left)
             putInt("position.right", binding.editor.cursor.right)
