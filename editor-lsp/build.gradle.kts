@@ -22,8 +22,8 @@
  *     additional information or have any questions
  ******************************************************************************/
 plugins {
-    id("com.android.library")
-    id("com.vanniktech.maven.publish.base")
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.publish)
 }
 
 android {

@@ -24,7 +24,7 @@
 
 
 plugins {
-    id("com.vanniktech.maven.publish.base")
+    alias(libs.plugins.publish)
     id("java-platform")
 }
 
