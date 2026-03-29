@@ -1025,38 +1025,53 @@ public class EditorRenderer {
         int startLine = editor.getFirstVisibleLine();
         int offsetY = editor.getOffsetY(), rowHeight = editor.getRowHeight();
         List<CodeBlock> codeBlocks;
-        if ((styles = editor.getStyles()) == null || (codeBlocks = styles.blocksByStart) == null) {
+        if ((styles = editor.getStyles()) == null || (codeBlocks = styles.blocks) == null) {
             return null;
         }
-        int size = codeBlocks.size();
-        List<CodeBlock> candidates = new ArrayList<>();
-        var limit = editor.getProps().stickyScrollIterationLimit;
-        var maxLine = content.getLineCount();
-        for (int i = 0; i < size && i < limit; i++) {
-            var block = codeBlocks.get(i);
-            if (block == null || block.startLine > block.endLine ||
-                    block.startLine > maxLine || block.endLine > maxLine ||
-                    block.startLine < 0) {
+
+        List<CodeBlock> visibleBlocks = new ArrayList<>();
+        int first = editor.getFirstVisibleLine();
+        int last = editor.getLastVisibleLine();
+        boolean mark = false;
+        int invalidCount = 0;
+        int maxCount = styles.getSuppressSwitch();
+        int mm = editor.binarySearchEndBlock(first, codeBlocks);
+        if (mm == -1) {
+            mm = 0;
+        }
+        for (int curr = mm; curr < codeBlocks.size(); curr++) {
+            CodeBlock block = codeBlocks.get(curr);
+            if (block == null) {
                 continue;
             }
-            if (block.startLine > startLine) {
-                break;
+            if (CodeEditor.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
+                visibleBlocks.add(block);
+                mark = true;
+            } else if (mark) {
+                if (invalidCount >= maxCount) break;
+                invalidCount++;
             }
+        }
+        // Sort visible blocks by start position and check constraints
+        Collections.sort(visibleBlocks, CodeBlock.COMPARATOR_START);
+        List<CodeBlock> finalCandidates = new ArrayList<>();
+        for (int i = 0; i < visibleBlocks.size(); i++) {
+            var block = visibleBlocks.get(i);
             if (block.endLine > startLine && editor.getRowTop(block.startLine) - offsetY < 0) {
-                candidates.add(block);
+                finalCandidates.add(block);
                 startLine++;
                 offsetY += rowHeight;
             }
         }
         var maxLines = editor.getProps().stickyScrollMaxLines;
-        if (candidates.size() > maxLines) {
+        if (finalCandidates.size() > maxLines) {
             if (maxLines <= 0) {
                 return null;
             }
             if (editor.getProps().stickyScrollPreferInnerScope) {
-                candidates = candidates.subList(candidates.size() - maxLines, candidates.size());
+                finalCandidates = finalCandidates.subList(finalCandidates.size() - maxLines, finalCandidates.size());
             } else {
-                candidates = candidates.subList(0, maxLines);
+                finalCandidates = finalCandidates.subList(0, maxLines);
             }
         }
         if (editor.getCursor().isSelected() && editor.getProps().stickyScrollAutoCollapse) {
@@ -1064,12 +1079,12 @@ public class EditorRenderer {
             var firstVis = editor.getFirstVisibleLine();
             int lastSelectionLine = editor.getCursor().getRightLine();
             if (lastSelectionLine >= firstVis) {
-                while (!candidates.isEmpty() && firstVis + candidates.size() >= limitLine) {
-                    candidates.remove(candidates.size() - 1);
+                while (!finalCandidates.isEmpty() && firstVis + finalCandidates.size() >= limitLine) {
+                    finalCandidates.remove(finalCandidates.size() - 1);
                 }
             }
         }
-        return candidates;
+        return finalCandidates;
     }
 
     private final LineStyles coordinateLine = new LineStyles(0);

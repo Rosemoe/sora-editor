@@ -428,11 +428,6 @@ public class DirectAccessProps implements Serializable {
     public boolean stickyScrollPreferInnerScope = false;
 
     /**
-     * Limit for sticky scroll dataset size
-     */
-    public int stickyScrollIterationLimit = 1000;
-
-    /**
      * Hide partially or all of the stuck lines when text is selected
      */
     @InvalidateRequired
