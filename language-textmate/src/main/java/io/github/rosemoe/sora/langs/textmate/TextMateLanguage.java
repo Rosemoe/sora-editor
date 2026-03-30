@@ -24,17 +24,14 @@
 package io.github.rosemoe.sora.langs.textmate;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tm4e.core.grammar.IGrammar;
-import org.eclipse.tm4e.core.registry.IGrammarSource;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 import org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration;
-
-import java.io.Reader;
 
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
@@ -44,14 +41,14 @@ import io.github.rosemoe.sora.lang.completion.IdentifierAutoComplete;
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler;
 import io.github.rosemoe.sora.langs.textmate.registry.GrammarRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
-import io.github.rosemoe.sora.langs.textmate.registry.model.DefaultGrammarDefinition;
 import io.github.rosemoe.sora.langs.textmate.registry.model.GrammarDefinition;
-import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.util.MyCharacter;
 
 public class TextMateLanguage extends EmptyLanguage {
+
+    private final static String LOG_TAG = "TextMateLanguage";
 
     private int tabSize = 4;
 
@@ -59,7 +56,7 @@ public class TextMateLanguage extends EmptyLanguage {
 
     private final IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
     boolean autoCompleteEnabled;
-    final boolean createIdentifiers;
+    final boolean collectIdentifiers;
 
     TextMateAnalyzer textMateAnalyzer;
 
@@ -79,103 +76,91 @@ public class TextMateLanguage extends EmptyLanguage {
                                LanguageConfiguration languageConfiguration,
                                GrammarRegistry grammarRegistry,
                                ThemeRegistry themeRegistry,
-                               boolean createIdentifiers) {
+                               boolean collectIdentifiers) {
 
         this.grammarRegistry = grammarRegistry;
         this.themeRegistry = themeRegistry;
-        // this.grammar = grammar;
-
+        this.collectIdentifiers = collectIdentifiers;
         autoCompleteEnabled = true;
-
-        this.createIdentifiers = createIdentifiers;
-
         symbolPairMatch = new TextMateSymbolPairMatch(this);
 
         createAnalyzerAndNewlineHandler(grammar, languageConfiguration);
     }
 
-
-    @Deprecated
-    public static IGrammar prepareLoad(IGrammarSource grammarSource, @Nullable Reader languageConfiguration, IThemeSource themeSource) {
-        var definition = DefaultGrammarDefinition.withGrammarSource(grammarSource, StringUtils.getFileNameWithoutExtension(grammarSource.getFilePath()), null);
-        var languageRegistry = GrammarRegistry.getInstance();
-        var grammar = languageRegistry.loadGrammar(definition);
-        if (languageConfiguration != null) {
-            languageRegistry.languageConfigurationToGrammar(LanguageConfiguration.load(languageConfiguration), grammar);
-        }
-        var themeRegistry = ThemeRegistry.getInstance();
-        try {
-            themeRegistry.loadTheme(themeSource);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return grammar;
+    /**
+     * Create a new TextMate language object. Lookup language grammars from default grammar registry.
+     *
+     * @param languageScopeName  Root language scope name
+     * @param collectIdentifiers Collect identifiers for auto-completion
+     */
+    public static TextMateLanguage create(String languageScopeName, boolean collectIdentifiers) {
+        return create(languageScopeName, GrammarRegistry.getInstance(), collectIdentifiers);
     }
 
-    @Deprecated
-    public static TextMateLanguage create(IGrammarSource grammarSource, Reader languageConfiguration, IThemeSource themeSource) {
-        var grammar = prepareLoad(grammarSource, languageConfiguration, themeSource);
-        return create(grammar.getScopeName(), true);
+    /**
+     * Create a new TextMate language object. Lookup language grammars from given grammar registry.
+     *
+     * @param languageScopeName  Root language scope name
+     * @param grammarRegistry    Grammar registry to lookup language grammars
+     * @param collectIdentifiers Collect identifiers for auto-completion
+     */
+    public static TextMateLanguage create(String languageScopeName, GrammarRegistry grammarRegistry, boolean collectIdentifiers) {
+        return create(languageScopeName, grammarRegistry, ThemeRegistry.getInstance(), collectIdentifiers);
     }
 
-    @Deprecated
-    public static TextMateLanguage create(IGrammarSource grammarSource, IThemeSource themeSource) {
-        var grammar = prepareLoad(grammarSource, null, themeSource);
-        return create(grammar.getScopeName(), true);
-    }
-
-    @Deprecated
-    public static TextMateLanguage createNoCompletion(IGrammarSource grammarSource, Reader languageConfiguration, IThemeSource themeSource) {
-        var grammar = prepareLoad(grammarSource, languageConfiguration, themeSource);
-        return create(grammar.getScopeName(), false);
-    }
-
-    @Deprecated
-    public static TextMateLanguage createNoCompletion(IGrammarSource grammarSource, IThemeSource themeSource) {
-        var grammar = prepareLoad(grammarSource, null, themeSource);
-        return create(grammar.getScopeName(), false);
-    }
-
-    public static TextMateLanguage create(String languageScopeName, boolean autoCompleteEnabled) {
-        return create(languageScopeName, GrammarRegistry.getInstance(), autoCompleteEnabled);
-    }
-
-    public static TextMateLanguage create(String languageScopeName, GrammarRegistry grammarRegistry, boolean autoCompleteEnabled) {
-        return create(languageScopeName, grammarRegistry, ThemeRegistry.getInstance(), autoCompleteEnabled);
-    }
-
-    public static TextMateLanguage create(String languageScopeName, GrammarRegistry grammarRegistry, ThemeRegistry themeRegistry, boolean autoCompleteEnabled) {
+    /**
+     * Create a new TextMate language object. Lookup language grammars from given grammar registry. Use theme from given theme registry.
+     *
+     * @param languageScopeName  Root language scope name
+     * @param grammarRegistry    Grammar registry to lookup language grammars
+     * @param themeRegistry      Theme registry for theme management
+     * @param collectIdentifiers Collect identifiers for auto-completion
+     */
+    public static TextMateLanguage create(String languageScopeName, GrammarRegistry grammarRegistry, ThemeRegistry themeRegistry, boolean collectIdentifiers) {
         var grammar = grammarRegistry.findGrammar(languageScopeName);
-
         if (grammar == null) {
             throw new IllegalArgumentException(String.format("Language with %s scope name %s not found", grammarRegistry, languageScopeName));
         }
-
         var languageConfiguration = grammarRegistry.findLanguageConfiguration(grammar.getScopeName());
-
-
-        return new TextMateLanguage(grammar, languageConfiguration, grammarRegistry, themeRegistry, autoCompleteEnabled);
+        return new TextMateLanguage(grammar, languageConfiguration, grammarRegistry, themeRegistry, collectIdentifiers);
     }
 
-
-    public static TextMateLanguage create(GrammarDefinition grammarDefinition, boolean autoCompleteEnabled) {
-        return create(grammarDefinition, GrammarRegistry.getInstance(), autoCompleteEnabled);
+    /**
+     * Create a new TextMate language object. Lookup language grammars from default grammar registry.
+     *
+     * @param grammarDefinition  Root language grammar definition
+     * @param collectIdentifiers Collect identifiers for auto-completion
+     */
+    public static TextMateLanguage create(GrammarDefinition grammarDefinition, boolean collectIdentifiers) {
+        return create(grammarDefinition, GrammarRegistry.getInstance(), collectIdentifiers);
     }
 
-    public static TextMateLanguage create(GrammarDefinition grammarDefinition, GrammarRegistry grammarRegistry, boolean autoCompleteEnabled) {
-        return create(grammarDefinition, grammarRegistry, ThemeRegistry.getInstance(), autoCompleteEnabled);
+    /**
+     * Create a new TextMate language object. Lookup language grammars from given grammar registry.
+     *
+     * @param grammarDefinition  Root language grammar definition
+     * @param grammarRegistry    Grammar registry to lookup language grammars
+     * @param collectIdentifiers Collect identifiers for auto-completion
+     */
+    public static TextMateLanguage create(GrammarDefinition grammarDefinition, GrammarRegistry grammarRegistry, boolean collectIdentifiers) {
+        return create(grammarDefinition, grammarRegistry, ThemeRegistry.getInstance(), collectIdentifiers);
     }
 
-    public static TextMateLanguage create(GrammarDefinition grammarDefinition, GrammarRegistry grammarRegistry, ThemeRegistry themeRegistry, boolean autoCompleteEnabled) {
+    /**
+     * Create a new TextMate language object. Lookup language grammars from given grammar registry. Use theme from given theme registry.
+     *
+     * @param grammarDefinition  Root language grammar definition
+     * @param grammarRegistry    Grammar registry to lookup language grammars
+     * @param themeRegistry      Theme registry for theme management
+     * @param collectIdentifiers Collect identifiers for auto-completion
+     */
+    public static TextMateLanguage create(GrammarDefinition grammarDefinition, GrammarRegistry grammarRegistry, ThemeRegistry themeRegistry, boolean collectIdentifiers) {
         var grammar = grammarRegistry.loadGrammar(grammarDefinition);
-
         if (grammar == null) {
             throw new IllegalArgumentException(String.format("Language with %s grammar definition %s not found", grammarRegistry, grammarDefinition));
         }
-
         var languageConfiguration = grammarRegistry.findLanguageConfiguration(grammar.getScopeName());
-
-        return new TextMateLanguage(grammar, languageConfiguration, grammarRegistry, themeRegistry, autoCompleteEnabled);
+        return new TextMateLanguage(grammar, languageConfiguration, grammarRegistry, themeRegistry, collectIdentifiers);
     }
 
 
@@ -204,7 +189,7 @@ public class TextMateLanguage extends EmptyLanguage {
         try {
             textMateAnalyzer = new TextMateAnalyzer(this, grammar, languageConfiguration, /*grammarRegistry,*/ themeRegistry);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.w(LOG_TAG, "Failed to create analyzer for TextMate", e);
         }
         this.languageConfiguration = languageConfiguration;
         newlineHandler = new TextMateNewlineHandler(this);
@@ -215,20 +200,34 @@ public class TextMateLanguage extends EmptyLanguage {
             // the symbol pair needs to be updated inside the symbol pair matcher.
             symbolPairMatch.updatePair();
         }
-
     }
 
-    public void updateLanguage(String scopeName) {
+    /**
+     * Update the root language to the given scope name.
+     * <p>
+     * <strong>This should be called when the language is detached from editor.</strong>
+     *
+     * @param scopeName New language scope name
+     */
+    public void updateLanguage(@NonNull String scopeName) {
         var grammar = grammarRegistry.findGrammar(scopeName);
+        if (grammar == null) {
+            throw new IllegalArgumentException(String.format("Language with %s scope name %s not found", grammarRegistry, scopeName));
+        }
         var languageConfiguration = grammarRegistry.findLanguageConfiguration(grammar.getScopeName());
         createAnalyzerAndNewlineHandler(grammar, languageConfiguration);
     }
 
-    public void updateLanguage(GrammarDefinition grammarDefinition) {
+    /**
+     * Update the root language to the given grammar definition.
+     * <p>
+     * <strong>This should be called when the language is detached from editor.</strong>
+     *
+     * @param grammarDefinition New language grammar definition
+     */
+    public void updateLanguage(@NonNull GrammarDefinition grammarDefinition) {
         var grammar = grammarRegistry.loadGrammar(grammarDefinition);
-
         var languageConfiguration = grammarRegistry.findLanguageConfiguration(grammar.getScopeName());
-
         createAnalyzerAndNewlineHandler(grammar, languageConfiguration);
     }
 
@@ -257,7 +256,6 @@ public class TextMateLanguage extends EmptyLanguage {
         return tabSize;
     }
 
-
     @Override
     public boolean useTab() {
         return useTab;
@@ -285,10 +283,19 @@ public class TextMateLanguage extends EmptyLanguage {
         return newlineHandlers;
     }
 
+    /**
+     * Whether auto-completion is enabled.
+     * @see #setAutoCompleteEnabled(boolean)
+     */
     public boolean isAutoCompleteEnabled() {
         return autoCompleteEnabled;
     }
 
+    /**
+     * Set whether auto-completion is enabled.
+     * <p>
+     * Identifiers are available in auto-completion only when the language instance is set to collect identifiers at the time it is created.
+     */
     public void setAutoCompleteEnabled(boolean autoCompleteEnabled) {
         this.autoCompleteEnabled = autoCompleteEnabled;
     }
@@ -307,6 +314,9 @@ public class TextMateLanguage extends EmptyLanguage {
         return autoComplete;
     }
 
+    /**
+     * Set keywords for auto-completion
+     */
     public void setCompleterKeywords(String[] keywords) {
         autoComplete.setKeywords(keywords, false);
     }

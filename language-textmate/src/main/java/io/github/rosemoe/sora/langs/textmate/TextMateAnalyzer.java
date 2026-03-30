@@ -212,7 +212,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         var surrogate = StringUtils.checkSurrogate(line);
         var lineTokens = grammar.tokenizeLine2(line, state == null ? null : state.tokenizeState, Duration.ofSeconds(2));
         int tokensLength = lineTokens.getTokens().length / 2;
-        var identifiers = language.createIdentifiers ? new ArrayList<String>() : null;
+        var identifiers = language.collectIdentifiers ? new ArrayList<String>() : null;
         for (int i = 0; i < tokensLength; i++) {
             int startIndex = StringUtils.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * i], surrogate);
             if (i == 0 && startIndex != 0) {
@@ -222,7 +222,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
             int foreground = EncodedTokenAttributes.getForeground(metadata);
             int fontStyle = EncodedTokenAttributes.getFontStyle(metadata);
             var tokenType = EncodedTokenAttributes.getTokenType(metadata);
-            if (language.createIdentifiers) {
+            if (language.collectIdentifiers) {
 
                 if (tokenType == StandardTokenType.Other) {
                     var end = i + 1 == tokensLength ? lineC.length() : StringUtils.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * (i + 1)], surrogate);
@@ -262,7 +262,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     @Override
     public void onAddState(MyState state) {
         super.onAddState(state);
-        if (language.createIdentifiers) {
+        if (language.collectIdentifiers) {
             for (String identifier : state.identifiers) {
                 syncIdentifiers.identifierIncrease(identifier);
             }
@@ -272,7 +272,7 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     @Override
     public void onAbandonState(MyState state) {
         super.onAbandonState(state);
-        if (language.createIdentifiers) {
+        if (language.collectIdentifiers) {
             for (String identifier : state.identifiers) {
                 syncIdentifiers.identifierDecrease(identifier);
             }
