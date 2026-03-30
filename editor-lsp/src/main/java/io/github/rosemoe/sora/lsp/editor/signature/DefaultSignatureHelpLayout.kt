@@ -231,7 +231,12 @@ class DefaultSignatureHelpLayout : SignatureHelpLayout {
         builder.append("(")
         for (i in parameters.indices) {
             val parameter = parameters[i]
-            val label = parameter.label.left
+            val label = if (parameter.label.isLeft) {
+                parameter.label.left
+            } else {
+                val range = parameter.label.right
+                signature.label.substring(range.first until range.second)
+            }
             val spanStart = builder.length
             builder.append(label)
             val highlight = parameter == activeParameter && activeParameterIndex >= 0
