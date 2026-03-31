@@ -38,6 +38,7 @@ import io.github.rosemoe.sora.lang.brackets.BracketsProvider;
 import io.github.rosemoe.sora.lang.brackets.PairedBracket;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
 
 public class EditorStyleDelegate implements StyleReceiver {
 
@@ -116,6 +117,14 @@ public class EditorStyleDelegate implements StyleReceiver {
         var editor = editorRef.get();
         if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager()) {
             runOnUiThread(() -> editor.setDiagnostics(diagnostics));
+        }
+    }
+
+    @Override
+    public void setInlayHints(@NonNull AnalyzeManager sourceManager, @Nullable InlayHintsContainer inlayHints) {
+        var editor = editorRef.get();
+        if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager()) {
+            runOnUiThread(() -> editor.setInlayHints(inlayHints));
         }
     }
 

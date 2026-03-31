@@ -15,6 +15,7 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.lang.styling.Span
 import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.lang.styling.TextStyle
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
@@ -177,6 +178,12 @@ open class EmptyStyleReceiver : StyleReceiver {
     override fun setDiagnostics(
         sourceManager: AnalyzeManager,
         diagnostics: DiagnosticsContainer?
+    ) {
+    }
+
+    override fun setInlayHints(
+        sourceManager: AnalyzeManager,
+        inlayHints: InlayHintsContainer?
     ) {
     }
 

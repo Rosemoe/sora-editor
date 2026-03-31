@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 import io.github.rosemoe.sora.lang.brackets.BracketsProvider;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
 
 /**
  * A {@link StyleReceiver} receives spans and other styles from analyzers.
@@ -76,10 +77,16 @@ public interface StyleReceiver {
     }
 
     /**
-     * Specify new diagnostics. You can call it in any thread.
+     * Set new diagnostics. You can call it in any thread.
      * The implementation of this method should make sure that concurrent invocations to it are safe.
      */
     void setDiagnostics(@NonNull AnalyzeManager sourceManager, @Nullable DiagnosticsContainer diagnostics);
+
+    /**
+     * Set new inlay hints. You can call it in any thread.
+     * The implementation of this method should make sure that concurrent invocations to it are safe.
+     */
+    void setInlayHints(@NonNull AnalyzeManager sourceManager, @Nullable InlayHintsContainer inlayHints);
 
     /**
      * Set new provider for brackets highlighting
