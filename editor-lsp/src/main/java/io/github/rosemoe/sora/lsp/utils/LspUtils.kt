@@ -113,6 +113,10 @@ fun TextRange.asLspRange(): Range {
     return Range(this.start.asLspPosition(), this.end.asLspPosition())
 }
 
+fun Range.asTextRange(): TextRange {
+    return TextRange(this.start.asCharPosition(), this.end.asCharPosition())
+}
+
 fun LspEditor.createDidOpenTextDocumentParams(): DidOpenTextDocumentParams {
     val params = DidOpenTextDocumentParams()
     params.textDocument = TextDocumentItem(
