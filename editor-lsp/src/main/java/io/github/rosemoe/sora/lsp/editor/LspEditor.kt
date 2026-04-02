@@ -226,6 +226,7 @@ class LspEditor(
             if (capabilities.inlayHintProvider?.left != false || capabilities.inlayHintProvider?.right != null) {
                 requestInlayHint(CharPosition(0, 0))
             }
+            requestDocumentColor()
 
             status = LspEditorStatus.CONNECTED
         }.onFailure {
@@ -365,6 +366,9 @@ class LspEditor(
         uiDelegate.showDocumentColors(documentColors)
     }
 
+    fun getAllColorOccurrences(): List<ColorInformation> {
+        return uiDelegate.cachedDocumentColors ?: return emptyList()
+    }
 
     fun hitReTrigger(eventText: CharSequence): Boolean {
         for (trigger in signatureHelpReTriggers) {

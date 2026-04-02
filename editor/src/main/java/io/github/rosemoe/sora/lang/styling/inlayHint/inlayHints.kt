@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.lang.styling.inlayHint
 
 import io.github.rosemoe.sora.lang.styling.color.ResolvableColor
+import io.github.rosemoe.sora.text.TextRange
 
 /**
  * A simple text inlay hint
@@ -47,7 +48,8 @@ class TextInlayHint(
 class ColorInlayHint(
     line: Int,
     column: Int,
-    val color: ResolvableColor
+    val color: ResolvableColor,
+    val colorRange: TextRange? = null
 ) : InlayHint(line, column, TYPE_NAME) {
 
     companion object {
