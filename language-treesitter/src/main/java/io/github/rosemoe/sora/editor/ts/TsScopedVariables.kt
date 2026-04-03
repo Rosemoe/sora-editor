@@ -39,8 +39,35 @@ import java.util.Stack
  * @param tree The parsed tree
  * @param text The current text for tree
  * @param spec Language specification, which should the same as highlighter's
+ * @param cancellationToken Cancellation token for early cancellation.
+ * @throws AnalysisCanceledException when the operation is canceled
  */
-class TsScopedVariables(tree: TSTree, text: UTF16String, val spec: TsLanguageSpec) {
+class TsScopedVariables(
+    tree: TSTree,
+    text: UTF16String,
+    val spec: TsLanguageSpec,
+    cancellationToken: CancellationToken = CancellationToken.NoCancellation
+) {
+
+    /**
+     * Token for cancellation of operation
+     */
+    fun interface CancellationToken {
+
+        companion object {
+            /**
+             * Never cancel the operation
+             */
+            val NoCancellation = CancellationToken { false }
+        }
+
+        /**
+         * Check if the operation is now canceled.
+         */
+        fun isCanceled(): Boolean
+    }
+
+    class AnalysisCanceledException : RuntimeException()
 
     private val rootScope: Scope = Scope(0, tree.rootNode.endByte / 2)
 
@@ -50,7 +77,7 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, val spec: TsLanguageSpe
                 cursor.exec(spec.tsQuery, tree.rootNode)
                 var match = cursor.nextMatch()
                 val captures = mutableListOf<TSQueryCapture>()
-                while (match != null) {
+                while (match != null && !cancellationToken.isCanceled()) {
                     if (spec.queryPredicator.doPredicate(spec.predicates, text, match)) {
                         captures.addAll(match.captures)
                     }
@@ -61,6 +88,9 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, val spec: TsLanguageSpe
                 var lastAddedVariableNode: TSNode? = null
                 scopeStack.push(rootScope)
                 for (capture in captures) {
+                    if (cancellationToken.isCanceled()) {
+                        break
+                    }
                     val startIndex = capture.node.startByte / 2
                     val endIndex = capture.node.endByte / 2
                     while (startIndex >= scopeStack.peek().endIndex) {
@@ -98,6 +128,9 @@ class TsScopedVariables(tree: TSTree, text: UTF16String, val spec: TsLanguageSpe
                     }
                 }
             }
+        }
+        if (cancellationToken.isCanceled()) {
+            throw AnalysisCanceledException()
         }
     }
 

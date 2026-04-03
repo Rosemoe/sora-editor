@@ -171,29 +171,33 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         }
 
         fun updateStyles() {
-            val scopedVariables = TsScopedVariables(tree!!, localText, languageSpec)
-            if (thread == this && messageQueue.isEmpty()) {
-                val oldTree = (styles.spans as LineSpansGenerator?)?.safeTree
-                val newTree = SafeTsTree(tree!!.copy())
-                val newSpans = LineSpansGenerator(
-                    newTree,
-                    reference!!.lineCount,
-                    reference!!.reference,
-                    theme,
-                    languageSpec,
-                    scopedVariables,
-                    spanFactory
-                )
-                val oldBlocks = styles.blocks
-                updateCodeBlocks()
-                currentReceiver?.setStyles(this@TsAnalyzeManager, styles) {
-                    styles.spans = newSpans
-                    oldTree?.close()
+            runCatching {
+                TsScopedVariables(tree!!, localText, languageSpec) {
+                    messageQueue.isNotEmpty()
                 }
-                currentReceiver?.updateBracketProvider(
-                    this@TsAnalyzeManager,
-                    TsBracketPairs(newTree, languageSpec)
-                )
+            }.onSuccess { scopedVariables ->
+                if (thread == this && messageQueue.isEmpty()) {
+                    val oldTree = (styles.spans as LineSpansGenerator?)?.safeTree
+                    val newTree = SafeTsTree(tree!!.copy())
+                    val newSpans = LineSpansGenerator(
+                        newTree,
+                        reference!!.lineCount,
+                        reference!!.reference,
+                        theme,
+                        languageSpec,
+                        scopedVariables,
+                        spanFactory
+                    )
+                    updateCodeBlocks()
+                    currentReceiver?.setStyles(this@TsAnalyzeManager, styles) {
+                        styles.spans = newSpans
+                        oldTree?.close()
+                    }
+                    currentReceiver?.updateBracketProvider(
+                        this@TsAnalyzeManager,
+                        TsBracketPairs(newTree, languageSpec)
+                    )
+                }
             }
         }
 
