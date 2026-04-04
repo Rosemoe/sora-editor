@@ -30,6 +30,7 @@ import io.github.rosemoe.sora.lang.styling.inlayHint.ColorInlayHint
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.color.documentColor
 import io.github.rosemoe.sora.lsp.events.inlayhint.inlayHint
+import io.github.rosemoe.sora.lsp.utils.asTextRange
 import io.github.rosemoe.sora.text.CharPosition
 import org.eclipse.lsp4j.ColorInformation
 import org.eclipse.lsp4j.InlayHint
@@ -84,15 +85,17 @@ fun List<ColorInformation>.colorInfoToDisplay() = map {
     // Always show on start
     // May we should use style patch to set background?
     ColorInlayHint(
-        it.range.start.line, it.range.start.character,
-        ConstColor(
+        line = it.range.start.line,
+        column = it.range.start.character,
+        color = ConstColor(
             Color.argb(
                 it.color.alpha.toFloat(),
                 it.color.red.toFloat(),
                 it.color.green.toFloat(),
                 it.color.blue.toFloat()
             )
-        )
+        ),
+        colorRange = it.range.asTextRange()
     )
 }
 

@@ -49,7 +49,8 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
     private var codeActionWindowRef: WeakReference<CodeActionWindow?> = WeakReference(null as CodeActionWindow?)
 
     private var cachedInlayHints: List<InlayHint>? = null
-    private var cachedDocumentColors: List<ColorInformation>? = null
+    internal var cachedDocumentColors: List<ColorInformation>? = null
+        private set
 
     var isEnableHover = true
         set(value) {
