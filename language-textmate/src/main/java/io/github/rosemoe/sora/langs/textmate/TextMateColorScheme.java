@@ -56,6 +56,11 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
     public TextMateColorScheme(ThemeRegistry themeRegistry, ThemeModel themeModel) {
         this.themeRegistry = themeRegistry;
         currentTheme = themeModel;
+        try {
+            themeRegistry.loadTheme(currentTheme);
+        } catch (Exception e) {
+            //throw new RuntimeException(e);
+        }
         setTheme(themeModel);
     }
 
