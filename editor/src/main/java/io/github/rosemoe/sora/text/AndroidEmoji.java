@@ -15,11 +15,7 @@
  */
 package io.github.rosemoe.sora.text;
 
-import android.icu.lang.UCharacter;
-import android.icu.lang.UProperty;
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
+import io.github.rosemoe.sora.text.emoji.EmojiPropertyProvider;
 
 /**
  * Taken from {@link android.text.Emoji}
@@ -44,12 +40,10 @@ public class AndroidEmoji {
     /**
      * Returns true if the given code point is emoji modifier.
      */
-    @RequiresApi(api = Build.VERSION_CODES.P)
     public static boolean isEmojiModifier(int codePoint) {
-        return UCharacter.hasBinaryProperty(codePoint, UProperty.EMOJI_MODIFIER);
+        return EmojiPropertyProvider.get().isEmojiModifier(codePoint);
     }
 
-    //
 
     /**
      * Returns true if the given code point is emoji modifier base.
@@ -57,7 +51,6 @@ public class AndroidEmoji {
      * @param c codepoint to check
      * @return true if is emoji modifier base
      */
-    @RequiresApi(api = Build.VERSION_CODES.P)
     public static boolean isEmojiModifierBase(int c) {
         // These two characters were removed from Emoji_Modifier_Base in Emoji 4.0, but we need to
         // keep them as emoji modifier bases since there are fonts and user-generated text out there
@@ -67,15 +60,14 @@ public class AndroidEmoji {
         }
         // If Android's copy of ICU is behind, check for new codepoints here.
         // Consult log for implementation pattern.
-        return UCharacter.hasBinaryProperty(c, UProperty.EMOJI_MODIFIER_BASE);
+        return EmojiPropertyProvider.get().isEmojiModifierBase(c);
     }
 
     /**
      * Returns true if the character has Emoji property.
      */
-    @RequiresApi(api = Build.VERSION_CODES.P)
     public static boolean isEmoji(int codePoint) {
-        return UCharacter.hasBinaryProperty(codePoint, UProperty.EMOJI);
+        return EmojiPropertyProvider.get().isEmoji(codePoint);
     }
 
     // Returns true if the character can be a base character of COMBINING ENCLOSING KEYCAP.
@@ -90,6 +82,11 @@ public class AndroidEmoji {
      */
     public static boolean isTagSpecChar(int codePoint) {
         return 0xE0020 <= codePoint && codePoint <= 0xE007E;
+    }
+
+    // Returns true if the given code point is a variation selector.
+    public static boolean isVariationSelector(int codepoint) {
+        return EmojiPropertyProvider.get().isVariationSelector(codepoint);
     }
 
 }

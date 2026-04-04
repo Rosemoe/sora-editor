@@ -128,7 +128,6 @@ import io.github.rosemoe.sora.text.LineSeparator;
 import io.github.rosemoe.sora.text.TextLayoutHelper;
 import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.text.TextUtils;
-import io.github.rosemoe.sora.text.TextUtilsP;
 import io.github.rosemoe.sora.text.method.KeyMetaStates;
 import io.github.rosemoe.sora.util.Chars;
 import io.github.rosemoe.sora.util.ClipDataUtils;
@@ -1986,9 +1985,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
             // Do not put cursor inside combined characters
             int begin;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                begin = TextUtilsP.getOffsetForBackspaceKey(text.getLine(cur.getLeftLine()), col);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                begin = TextUtils.getOffsetForBackspaceKey(text.getLine(cur.getLeftLine()), col);
             } else {
+                // Devices under API 23 does not use the strategy above
                 begin = TextLayoutHelper.get().getCurPosLeft(col, text.getLine(cur.getLeftLine()));
             }
             int end = cur.getLeftColumn();
