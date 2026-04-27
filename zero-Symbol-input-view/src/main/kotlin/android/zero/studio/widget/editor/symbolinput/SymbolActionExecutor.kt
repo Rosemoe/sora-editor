@@ -3,8 +3,17 @@ package android.zero.studio.widget.editor.symbolinput
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.SelectionMovement
 
+/**
+ * SymbolActionExecutor 的核心实现。
+ *
+ * @author android_zero
+ * @github msmt2018/zero-Symbol-input-view
+ */
 object SymbolActionExecutor {
 
+    /**
+     * 执行 execute 方法。
+     */
     fun execute(editor: CodeEditor, actionId: Int, text: String?, onOpenManager: (() -> Unit)?) {
         if (!editor.isEditable && actionId in listOf(0, 3, 4, 7, 8, 9, 11, 29, 30, 32)) return
 
@@ -46,6 +55,9 @@ object SymbolActionExecutor {
         }
     }
 
+    /**
+     * 执行 insertTextWithMacro 方法。
+     */
     private fun insertTextWithMacro(editor: CodeEditor, text: String) {
         val selectedText = if (editor.cursor.isSelected) {
             val left = editor.cursor.left().index
@@ -81,6 +93,9 @@ object SymbolActionExecutor {
         }
     }
 
+    /**
+     * 执行 deleteLine 方法。
+     */
     private fun deleteLine(editor: CodeEditor) {
         val cursor = editor.cursor
         val line = cursor.leftLine
@@ -92,15 +107,24 @@ object SymbolActionExecutor {
         }
     }
 
+    /**
+     * 执行 clearLine 方法。
+     */
     private fun clearLine(editor: CodeEditor) {
         val line = editor.cursor.leftLine
         editor.text.delete(line, 0, line, editor.text.getColumnCount(line))
     }
 
+    /**
+     * 执行 cutLine 方法。
+     */
     private fun cutLine(editor: CodeEditor) {
         deleteLine(editor)
     }
 
+    /**
+     * 执行 duplicateLine 方法。
+     */
     private fun duplicateLine(editor: CodeEditor) {
         val line = editor.cursor.leftLine
         val content = editor.text.getLineString(line)
@@ -108,12 +132,18 @@ object SymbolActionExecutor {
         editor.text.insert(insertionLine, 0, content + "\n")
     }
 
+    /**
+     * 执行 replaceLine 方法。
+     */
     private fun replaceLine(editor: CodeEditor, replacement: String?) {
         val line = editor.cursor.leftLine
         editor.text.delete(line, 0, line, editor.text.getColumnCount(line))
         editor.text.insert(line, 0, replacement ?: "")
     }
 
+    /**
+     * 执行 toggleComment 方法。
+     */
     private fun toggleComment(editor: CodeEditor) {
         val textObj = editor.text
         val startLine = editor.cursor.leftLine
@@ -137,6 +167,9 @@ object SymbolActionExecutor {
         textObj.endBatchEdit()
     }
     
+    /**
+     * 执行 toUpperCase 方法。
+     */
     private fun toUpperCase(editor: CodeEditor) {
         if (editor.cursor.isSelected) {
             val leftIdx = editor.cursor.left().index
@@ -146,6 +179,9 @@ object SymbolActionExecutor {
         }
     }
 
+    /**
+     * 执行 toLowerCase 方法。
+     */
     private fun toLowerCase(editor: CodeEditor) {
         if (editor.cursor.isSelected) {
             val leftIdx = editor.cursor.left().index

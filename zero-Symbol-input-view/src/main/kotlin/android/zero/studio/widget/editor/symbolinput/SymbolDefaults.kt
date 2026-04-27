@@ -1,7 +1,16 @@
 package android.zero.studio.widget.editor.symbolinput
 
+/**
+ * SymbolDefaults 的核心实现。
+ *
+ * @author android_zero
+ * @github msmt2018/zero-Symbol-input-view
+ */
 object SymbolDefaults {
 
+    /**
+     * 执行 createFallbackGroups 方法。
+     */
     fun createFallbackGroups(): MutableList<SymbolGroup> {
         return mutableListOf(
             SymbolGroup(
@@ -15,8 +24,6 @@ object SymbolDefaults {
                     SymbolItem(0, ",", ","),
                     SymbolItem(0, "/", "/"),
                     SymbolItem(0, "//", "//"),
-                    SymbolItem(0, ":", ":"),
-                    SymbolItem(0, ";", ";"),
                     SymbolItem(0, ":", ":"),
                     SymbolItem(0, ";", ";"),
                     SymbolItem(21, "↓", null, 24, null),
@@ -52,6 +59,9 @@ object SymbolDefaults {
         )
     }
 
+    /**
+     * 执行 deepCopy 方法。
+     */
     fun deepCopy(groups: List<SymbolGroup>): MutableList<SymbolGroup> {
         return groups.map { group ->
             SymbolGroup(

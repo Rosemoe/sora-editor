@@ -4,6 +4,12 @@ import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
+/**
+ * SymbolDataManager 的核心实现。
+ *
+ * @author android_zero
+ * @github msmt2018/zero-Symbol-input-view
+ */
 object SymbolDataManager {
     private const val PREFS_NAME = "advanced_symbol_prefs"
     private const val KEY_DATA = "symbol_json_data"
@@ -53,6 +59,9 @@ object SymbolDataManager {
         prefs.edit().putString(KEY_DATA, gson.toJson(data)).apply()
     }
 
+    /**
+     * 执行 getUiSettings 方法。
+     */
     fun getUiSettings(context: Context): SymbolUiSettings {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return SymbolUiSettings(
@@ -68,6 +77,9 @@ object SymbolDataManager {
         )
     }
 
+    /**
+     * 执行 saveUiSettings 方法。
+     */
     fun saveUiSettings(context: Context, settings: SymbolUiSettings) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit()
@@ -83,27 +95,42 @@ object SymbolDataManager {
             .apply()
     }
 
+    /**
+     * 执行 setLastExpanded 方法。
+     */
     fun setLastExpanded(context: Context, expanded: Boolean) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putBoolean(KEY_LAST_EXPANDED, expanded).apply()
     }
 
+    /**
+     * 执行 getLastExpanded 方法。
+     */
     fun getLastExpanded(context: Context): Boolean {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getBoolean(KEY_LAST_EXPANDED, false)
     }
 
+    /**
+     * 执行 setLastPageIndex 方法。
+     */
     fun setLastPageIndex(context: Context, index: Int) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putInt(KEY_LAST_PAGE_INDEX, index.coerceAtLeast(0)).apply()
     }
 
+    /**
+     * 执行 getLastPageIndex 方法。
+     */
     fun getLastPageIndex(context: Context): Int {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getInt(KEY_LAST_PAGE_INDEX, 0).coerceAtLeast(0)
     }
 
 
+    /**
+     * 执行 shouldTriggerUiRefresh 方法。
+     */
     fun shouldTriggerUiRefresh(key: String?): Boolean {
         if (key.isNullOrEmpty()) return false
         return key in setOf(

@@ -43,6 +43,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * SymbolManagerActivity 的核心实现。
+ *
+ * @author android_zero
+ * @github msmt2018/zero-Symbol-input-view
+ */
 class SymbolManagerActivity : AppCompatActivity() {
 
     private lateinit var tabLayout: TabLayout
@@ -67,6 +73,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         uri?.let(::showExportNameDialog)
     }
 
+    /**
+     * 执行 onCreate 方法。
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, true)
@@ -109,6 +118,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         applyIndicatorStyle()
         bindGroupTabLongPressMenus()
         viewPager.addOnPageChangeListener(object : ViewPager.SimpleOnPageChangeListener() {
+            /**
+             * 执行 onPageSelected 方法。
+             */
             override fun onPageSelected(position: Int) {
                 if (isBatchMode && (position != batchGroupIndex || isSettingsPosition(position))) {
                     exitBatchMode()
@@ -117,6 +129,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         })
     }
 
+    /**
+     * 执行 bindGroupTabLongPressMenus 方法。
+     */
     private fun bindGroupTabLongPressMenus() {
         tabLayout.post {
             for (i in 0 until tabLayout.tabCount) {
@@ -133,6 +148,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 执行 showGroupTabMenu 方法。
+     */
     private fun showGroupTabMenu(anchor: View, groupIndex: Int) {
         PopupMenu(this, anchor).apply {
             menuInflater.inflate(R.menu.menu_symbol_group_tab_actions, menu)
@@ -151,6 +169,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 执行 moveGroup 方法。
+     */
     private fun moveGroup(groupIndex: Int, delta: Int) {
         val target = (groupIndex + delta).coerceIn(0, symbolGroups.lastIndex)
         if (target == groupIndex) return
@@ -160,6 +181,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         onGroupsChanged(targetGroupIndex = target)
     }
 
+    /**
+     * 执行 copyGroupToAnother 方法。
+     */
     private fun copyGroupToAnother(sourceIndex: Int) {
         val source = symbolGroups.getOrNull(sourceIndex) ?: return
         showTargetGroupDialog(getString(R.string.tab_action_copy_to)) { targetIndex ->
@@ -173,6 +197,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 执行 renameGroup 方法。
+     */
     private fun renameGroup(groupIndex: Int) {
         val group = symbolGroups.getOrNull(groupIndex) ?: return
         val editText = EditText(this).apply {
@@ -194,6 +221,9 @@ class SymbolManagerActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * 执行 deleteGroup 方法。
+     */
     private fun deleteGroup(groupIndex: Int) {
         if (groupIndex !in symbolGroups.indices) return
         MaterialAlertDialogBuilder(this)
@@ -207,6 +237,9 @@ class SymbolManagerActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * 执行 setupBatchActionBar 方法。
+     */
     private fun setupBatchActionBar() {
         findViewById<View>(R.id.action_batch_copy).setOnClickListener { performBatchCopyOrCut(isCut = false) }
         findViewById<View>(R.id.action_batch_cut).setOnClickListener { performBatchCopyOrCut(isCut = true) }
@@ -215,11 +248,17 @@ class SymbolManagerActivity : AppCompatActivity() {
         findViewById<View>(R.id.action_batch_close).setOnClickListener { exitBatchMode() }
     }
 
+    /**
+     * 执行 onCreateOptionsMenu 方法。
+     */
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_symbol_manager, menu)
         return true
     }
 
+    /**
+     * 执行 onOptionsItemSelected 方法。
+     */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_add -> {
@@ -256,6 +295,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    /**
+     * 执行 showAddGroupDialog 方法。
+     */
     private fun showAddGroupDialog(onCreated: ((Int) -> Unit)? = null) {
         val editText = EditText(this).apply {
             hint = getString(R.string.group_name)
@@ -280,6 +322,9 @@ class SymbolManagerActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * 执行 exportToClipboard 方法。
+     */
     private fun exportToClipboard() {
         val jsonStr = SymbolDataManager.gson.toJson(symbolGroups)
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -287,6 +332,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         Toast.makeText(this, R.string.toast_success, Toast.LENGTH_SHORT).show()
     }
 
+    /**
+     * 执行 importFromClipboard 方法。
+     */
     private fun importFromClipboard() {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val text = clipboard.primaryClip?.getItemAt(0)?.text?.toString()
@@ -305,6 +353,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 执行 importFromUri 方法。
+     */
     private fun importFromUri(uri: Uri) {
         try {
             val text = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
@@ -324,6 +375,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 执行 showExportNameDialog 方法。
+     */
     private fun showExportNameDialog(treeUri: Uri) {
         val defaultName = "symbol-config-${
             SimpleDateFormat("yyyyMMdd-HHmmss", Locale.getDefault()).format(Date())
@@ -348,6 +402,9 @@ class SymbolManagerActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * 执行 exportToDirectoryUri 方法。
+     */
     private fun exportToDirectoryUri(treeUri: Uri, fileName: String) {
         try {
             val treeDocumentId = DocumentsContract.getTreeDocumentId(treeUri)
@@ -371,6 +428,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 执行 showEditDialog 方法。
+     */
     private fun showEditDialog(group: SymbolGroup, itemToEdit: SymbolItem?) {
         showSymbolDialog(
             title = if (itemToEdit == null) getString(R.string.dialog_title_add_symbol) else getString(R.string.dialog_title_edit_symbol),
@@ -399,6 +459,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * 执行 showCopyDialog 方法。
+     */
     private fun showCopyDialog(group: SymbolGroup, sourceItem: SymbolItem) {
         showSymbolDialog(
             title = getString(R.string.menu_item_copy),
@@ -418,6 +481,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * 执行 showSymbolDialog 方法。
+     */
     private fun showSymbolDialog(
         title: String,
         initialItem: SymbolItem?,
@@ -479,6 +545,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         builder.show()
     }
 
+    /**
+     * 执行 showItemMenu 方法。
+     */
     private fun showItemMenu(anchor: View, group: SymbolGroup, item: SymbolItem) {
         PopupMenu(this, anchor).apply {
             menuInflater.inflate(R.menu.menu_symbol_item_actions, menu)
@@ -495,6 +564,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 执行 confirmDeleteSingle 方法。
+     */
     private fun confirmDeleteSingle(group: SymbolGroup, item: SymbolItem) {
         MaterialAlertDialogBuilder(this)
             .setMessage(R.string.dialog_confirm_delete_symbol)
@@ -511,6 +583,9 @@ class SymbolManagerActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * 执行 enterBatchMode 方法。
+     */
     private fun enterBatchMode(groupIndex: Int, seedItem: SymbolItem) {
         isBatchMode = true
         batchGroupIndex = groupIndex
@@ -521,6 +596,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         pagerAdapter.notifyDataSetChanged()
     }
 
+    /**
+     * 执行 exitBatchMode 方法。
+     */
     private fun exitBatchMode() {
         isBatchMode = false
         batchGroupIndex = -1
@@ -530,6 +608,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         pagerAdapter.notifyDataSetChanged()
     }
 
+    /**
+     * 执行 toggleSelected 方法。
+     */
     private fun toggleSelected(item: SymbolItem) {
         if (!selectedItems.add(item)) {
             selectedItems.remove(item)
@@ -541,6 +622,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         pagerAdapter.notifyDataSetChanged()
     }
 
+    /**
+     * 执行 invertBatchSelection 方法。
+     */
     private fun invertBatchSelection() {
         if (!isBatchMode || batchGroupIndex !in symbolGroups.indices) return
         val group = symbolGroups[batchGroupIndex]
@@ -555,6 +639,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         pagerAdapter.notifyDataSetChanged()
     }
 
+    /**
+     * 执行 confirmDeleteSelected 方法。
+     */
     private fun confirmDeleteSelected() {
         if (selectedItems.isEmpty()) {
             Toast.makeText(this, R.string.toast_no_selection, Toast.LENGTH_SHORT).show()
@@ -575,6 +662,9 @@ class SymbolManagerActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * 执行 performBatchCopyOrCut 方法。
+     */
     private fun performBatchCopyOrCut(isCut: Boolean) {
         if (selectedItems.isEmpty()) {
             Toast.makeText(this, R.string.toast_no_selection, Toast.LENGTH_SHORT).show()
@@ -612,11 +702,17 @@ class SymbolManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 执行 showTargetGroupDialog 方法。
+     */
     private fun showTargetGroupDialog(title: String, onTargetSelected: (Int) -> Unit) {
         if (symbolGroups.isEmpty()) return
 
         var selectedIndex = viewPager.currentItem.coerceIn(0, symbolGroups.lastIndex)
 
+        /**
+         * 执行 showChooser 方法。
+         */
         fun showChooser() {
             val names = symbolGroups.map { it.name }.toTypedArray()
             MaterialAlertDialogBuilder(this)
@@ -640,8 +736,14 @@ class SymbolManagerActivity : AppCompatActivity() {
         showChooser()
     }
 
+    /**
+     * 执行 isSettingsPosition 方法。
+     */
     private fun isSettingsPosition(position: Int): Boolean = position == symbolGroups.size
 
+    /**
+     * 执行 applyIndicatorStyle 方法。
+     */
     private fun applyIndicatorStyle() {
         val accent = resolveThemeColor(android.R.attr.colorAccent, Color.GRAY)
         tabLayout.tabMode = TabLayout.MODE_SCROLLABLE
@@ -655,16 +757,31 @@ class SymbolManagerActivity : AppCompatActivity() {
         tabLayout.elevation = 6f * resources.displayMetrics.density
     }
 
+    /**
+     * 执行 ensureDotTabSelectionListener 方法。
+     */
     private fun ensureDotTabSelectionListener() {
         if (dotTabListenerAttached) return
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            /**
+             * 执行 onTabSelected 方法。
+             */
             override fun onTabSelected(tab: TabLayout.Tab) = updateDotTabState(tab, true)
+            /**
+             * 执行 onTabUnselected 方法。
+             */
             override fun onTabUnselected(tab: TabLayout.Tab) = updateDotTabState(tab, false)
+            /**
+             * 执行 onTabReselected 方法。
+             */
             override fun onTabReselected(tab: TabLayout.Tab) = Unit
         })
         dotTabListenerAttached = true
     }
 
+    /**
+     * 执行 applyTabItemPresentation 方法。
+     */
     private fun applyTabItemPresentation(simpleDots: Boolean) {
         for (index in 0 until tabLayout.tabCount) {
             val tab = tabLayout.getTabAt(index) ?: continue
@@ -680,6 +797,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 执行 createDotTabView 方法。
+     */
     private fun createDotTabView(): View {
         val dot = View(this)
         dot.layoutParams = LinearLayout.LayoutParams(dp(8), dp(8)).apply {
@@ -691,6 +811,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         return dot
     }
 
+    /**
+     * 执行 updateDotTabState 方法。
+     */
     private fun updateDotTabState(tab: TabLayout.Tab, selected: Boolean) {
         if (SymbolDataManager.getUiSettings(this).indicatorStyle != 1) return
         val dot = tab.customView ?: return
@@ -704,8 +827,14 @@ class SymbolManagerActivity : AppCompatActivity() {
         dot.setBackgroundResource(if (selected) R.drawable.bg_page_indicator_capsule else R.drawable.bg_page_indicator_dot)
     }
 
+    /**
+     * 执行 dp 方法。
+     */
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
+    /**
+     * 执行 createSettingsPage 方法。
+     */
     private fun createSettingsPage(container: ViewGroup): View {
         val scrollView = NestedScrollView(this).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -717,6 +846,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         }
         scrollView.addView(content)
 
+        /**
+         * 执行 createEntry 方法。
+         */
         fun createEntry(title: String, subtitle: String): View {
             val item = LayoutInflater.from(this).inflate(R.layout.item_symbol_manage, content, false)
             val tvTitle = item.findViewById<TextView>(R.id.tv_title)
@@ -788,6 +920,9 @@ class SymbolManagerActivity : AppCompatActivity() {
         return scrollView
     }
 
+    /**
+     * 执行 showLineSettingDialog 方法。
+     */
     private fun showLineSettingDialog() {
         val settings = SymbolDataManager.getUiSettings(this)
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_line_settings, null)
@@ -812,6 +947,9 @@ class SymbolManagerActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * 执行 setupStatusBar 方法。
+     */
     private fun setupStatusBar() {
         val surface = resolveThemeColor(android.R.attr.colorBackground, Color.WHITE)
         window.statusBarColor = surface
@@ -820,12 +958,18 @@ class SymbolManagerActivity : AppCompatActivity() {
         controller.isAppearanceLightStatusBars = isLightSurface
     }
 
+    /**
+     * 执行 resolveThemeColor 方法。
+     */
     private fun resolveThemeColor(attr: Int, fallback: Int): Int {
         val value = TypedValue()
         if (!theme.resolveAttribute(attr, value, true)) return fallback
         return if (value.resourceId != 0) getColor(value.resourceId) else value.data
     }
 
+    /**
+     * 执行 showTextSizeDialog 方法。
+     */
     private fun showTextSizeDialog() {
         val settings = SymbolDataManager.getUiSettings(this)
         val editText = EditText(this).apply {
@@ -844,6 +988,9 @@ class SymbolManagerActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * 执行 onGroupsChanged 方法。
+     */
     private fun onGroupsChanged(targetGroupIndex: Int? = null) {
         pagerAdapter.notifyDataSetChanged()
         tabLayout.post {
@@ -857,14 +1004,26 @@ class SymbolManagerActivity : AppCompatActivity() {
     }
 
     private inner class GroupPagerAdapter : PagerAdapter() {
+        /**
+         * 执行 getCount 方法。
+         */
         override fun getCount(): Int = symbolGroups.size + 1
 
+        /**
+         * 执行 isViewFromObject 方法。
+         */
         override fun isViewFromObject(view: View, `object`: Any): Boolean = view === `object`
 
+        /**
+         * 执行 getPageTitle 方法。
+         */
         override fun getPageTitle(position: Int): CharSequence {
             return if (isSettingsPosition(position)) settingsTabTitle else symbolGroups[position].name
         }
 
+        /**
+         * 执行 instantiateItem 方法。
+         */
         override fun instantiateItem(container: ViewGroup, position: Int): Any {
             if (isSettingsPosition(position)) {
                 return createSettingsPage(container).also { container.addView(it) }
@@ -881,6 +1040,9 @@ class SymbolManagerActivity : AppCompatActivity() {
                 ItemTouchHelper.UP or ItemTouchHelper.DOWN,
                 0
             ) {
+                /**
+                 * 执行 onMove 方法。
+                 */
                 override fun onMove(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder,
@@ -900,10 +1062,16 @@ class SymbolManagerActivity : AppCompatActivity() {
                     return true
                 }
 
+                /**
+                 * 执行 onSwiped 方法。
+                 */
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                     // no-op
                 }
 
+                /**
+                 * 执行 isLongPressDragEnabled 方法。
+                 */
                 override fun isLongPressDragEnabled(): Boolean = false
             }
             val touchHelper = ItemTouchHelper(callback)
@@ -914,10 +1082,16 @@ class SymbolManagerActivity : AppCompatActivity() {
             return rv
         }
 
+        /**
+         * 执行 destroyItem 方法。
+         */
         override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
             container.removeView(`object` as View)
         }
 
+        /**
+         * 执行 getItemPosition 方法。
+         */
         override fun getItemPosition(`object`: Any): Int = POSITION_NONE
     }
 
@@ -928,6 +1102,9 @@ class SymbolManagerActivity : AppCompatActivity() {
 
         private var touchHelper: ItemTouchHelper? = null
 
+        /**
+         * 执行 attachTouchHelper 方法。
+         */
         fun attachTouchHelper(helper: ItemTouchHelper) {
             touchHelper = helper
         }
@@ -938,11 +1115,17 @@ class SymbolManagerActivity : AppCompatActivity() {
             val dragHandle: View = view.findViewById(R.id.iv_drag_handle)
         }
 
+        /**
+         * 执行 onCreateViewHolder 方法。
+         */
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
             val view = LayoutInflater.from(this@SymbolManagerActivity).inflate(R.layout.item_symbol_manage, parent, false)
             return ItemViewHolder(view)
         }
 
+        /**
+         * 执行 onBindViewHolder 方法。
+         */
         override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
             val item = group.items[position]
             holder.tvTitle.text = item.display
@@ -989,6 +1172,9 @@ class SymbolManagerActivity : AppCompatActivity() {
             }
         }
 
+        /**
+         * 执行 getItemCount 方法。
+         */
         override fun getItemCount() = group.items.size
     }
 }

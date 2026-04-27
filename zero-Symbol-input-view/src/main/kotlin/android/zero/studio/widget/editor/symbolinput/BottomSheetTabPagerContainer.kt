@@ -10,6 +10,12 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
+/**
+ * BottomSheetTabPagerContainer 的核心实现。
+ *
+ * @author android_zero
+ * @github msmt2018/zero-Symbol-input-view
+ */
 abstract class BottomSheetTabPagerContainer @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
@@ -68,6 +74,9 @@ abstract class BottomSheetTabPagerContainer @JvmOverloads constructor(
         }
 
         val sheetCallback = object : BottomSheetBehavior.BottomSheetCallback() {
+            /**
+             * 执行 onStateChanged 方法。
+             */
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 when (newState) {
                     BottomSheetBehavior.STATE_COLLAPSED -> setExpansionFraction(0f)
@@ -78,6 +87,9 @@ abstract class BottomSheetTabPagerContainer @JvmOverloads constructor(
                 }
             }
 
+            /**
+             * 执行 onSlide 方法。
+             */
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 setExpansionFraction(slideOffset.coerceIn(0f, 1f))
             }
@@ -86,6 +98,9 @@ abstract class BottomSheetTabPagerContainer @JvmOverloads constructor(
         registeredBottomSheetCallback = sheetCallback
     }
 
+    /**
+     * 执行 onHostResume 方法。
+     */
     fun onHostResume() {
         bottomSheetBehavior?.state = BottomSheetBehavior.STATE_COLLAPSED
     }
@@ -104,6 +119,9 @@ abstract class BottomSheetTabPagerContainer @JvmOverloads constructor(
         }.apply { attach() }
     }
 
+    /**
+     * 执行 detachTabMediatorSafely 方法。
+     */
     private fun detachTabMediatorSafely() {
         val mediator = tabMediator ?: return
         try {
@@ -112,6 +130,9 @@ abstract class BottomSheetTabPagerContainer @JvmOverloads constructor(
         tabMediator = null
     }
 
+    /**
+     * 执行 onDetachedFromWindow 方法。
+     */
     override fun onDetachedFromWindow() {
         detachTabMediatorSafely()
         bottomSheetBehavior?.let { behavior ->

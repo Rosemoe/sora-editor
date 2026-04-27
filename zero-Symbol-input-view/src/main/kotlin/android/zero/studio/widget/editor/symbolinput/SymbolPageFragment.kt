@@ -13,12 +13,21 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.roundToInt
 
+/**
+ * SymbolPageFragment 的核心实现。
+ *
+ * @author android_zero
+ * @github msmt2018/zero-Symbol-input-view
+ */
 class SymbolPageFragment : Fragment() {
 
     companion object {
         private const val ARG_GROUP_INDEX = "arg_group_index"
         private const val ARG_VIEW_ID = "arg_view_id"
 
+        /**
+         * 执行 newInstance 方法。
+         */
         fun newInstance(groupIndex: Int, viewId: Int): SymbolPageFragment {
             val fragment = SymbolPageFragment()
             val args = Bundle()
@@ -32,11 +41,17 @@ class SymbolPageFragment : Fragment() {
     private var groupIndex: Int = 0
     private lateinit var viewModel: SymbolInputViewModel
 
+    /**
+     * 执行 onCreate 方法。
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         groupIndex = arguments?.getInt(ARG_GROUP_INDEX) ?: 0
     }
 
+    /**
+     * 执行 onCreateView 方法。
+     */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -74,6 +89,9 @@ class SymbolPageFragment : Fragment() {
 
         inner class SymbolViewHolder(val tv: TextView) : RecyclerView.ViewHolder(tv)
 
+        /**
+         * 执行 onCreateViewHolder 方法。
+         */
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SymbolViewHolder {
             val tv = TextView(parent.context).apply {
                 layoutParams = GridLayoutManager.LayoutParams(
@@ -97,6 +115,9 @@ class SymbolPageFragment : Fragment() {
             return SymbolViewHolder(tv)
         }
 
+        /**
+         * 执行 onBindViewHolder 方法。
+         */
         override fun onBindViewHolder(holder: SymbolViewHolder, position: Int) {
             val item = items[position]
             holder.tv.text = item.display
@@ -119,6 +140,9 @@ class SymbolPageFragment : Fragment() {
             }
         }
 
+        /**
+         * 执行 getItemCount 方法。
+         */
         override fun getItemCount(): Int = items.size
     }
 }
