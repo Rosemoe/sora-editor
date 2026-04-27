@@ -49,9 +49,6 @@ jobs:
         id: build
         run: ./gradlew assembleDebug
 
-      - name: Publish snapshot
-        if: ${{ always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.build.outcome == 'success' }}
-
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
