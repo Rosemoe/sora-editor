@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/action_tab_move_left" android:title="@string/tab_action_move_left" />
+    <item android:id="@+id/action_tab_move_right" android:title="@string/tab_action_move_right" />
+    <item android:id="@+id/action_tab_add" android:title="@string/tab_action_add" />
+    <item android:id="@+id/action_tab_copy_to" android:title="@string/tab_action_copy_to" />
+    <item android:id="@+id/action_tab_rename" android:title="@string/tab_action_rename" />
+    <item android:id="@+id/action_tab_delete" android:title="@string/tab_action_delete" />
+</menu>
