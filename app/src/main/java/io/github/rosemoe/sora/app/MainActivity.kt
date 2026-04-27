@@ -27,6 +27,7 @@ import android.content.DialogInterface
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -116,6 +117,8 @@ import kotlinx.coroutines.withContext
 import org.eclipse.tm4e.core.registry.IGrammarSource
 import org.eclipse.tm4e.core.registry.IThemeSource
 import java.util.regex.PatternSyntaxException
+import android.zero.studio.widget.editor.symbolinput.*
+
 
 /**
  * Demo and debug Activity for the code editor
@@ -183,10 +186,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Configure symbol input view
-        val inputView = binding.symbolInput
-        inputView.bindEditor(binding.editor)
-        inputView.addSymbols(SYMBOLS, SYMBOL_INSERT_TEXT)
-        inputView.forEachButton { it.typeface = typeface }
+        // val inputView = binding.symbolInput
+        // inputView.bindEditor(binding.editor)
+        // inputView.addSymbols(SYMBOLS, SYMBOL_INSERT_TEXT)
+        // inputView.forEachButton { it.typeface = typeface }
+        val symbolInputView = findViewById<AdvancedSymbolInputView>(R.id.advanced_symbol_input)
+        symbolInputView.bindEditor(binding.editor)
+
+        // 设置点击 “...” (动作22) 的监听器，跳转到管理界面
+        symbolInputView.onOpenManagerListener = {
+            startActivity(Intent(this, SymbolManagerActivity::class.java))
+        }
+        
 
         // Commit search when text changed
         binding.searchEditor.addTextChangedListener(object : TextWatcher {
@@ -1172,6 +1183,14 @@ class MainActivity : AppCompatActivity() {
 
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        findViewById<AdvancedSymbolInputView>(R.id.advanced_symbol_input)?.apply {
+            refreshData()
+            onHostResume()
         }
     }
 
