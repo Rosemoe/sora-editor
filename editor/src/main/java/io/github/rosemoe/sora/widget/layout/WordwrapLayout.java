@@ -44,6 +44,7 @@ import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * Wordwrap layout for editor
@@ -74,7 +75,7 @@ public class WordwrapLayout extends AbstractLayout {
     private final boolean supportRtlRow;
     private List<RowRegion> rowTable;
 
-    public WordwrapLayout(@NonNull CodeEditor editor, @NonNull Content text, boolean antiWordBreaking, boolean supportRtlRow, @Nullable WordwrapLayout oldLayout, boolean clearCache) {
+    public WordwrapLayout(@NonNull CodeEditorDelegate editor, @NonNull Content text, boolean antiWordBreaking, boolean supportRtlRow, @Nullable WordwrapLayout oldLayout, boolean clearCache) {
         super(editor, text);
         this.antiWordBreaking = antiWordBreaking;
         this.supportRtlRow = supportRtlRow;

@@ -46,6 +46,7 @@ import io.github.dingyi222666.monarch.languages.JavaLanguage
 import io.github.dingyi222666.monarch.languages.KotlinLanguage
 import io.github.dingyi222666.monarch.languages.PythonLanguage
 import io.github.dingyi222666.monarch.languages.TypescriptLanguage
+import io.github.rosemoe.sora.app.compose.ComposeEditorActivity
 import io.github.rosemoe.sora.app.databinding.ActivityMainBinding
 import io.github.rosemoe.sora.app.lsp.LspTestActivity
 import io.github.rosemoe.sora.app.lsp.LspTestJavaActivity
@@ -692,6 +693,14 @@ class MainActivity : AppCompatActivity() {
         val editor = binding.editor
         when (id) {
             R.id.open_test_activity -> startActivity<TestActivity>()
+            R.id.open_compose_activity -> {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                    toast("Not Supported")
+                } else {
+                    startActivity<ComposeEditorActivity>()
+                }
+            }
+
             R.id.open_paged_edit -> startActivity<PagedEditActivity>()
             R.id.open_lsp_activity -> {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {

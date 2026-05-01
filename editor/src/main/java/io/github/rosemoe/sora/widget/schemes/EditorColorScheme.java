@@ -36,6 +36,7 @@ import java.util.Objects;
 
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * This class manages the colors of editor.
@@ -197,7 +198,7 @@ public class EditorColorScheme {
     /**
      * Host editor object
      */
-    private final List<WeakReference<CodeEditor>> editors;
+    private final List<WeakReference<CodeEditorDelegate>> editors;
 
     private final boolean dark;
 
@@ -213,7 +214,7 @@ public class EditorColorScheme {
      *
      * @param editor Host editor
      */
-    public EditorColorScheme(CodeEditor editor) {
+    public EditorColorScheme(CodeEditorDelegate editor) {
         this();
         attachEditor(editor);
     }
@@ -243,7 +244,7 @@ public class EditorColorScheme {
      * Called by editor
      */
     @UnsupportedUserUsage
-    public void attachEditor(@NonNull CodeEditor editor) {
+    public void attachEditor(@NonNull CodeEditorDelegate editor) {
         Objects.requireNonNull(editor);
         for (var ref : editors) {
             if (ref.get() == editor) {
@@ -258,7 +259,7 @@ public class EditorColorScheme {
      * Unsubscribe changes
      */
     @UnsupportedUserUsage
-    public void detachEditor(@NonNull CodeEditor editor) {
+    public void detachEditor(@NonNull CodeEditorDelegate editor) {
         var itr = editors.iterator();
         while (itr.hasNext()) {
             if (itr.next().get() == editor) {

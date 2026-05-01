@@ -54,13 +54,16 @@ import io.github.rosemoe.sora.text.method.KeyMetaStates;
 public class EditorKeyEventHandler {
 
     private static final String TAG = "EditorKeyEventHandler";
-    private final CodeEditor editor;
+    private final CodeEditorDelegate editor;
+    private final CodeEditorHost host;
     private final KeyMetaStates keyMetaStates;
 
-    EditorKeyEventHandler(CodeEditor editor) {
-        Objects.requireNonNull(editor, "Cannot setup KeyEvent with null editor instance.");
+    EditorKeyEventHandler(CodeEditorDelegate editor, CodeEditorHost host) {
+        Objects.requireNonNull(editor, "Cannot setup KeyEvent with null editor delegate.");
+        Objects.requireNonNull(host, "Cannot setup KeyEvent with null editor host.");
         this.editor = editor;
-        this.keyMetaStates = new KeyMetaStates(editor);
+        this.host = host;
+        this.keyMetaStates = new KeyMetaStates();
     }
 
     /**
@@ -153,7 +156,7 @@ public class EditorKeyEventHandler {
             return editorKeyEvent.result(result);
         }
 
-        return editorKeyEvent.result(editor.onSuperKeyDown(keyCode, event));
+        return editorKeyEvent.result(host.onSuperKeyDown(keyCode, event));
     }
 
     private Boolean handleKeyEvent(KeyEvent event,
@@ -401,7 +404,7 @@ public class EditorKeyEventHandler {
         if (charCode != 0 && editor.isEditable()) {
             if (charCode == KeyCharacterMap.HEX_INPUT || charCode == KeyCharacterMap.PICKER_DIALOG_INPUT) {
                 // unsupported: character picker dialog and hex input
-                return editor.onSuperKeyDown(keyCode, event);
+                return host.onSuperKeyDown(keyCode, event);
             }
             // #547 Dead Keys
             boolean dead = false;
@@ -436,7 +439,7 @@ public class EditorKeyEventHandler {
             editor.notifyIMEExternalCursorChange();
             return true;
         } else {
-            return editor.onSuperKeyDown(keyCode, event);
+            return host.onSuperKeyDown(keyCode, event);
         }
     }
 
@@ -583,7 +586,7 @@ public class EditorKeyEventHandler {
         return editorKeyEvent.result(true);
     }
 
-    private boolean startNewLine(CodeEditor editor, Cursor editorCursor, Content
+    private boolean startNewLine(CodeEditorDelegate editor, Cursor editorCursor, Content
             editorText, EditorKeyEvent e, KeyBindingEvent keybindingEvent) {
         final var line = editorCursor.right().line;
         editor.setSelection(line, editorText.getColumnCount(line));
@@ -622,7 +625,7 @@ public class EditorKeyEventHandler {
             }
         }
 
-        return e.result(this.editor.onSuperKeyUp(keyCode, event));
+        return e.result(host.onSuperKeyUp(keyCode, event));
     }
 
     /**
@@ -640,6 +643,6 @@ public class EditorKeyEventHandler {
             return e.result(false);
         }
 
-        return e.result(this.editor.onSuperKeyMultiple(keyCode, repeatCount, event));
+        return e.result(host.onSuperKeyMultiple(keyCode, repeatCount, event));
     }
 }

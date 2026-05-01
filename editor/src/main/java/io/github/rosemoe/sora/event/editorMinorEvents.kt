@@ -29,22 +29,22 @@ import android.view.ContextMenu
 import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import io.github.rosemoe.sora.lang.Language
-import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.styling.Span
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.TextRange
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
 
 /**
  * Editor [Language] changed
  */
-class EditorLanguageChangeEvent(editor: CodeEditor, val newLanguage: Language) : Event(editor)
+class EditorLanguageChangeEvent(editor: CodeEditorDelegate, val newLanguage: Language) : Event(editor)
 
 /**
  * This event is triggered after format result is available and is applied to the editor
  */
-class EditorFormatEvent(editor: CodeEditor, val isSuccess: Boolean) : Event(editor)
+class EditorFormatEvent(editor: CodeEditorDelegate, val isSuccess: Boolean) : Event(editor)
 
 /**
  * Called when the editor is going to be released. That's when [CodeEditor.release] is
@@ -55,7 +55,7 @@ class EditorFormatEvent(editor: CodeEditor, val isSuccess: Boolean) : Event(edit
  *
  *  @author Rosemoe
  */
-class EditorReleaseEvent(editor: CodeEditor) : Event(editor)
+class EditorReleaseEvent(editorDelegate: CodeEditorDelegate, val editor: CodeEditor) : Event(editorDelegate)
 
 /**
  * Event for ime private command execution. When [android.view.inputmethod.InputConnection.performPrivateCommand]
@@ -66,7 +66,7 @@ class EditorReleaseEvent(editor: CodeEditor) : Event(editor)
  * @see android.view.inputmethod.InputConnection.performPrivateCommand
  * @author Rosemoe
  */
-class ImePrivateCommandEvent(editor: CodeEditor, val action: String, val data: Bundle?) :
+class ImePrivateCommandEvent(editor: CodeEditorDelegate, val action: String, val data: Bundle?) :
     Event(editor)
 
 /**
@@ -78,24 +78,24 @@ class ImePrivateCommandEvent(editor: CodeEditor, val action: String, val data: B
  *
  * @author Rosemoe
  */
-class BuildEditorInfoEvent(editor: CodeEditor, val editorInfo: EditorInfo) : Event(editor)
+class BuildEditorInfoEvent(editor: CodeEditorDelegate, val editorInfo: EditorInfo) : Event(editor)
 
 /**
  * Triggered when focus state is changed
  */
-class EditorFocusChangeEvent(editor: CodeEditor, val isGainFocus: Boolean) : Event(editor)
+class EditorFocusChangeEvent(editor: CodeEditorDelegate, val isGainFocus: Boolean) : Event(editor)
 
 /**
  * Trigger when the editor is attached to window/detached from window
  */
-class EditorAttachStateChangeEvent(editor: CodeEditor, val isAttachedToWindow: Boolean) :
+class EditorAttachStateChangeEvent(editor: CodeEditorDelegate, val isAttachedToWindow: Boolean) :
     Event(editor)
 
 /**
  * Trigger when mouse right-clicked the editor
  */
 class ContextClickEvent(
-    editor: CodeEditor,
+    editor: CodeEditorDelegate,
     position: CharPosition,
     event: MotionEvent,
     span: Span?,
@@ -108,7 +108,7 @@ class ContextClickEvent(
  * Trigger when mouse hover updates
  */
 class HoverEvent(
-    editor: CodeEditor,
+    editor: CodeEditorDelegate,
     position: CharPosition,
     event: MotionEvent,
     span: Span?,
@@ -121,7 +121,7 @@ class HoverEvent(
  * Triggered when drag selecting is stopped
  */
 class DragSelectStopEvent(
-    editor: CodeEditor
+    editor: CodeEditorDelegate
 ) : Event(editor)
 
 /**
@@ -130,7 +130,7 @@ class DragSelectStopEvent(
  * @property position Target text position of the menu
  */
 class CreateContextMenuEvent(
-    editor: CodeEditor,
+    editor: CodeEditorDelegate,
     val menu: ContextMenu,
     val position: CharPosition
 ) : Event(editor)
@@ -141,7 +141,7 @@ class CreateContextMenuEvent(
  * @property newTextSize new text size after changed
  */
 class TextSizeChangeEvent(
-    editor: CodeEditor,
+    editor: CodeEditorDelegate,
     val oldTextSize: Float,
     val newTextSize: Float
 ) : Event(editor)
@@ -152,7 +152,7 @@ class TextSizeChangeEvent(
  *
  * @author Rosemoe
  */
-class PublishSearchResultEvent(editor: CodeEditor) : Event(editor) {
+class PublishSearchResultEvent(editor: CodeEditorDelegate) : Event(editor) {
 
     fun getSearcher() = editor.searcher
 
@@ -161,13 +161,13 @@ class PublishSearchResultEvent(editor: CodeEditor) : Event(editor) {
 /**
  * Triggered when the initial layout async task starts/stops
  */
-class LayoutStateChangeEvent(editor: CodeEditor, val isLayoutBusy: Boolean) : Event(editor)
+class LayoutStateChangeEvent(editor: CodeEditorDelegate, val isLayoutBusy: Boolean) : Event(editor)
 
 /**
  * Trigger when the editor diagnostics changed
  */
 class PublishDiagnosticsEvent(
-    editor: CodeEditor,
+    editor: CodeEditorDelegate,
     val oldDiagnostics: List<DiagnosticRegion>,
     val newDiagnosticsEvent: List<DiagnosticRegion>
 ): Event(editor)

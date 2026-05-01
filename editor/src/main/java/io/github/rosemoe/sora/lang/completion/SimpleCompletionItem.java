@@ -28,7 +28,7 @@ import android.graphics.drawable.Drawable;
 import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.text.Content;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * SimpleCompletionItem represents a simple replace action for auto-completion.
@@ -97,7 +97,7 @@ public class SimpleCompletionItem extends CompletionItem {
     }
 
     @Override
-    public void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, int line, int column) {
+    public void performCompletion(@NonNull CodeEditorDelegate editor, @NonNull Content text, int line, int column) {
         if (commitText == null) {
             return;
         }

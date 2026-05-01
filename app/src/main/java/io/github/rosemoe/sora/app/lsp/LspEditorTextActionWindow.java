@@ -30,7 +30,6 @@ import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
@@ -53,7 +52,6 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.EditorTouchEventHandler;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent;
-import io.github.rosemoe.sora.widget.component.EditorTextActionWindow;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
@@ -88,7 +86,7 @@ public class LspEditorTextActionWindow extends EditorPopupWindow implements View
      * @param editor Target editor
      */
     public LspEditorTextActionWindow(LspEditor editor) {
-        super(Objects.requireNonNull(editor.getEditor()), FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED);
+        super(Objects.requireNonNull(editor.getEditor()).getDelegate(), editor.getEditor(), FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED);
         var soraEditor = editor.getEditor();
         this.lspEditor = editor;
         this.editor = soraEditor;
