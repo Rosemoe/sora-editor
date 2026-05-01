@@ -37,6 +37,7 @@ import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * Base layout implementation of {@link Layout}.
@@ -56,10 +57,10 @@ public abstract class AbstractLayout implements Layout {
         executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 1, TimeUnit.MINUTES, new LinkedBlockingQueue<>(128));
     }
 
-    protected CodeEditor editor;
+    protected CodeEditorDelegate editor;
     protected Content text;
 
-    public AbstractLayout(@NonNull CodeEditor editor, @NonNull Content text) {
+    public AbstractLayout(@NonNull CodeEditorDelegate editor, @NonNull Content text) {
         this.editor = editor;
         this.text = text;
     }

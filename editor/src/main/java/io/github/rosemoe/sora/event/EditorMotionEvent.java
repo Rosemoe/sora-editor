@@ -32,7 +32,7 @@ import androidx.annotation.Nullable;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.TextRange;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 import io.github.rosemoe.sora.widget.RegionResolverKt;
 
 /**
@@ -110,7 +110,7 @@ public abstract class EditorMotionEvent extends Event {
     private final int motionRegion;
     private final int motionBound;
 
-    public EditorMotionEvent(@NonNull CodeEditor editor, @NonNull CharPosition position,
+    public EditorMotionEvent(@NonNull CodeEditorDelegate editor, @NonNull CharPosition position,
                              @NonNull MotionEvent event, @Nullable Span span, @Nullable TextRange spanRange,
                              int motionRegion, int motionBound) {
         super(editor);

@@ -53,6 +53,7 @@ include(
     ":language-java",
     ":language-textmate",
     ":editor-lsp",
+    ":editor-compose",
     ":language-treesitter",
     ":oniguruma-native"
 )

@@ -25,7 +25,7 @@ package io.github.rosemoe.sora.event;
 
 import androidx.annotation.NonNull;
 
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * Notify that snippet controller state is changed.
@@ -59,7 +59,7 @@ public class SnippetEvent extends Event {
     private final int currentTabStop;
     private final int totalTabStop;
 
-    public SnippetEvent(@NonNull CodeEditor editor, int action, int currentTabStop, int totalTabStop) {
+    public SnippetEvent(@NonNull CodeEditorDelegate editor, int action, int currentTabStop, int totalTabStop) {
         super(editor);
         this.action = action;
         this.currentTabStop = currentTabStop;

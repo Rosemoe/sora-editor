@@ -23,8 +23,6 @@
  */
 package io.github.rosemoe.sora.widget;
 
-import android.text.TextUtils;
-
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -127,7 +125,7 @@ public class SymbolPairMatch {
     }
 
     @Nullable
-    public final SymbolPair matchBestPair(CodeEditor editor, CharPosition cursorPosition, char[] inputCharArray, char endChar) {
+    public final SymbolPair matchBestPair(CodeEditorDelegate editor, CharPosition cursorPosition, char[] inputCharArray, char endChar) {
         final Content content = editor.getText();
         // do not apply single character pairs for text with length > 1
         var singleCharPair = inputCharArray == null ? matchBestPairBySingleChar(endChar) : null;
@@ -246,7 +244,7 @@ public class SymbolPairMatch {
         }
 
 
-        protected boolean shouldReplace(CodeEditor editor) {
+        protected boolean shouldReplace(CodeEditorDelegate editor) {
             if (symbolPairEx == null) {
                 return false;
             }
@@ -290,7 +288,7 @@ public class SymbolPairMatch {
              * @param currentLine The current line edit in the editor,quick analysis it to decide whether to replaced
              * @param leftColumn  return current cursor column
              */
-            default boolean shouldReplace(CodeEditor editor, ContentLine currentLine, int leftColumn) {
+            default boolean shouldReplace(CodeEditorDelegate editor, ContentLine currentLine, int leftColumn) {
                 return true;
             }
 
