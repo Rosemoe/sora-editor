@@ -40,10 +40,13 @@ import androidx.compose.ui.semantics.copyText
 import androidx.compose.ui.semantics.cutText
 import androidx.compose.ui.semantics.editableText
 import androidx.compose.ui.semantics.horizontalScrollAxisRange
+import androidx.compose.ui.semantics.insertTextAtCursor
 import androidx.compose.ui.semantics.isEditable
 import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.pageDown
+import androidx.compose.ui.semantics.pageUp
 import androidx.compose.ui.semantics.pasteText
-import androidx.compose.ui.semantics.scrollBy
+import androidx.compose.ui.semantics.requestFocus
 import androidx.compose.ui.semantics.scrollByOffset
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setText
@@ -56,6 +59,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import io.github.rosemoe.sora.compose.internal.CodeEditorImpl
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.text.TextUtils
+import io.github.rosemoe.sora.widget.SelectionMovement
 
 /**
  * Composable for displaying and editing code.
@@ -118,7 +122,16 @@ fun CodeEditor(
                                     state.setText(text)
                                     true
                                 }
+
+                                insertTextAtCursor { text ->
+                                    if (state.isEditable) {
+                                        state.insertText(text.toString(), state.cursor.left)
+                                    }
+                                    state.isEditable
+                                }
                             }
+
+                            requestFocus { state.host.requestFocus() }
 
                             onLongClick { true }
 
@@ -153,6 +166,26 @@ fun CodeEditor(
                                 state.setSelection(line, column, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE)
                                 offset
                             }
+
+                            pageUp {
+                                state.moveSelection(SelectionMovement.PAGE_UP)
+                                true
+                            }
+
+                            pageDown {
+                                state.moveSelection(SelectionMovement.PAGE_DOWN)
+                                true
+                            }
+
+//                            pageLeft {
+//                                state.moveSelection(SelectionMovement.LEFT)
+//                                true
+//                            }
+//
+//                            pageRight {
+//                                state.moveSelection(SelectionMovement.RIGHT)
+//                                true
+//                            }
                         }
                     }
             )
