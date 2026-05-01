@@ -628,6 +628,15 @@ class CodeEditorState @RememberInComposition internal constructor(
     }
 
     /**
+     * Determine character position using positions in scroll coordinate
+     *
+     * @param x X position in scroll coordinate
+     * @param y Y position in scroll coordinate
+     * @return [Pair<Int, Int>][Pair]. [first][Pair.first] is line and [second][Pair.second] is column
+     */
+    fun getPointPosition(x: Float, y: Float) = getPointPosition(Offset(x, y))
+
+    /**
      * Determine character position using positions on view
      *
      * @param x X on view
