@@ -270,12 +270,7 @@ public class CodeEditor extends View implements InlayHintRendererProvider, CodeE
      */
     @Nullable
     public static CodeEditor fromDelegate(@NonNull CodeEditorDelegate delegate) {
-        var view = delegate.host.getAttachedView();
-        if (view instanceof CodeEditor) {
-            return (CodeEditor) view;
-        } else {
-            return null;
-        }
+        return DelegateKt.asCodeEditor(delegate);
     }
 
     /**

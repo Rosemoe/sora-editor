@@ -27,6 +27,7 @@ package io.github.rosemoe.sora.compose.internal.modifier
 import android.graphics.Canvas
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
@@ -62,16 +63,12 @@ private class CodeEditorDrawModifier(
     }
 
     override fun ContentDrawScope.draw() {
-        state.computeScroll()
-        val canvas = drawContext.canvas.nativeCanvas
-
         val scrollX = delegate.offsetX.toFloat()
         val scrollY = delegate.offsetY.toFloat()
 
-        canvas.save()
-        canvas.translate(-scrollX, -scrollY)
-        onDraw(canvas)
-        canvas.restore()
+        translate(-scrollX, -scrollY) {
+            onDraw(drawContext.canvas.nativeCanvas)
+        }
     }
 
     private fun onDraw(canvas: Canvas) {

@@ -31,7 +31,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -50,6 +53,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import io.github.rosemoe.sora.app.R
 import io.github.rosemoe.sora.compose.CodeEditor
 import io.github.rosemoe.sora.compose.rememberCodeEditorState
@@ -108,28 +112,32 @@ class ComposeEditorActivity : ComponentActivity() {
             }
         ) { paddingValues ->
 
-            val state = rememberCodeEditorState()
-            val typeface = remember { Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf") }
-
-            LaunchedEffect(state) {
-                state.typefaceText = typeface
-                state.typefaceLineNumber = typeface
-                state.editorLanguage = JavaLanguage()
-                state.colorScheme = SchemeEclipse()
-
-                val content = withContext(Dispatchers.IO) {
-                    unzipSampleFile().inputStream().use { ContentIO.createFrom(it) }
-                }
-                withContext(Dispatchers.Main) { state.setText(content) }
-            }
-
-            CodeEditor(
-                state = state,
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
                     .padding(paddingValues)
                     .imePadding()
-            )
+            ) {
+                val state = rememberCodeEditorState()
+                val typeface = remember { Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf") }
+
+                LaunchedEffect(state) {
+                    state.typefaceText = typeface
+                    state.typefaceLineNumber = typeface
+                    state.editorLanguage = JavaLanguage()
+                    state.colorScheme = SchemeEclipse()
+                    state.props.showMinimap = false
+
+                    val content = withContext(Dispatchers.IO) {
+                        unzipSampleFile().inputStream().use { ContentIO.createFrom(it) }
+                    }
+                    withContext(Dispatchers.Main) { state.setText(content) }
+                }
+
+                CodeEditor(
+                    state = state,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
     }
 
