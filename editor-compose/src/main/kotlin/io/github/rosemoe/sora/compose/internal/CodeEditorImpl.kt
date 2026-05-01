@@ -27,10 +27,11 @@ package io.github.rosemoe.sora.compose.internal
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasurePolicy
@@ -50,6 +51,14 @@ internal fun CodeEditorImpl(
     state: CodeEditorState,
     modifier: Modifier = Modifier
 ) {
+    LaunchedEffect(state) {
+        while (true) {
+            withFrameNanos {
+                state.computeScroll()
+            }
+        }
+    }
+
     Layout(
         measurePolicy = CodeEditorMeasurePolicy,
         modifier = modifier
