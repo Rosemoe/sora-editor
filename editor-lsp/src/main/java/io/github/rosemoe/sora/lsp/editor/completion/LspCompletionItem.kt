@@ -39,7 +39,7 @@ import io.github.rosemoe.sora.lsp.utils.createRange
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.util.Logger
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionItemTag
 import org.eclipse.lsp4j.InsertTextFormat
@@ -110,14 +110,14 @@ class LspCompletionItem(
         return labelColor ?: detailColor ?: documentationColor
     }
 
-    override fun performCompletion(editor: CodeEditor, text: Content, position: CharPosition) {
+    override fun performCompletion(editor: CodeEditorDelegate, text: Content, position: CharPosition) {
         val defaultRange = createRange(
-             createPosition(
-                 position.line,
-                 position.column - prefixLength
-             ),
-             position.asLspPosition()
-         )
+            createPosition(
+                position.line,
+                position.column - prefixLength
+            ),
+            position.asLspPosition()
+        )
 
         val textEdit = when {
             completionItem.textEdit?.isLeft == true -> {
@@ -233,7 +233,7 @@ class LspCompletionItem(
         }
     }
 
-    override fun performCompletion(editor: CodeEditor, text: Content, line: Int, column: Int) {
+    override fun performCompletion(editor: CodeEditorDelegate, text: Content, line: Int, column: Int) {
         // do nothing
     }
 }

@@ -135,6 +135,9 @@
             <item
                 android:id="@+id/open_lsp_activity"
                 android:title="@string/open_lsp_activity" />
+            <item
+                android:id="@+id/open_compose_activity"
+                android:title="@string/open_compose_activity" />
         </menu>
     </item>
 

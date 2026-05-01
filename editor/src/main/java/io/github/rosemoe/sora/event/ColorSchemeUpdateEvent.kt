@@ -24,7 +24,7 @@
 
 package io.github.rosemoe.sora.event
 
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
 
 /**
  * Event trigger when any updates to the editor color scheme, including setting a new color and setting
@@ -32,7 +32,7 @@ import io.github.rosemoe.sora.widget.CodeEditor
  *
  *  @author Rosemoe
  */
-class ColorSchemeUpdateEvent(editor: CodeEditor) : Event(editor) {
+class ColorSchemeUpdateEvent(editor: CodeEditorDelegate) : Event(editor) {
 
     /**
      * Updated color scheme (the new one if new color scheme is set)

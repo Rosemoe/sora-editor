@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.event;
 import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * Notifies a selection handle's touch state has changed
@@ -40,7 +41,7 @@ public class HandleStateChangeEvent extends Event {
     private final int which;
     private final boolean isHeld;
 
-    public HandleStateChangeEvent(@NonNull CodeEditor editor, int which, boolean heldState) {
+    public HandleStateChangeEvent(@NonNull CodeEditorDelegate editor, int which, boolean heldState) {
         super(editor);
         this.which = which;
         isHeld = heldState;

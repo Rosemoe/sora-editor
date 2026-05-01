@@ -29,18 +29,20 @@ import androidx.annotation.NonNull;
 
 public class EditorScroller {
 
-    private final CodeEditor editor;
+    private final CodeEditorDelegate editor;
+    private final CodeEditorHost host;
 
     private final OverScroller scroller;
 
-    public EditorScroller(@NonNull CodeEditor editor) {
-        scroller = new OverScroller(editor.getContext());
+    public EditorScroller(@NonNull CodeEditorDelegate editor, @NonNull CodeEditorHost host) {
+        scroller = new OverScroller(host.getContext());
         this.editor = editor;
+        this.host = host;
     }
 
     public void setEditorOffsets() {
-        editor.setScrollX(scroller.getCurrX());
-        editor.setScrollY(scroller.getCurrY());
+        host.setScrollX(scroller.getCurrX());
+        host.setScrollY(scroller.getCurrY());
     }
 
     public void startScroll(int startX, int startY, int dx, int dy) {

@@ -27,13 +27,13 @@ import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.text.ICUUtils;
 import io.github.rosemoe.sora.util.IntPair;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 public class EditorBasedSnippetVariableResolver implements ISnippetVariableResolver {
 
-    private final CodeEditor editor;
+    private final CodeEditorDelegate editor;
 
-    public EditorBasedSnippetVariableResolver(@NonNull CodeEditor editor) {
+    public EditorBasedSnippetVariableResolver(@NonNull CodeEditorDelegate editor) {
         this.editor = editor;
     }
 
