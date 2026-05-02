@@ -22,45 +22,26 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.compose)
+package io.github.rosemoe.sora.compose
+
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.text.font.FontFamily
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+
+/**
+ * The [EditorColorScheme] used for editor text rendering.
+ *
+ * Note: This value is only valid and provided within editor popup windows,
+ * such as autocompletion windows, text action windows, etc.
+ */
+val LocalEditorColorScheme = compositionLocalOf<EditorColorScheme> {
+    error("EditorColorScheme not provided")
 }
 
-android {
-    namespace = "io.github.rosemoe.sora.compose"
-
-    defaultConfig {
-        // required by compose
-        minSdk = 23
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-
-    buildFeatures {
-        compose = true
-    }
-}
-
-dependencies {
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.lifecycle.viewmodel)
-
-    debugImplementation(libs.androidx.compose.ui.tooling)
-
-    implementation(projects.editor)
-}
+/**
+ * The [FontFamily] used for editor text rendering.
+ *
+ * Note: This value is only valid and provided within editor popup windows,
+ * such as autocompletion windows, text action windows, etc.
+ */
+val LocalEditorFontFamily = compositionLocalOf<FontFamily> { FontFamily.Monospace }
