@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.lang.completion;
 
+import java.util.concurrent.CancellationException;
+
 /**
  * Thrown when the thread is abandoned by the editor framework because the editor do not need its
  * new items anymore.
@@ -32,7 +34,7 @@ package io.github.rosemoe.sora.lang.completion;
  *
  * @author Rosemoe
  */
-public class CompletionCancelledException extends RuntimeException {
+public class CompletionCancelledException extends CancellationException {
 
     public CompletionCancelledException() {
     }

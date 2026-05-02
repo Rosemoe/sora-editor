@@ -101,11 +101,11 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     protected EventManager eventManager;
     private int completionWndPosMode = WINDOW_POS_MODE_AUTO;
     private CharPosition previousSelection;
-    private long requestShow = 0;
-    private long requestHide = -1;
+    protected long requestShow = 0;
+    protected long requestHide = -1;
     private boolean enabled = true;
-    private boolean loading = false;
-    private boolean highlightMatchedLabel = true;
+    protected boolean loading = false;
+    protected boolean highlightMatchedLabel = true;
 
     /**
      * Create a panel instance for the given editor
@@ -475,7 +475,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     /**
      * Make current selection visible
      */
-    private void ensurePosition() {
+    protected void ensurePosition() {
         if (currentSelection != -1)
             layout.ensureListPositionVisible(currentSelection, adapter.getItemHeight());
     }

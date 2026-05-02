@@ -24,11 +24,10 @@
 
 package io.github.rosemoe.sora.compose
 
-import androidx.compose.foundation.LocalOverscrollFactory
-import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.UiComposable
 import androidx.compose.ui.draw.clipToBounds
@@ -56,10 +55,15 @@ import androidx.compose.ui.semantics.verticalScrollAxisRange
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.tooling.preview.Preview
+import io.github.rosemoe.sora.compose.component.CompletionState
+import io.github.rosemoe.sora.compose.component.createAutoCompletionWindow
 import io.github.rosemoe.sora.compose.internal.CodeEditorImpl
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.text.TextUtils
 import io.github.rosemoe.sora.widget.SelectionMovement
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.getComponent
+import io.github.rosemoe.sora.widget.replaceComponent
 
 /**
  * Composable for displaying and editing code.
@@ -68,6 +72,8 @@ import io.github.rosemoe.sora.widget.SelectionMovement
  * @param state The state object to be used to control or observe the editor's state.
  * @param editable Controls if the text in the editor can be modified by the user.
  * @param enabled Controls the enabled state of the editor. When `false`, the editor will not respond to user input.
+ * @param autoCompletionWindow A composable function to render the auto-completion window.
+ * Pass `null` to disable the auto-completion feature. Defaults to [CodeEditorDefaults.AutoCompletionWindow].
  */
 @Composable
 @UiComposable
@@ -75,77 +81,91 @@ fun CodeEditor(
     modifier: Modifier = Modifier,
     state: CodeEditorState = rememberCodeEditorState(),
     editable: Boolean = true,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    autoCompletionWindow: @Composable ((
+        state: CompletionState,
+        onItemClick: (index: Int) -> Unit
+    ) -> Unit)? = CodeEditorDefaults::AutoCompletionWindow
 ) {
     LaunchedEffect(enabled, editable) {
         state.host._isEnabled = enabled
         state.editable = editable
     }
 
-    Box(modifier = modifier) {
-        CompositionLocalProvider(LocalOverscrollFactory provides null) {
-            CodeEditorImpl(
-                state = state,
-                modifier = Modifier
-                    .matchParentSize()
-                    .clipToBounds()
-                    .pointerHoverIcon(PointerIcon.Text, overrideDescendants = true)
-                    .semantics(mergeDescendants = true) {
-                        stateDescription = if (enabled) "enabled" else "disabled"
+    val autoCompletion by rememberUpdatedState(autoCompletionWindow)
 
-                        if (enabled) {
-                            val maxLength = state.props.maxAccessibilityTextLength
-                            if (maxLength > 0) {
-                                isEditable = state.isEditable
-                                textSelectionRange = TextRange(state.cursor.left, state.cursor.right)
-                                accessibilityClassName = "CodeEditor"
-                                //text = AnnotatedString(TextUtils.trimToSize(state.text, maxLength).toString())
-                                //inputText = AnnotatedString(TextUtils.trimToSize(state.text, maxLength).toString())
-                                editableText = AnnotatedString(TextUtils.trimToSize(state.text, maxLength).toString())
+    LaunchedEffect(autoCompletion) {
+        val delegate = state.delegate
+        if (autoCompletion == null) {
+            delegate.getComponent<EditorAutoCompletion>().isEnabled = false
+        } else {
+            val component = delegate.createAutoCompletionWindow(autoCompletion!!)
+            delegate.replaceComponent<EditorAutoCompletion>(component)
+            component.isEnabled = true
+        }
+    }
 
-                                copyText {
-                                    state.copyText()
-                                    true
-                                }
+    CodeEditorImpl(
+        state = state,
+        modifier = modifier
+            .clipToBounds()
+            .pointerHoverIcon(PointerIcon.Text, overrideDescendants = true)
+            .semantics(mergeDescendants = true) {
+                stateDescription = if (enabled) "enabled" else "disabled"
 
-                                cutText {
-                                    state.cutText()
-                                    true
-                                }
+                if (enabled) {
+                    val maxLength = state.props.maxAccessibilityTextLength
+                    if (maxLength > 0) {
+                        isEditable = state.isEditable
+                        textSelectionRange = TextRange(state.cursor.left, state.cursor.right)
+                        accessibilityClassName = "CodeEditor"
+                        //text = AnnotatedString(TextUtils.trimToSize(state.text, maxLength).toString())
+                        //inputText = AnnotatedString(TextUtils.trimToSize(state.text, maxLength).toString())
+                        editableText = AnnotatedString(TextUtils.trimToSize(state.text, maxLength).toString())
 
-                                pasteText {
-                                    state.pasteText()
-                                    true
-                                }
+                        copyText {
+                            state.copyText()
+                            true
+                        }
 
-                                setText { text ->
-                                    state.setText(text)
-                                    true
-                                }
+                        cutText {
+                            state.cutText()
+                            true
+                        }
 
-                                insertTextAtCursor { text ->
-                                    if (state.isEditable) {
-                                        state.insertText(text.toString(), state.cursor.left)
-                                    }
-                                    state.isEditable
-                                }
+                        pasteText {
+                            state.pasteText()
+                            true
+                        }
+
+                        setText { text ->
+                            state.setText(text)
+                            true
+                        }
+
+                        insertTextAtCursor { text ->
+                            if (state.isEditable) {
+                                state.insertText(text.toString(), state.cursor.left)
                             }
+                            state.isEditable
+                        }
+                    }
 
-                            requestFocus { state.host.requestFocus() }
+                    requestFocus { state.host.requestFocus() }
 
-                            onLongClick { true }
+                    onLongClick { true }
 
-                            verticalScrollAxisRange = ScrollAxisRange(
-                                value = { state.scrollY.toFloat() },
-                                maxValue = { state.maxScrollY.toFloat() },
-                                reverseScrolling = false
-                            )
+                    verticalScrollAxisRange = ScrollAxisRange(
+                        value = { state.scrollY.toFloat() },
+                        maxValue = { state.maxScrollY.toFloat() },
+                        reverseScrolling = false
+                    )
 
-                            horizontalScrollAxisRange = ScrollAxisRange(
-                                value = { state.scrollX.toFloat() },
-                                maxValue = { state.maxScrollX.toFloat() },
-                                reverseScrolling = false
-                            )
+                    horizontalScrollAxisRange = ScrollAxisRange(
+                        value = { state.scrollX.toFloat() },
+                        maxValue = { state.maxScrollX.toFloat() },
+                        reverseScrolling = false
+                    )
 
 //                            scrollBy { x, y ->
 //                                val (line, column) = state.getPointPosition(
@@ -157,25 +177,25 @@ fun CodeEditor(
 //                                true
 //                            }
 
-                            scrollByOffset { offset ->
-                                val (line, column) = state.getPointPosition(
-                                    state.scrollX + offset.x,
-                                    state.scrollY + offset.y
-                                )
-                                state.delegate.touchHandler.scrollBy(offset.x, offset.y, true)
-                                state.setSelection(line, column, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE)
-                                offset
-                            }
+                    scrollByOffset { offset ->
+                        val (line, column) = state.getPointPosition(
+                            state.scrollX + offset.x,
+                            state.scrollY + offset.y
+                        )
+                        state.delegate.touchHandler.scrollBy(offset.x, offset.y, true)
+                        state.setSelection(line, column, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE)
+                        offset
+                    }
 
-                            pageUp {
-                                state.moveSelection(SelectionMovement.PAGE_UP)
-                                true
-                            }
+                    pageUp {
+                        state.moveSelection(SelectionMovement.PAGE_UP)
+                        true
+                    }
 
-                            pageDown {
-                                state.moveSelection(SelectionMovement.PAGE_DOWN)
-                                true
-                            }
+                    pageDown {
+                        state.moveSelection(SelectionMovement.PAGE_DOWN)
+                        true
+                    }
 
 //                            pageLeft {
 //                                state.moveSelection(SelectionMovement.LEFT)
@@ -186,11 +206,9 @@ fun CodeEditor(
 //                                state.moveSelection(SelectionMovement.RIGHT)
 //                                true
 //                            }
-                        }
-                    }
-            )
-        }
-    }
+                }
+            }
+    )
 }
 
 @Preview
