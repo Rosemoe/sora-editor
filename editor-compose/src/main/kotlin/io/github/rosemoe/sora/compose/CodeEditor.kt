@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.compose
 
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,11 +58,13 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.tooling.preview.Preview
 import io.github.rosemoe.sora.compose.component.CompletionState
 import io.github.rosemoe.sora.compose.component.createAutoCompletionWindow
+import io.github.rosemoe.sora.compose.component.createTextActionWindow
 import io.github.rosemoe.sora.compose.internal.CodeEditorImpl
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.text.TextUtils
 import io.github.rosemoe.sora.widget.SelectionMovement
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
 import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.replaceComponent
 
@@ -74,6 +77,8 @@ import io.github.rosemoe.sora.widget.replaceComponent
  * @param enabled Controls the enabled state of the editor. When `false`, the editor will not respond to user input.
  * @param autoCompletionWindow A composable function to render the auto-completion window.
  * Pass `null` to disable the auto-completion feature. Defaults to [CodeEditorDefaults.AutoCompletionWindow].
+ * @param textActionWindow A composable function to render the text action window (selection menu/toolbar).
+ * Pass `null` to disable the text action window. Defaults to [CodeEditorDefaults.TextActionWindow].
  */
 @Composable
 @UiComposable
@@ -85,7 +90,13 @@ fun CodeEditor(
     autoCompletionWindow: @Composable ((
         state: CompletionState,
         onItemClick: (index: Int) -> Unit
-    ) -> Unit)? = CodeEditorDefaults::AutoCompletionWindow
+    ) -> Unit)? = CodeEditorDefaults::AutoCompletionWindow,
+    textActionWindow: @Composable ((CodeEditorState) -> Unit)? = { state ->
+        CodeEditorDefaults.TextActionWindow(
+            state = state,
+            modifier = Modifier.fillMaxHeight()
+        )
+    }
 ) {
     LaunchedEffect(enabled, editable) {
         state.host._isEnabled = enabled
@@ -93,6 +104,7 @@ fun CodeEditor(
     }
 
     val autoCompletion by rememberUpdatedState(autoCompletionWindow)
+    val textAction by rememberUpdatedState(textActionWindow)
 
     LaunchedEffect(autoCompletion) {
         val delegate = state.delegate
@@ -102,6 +114,18 @@ fun CodeEditor(
             val component = delegate.createAutoCompletionWindow(autoCompletion!!)
             delegate.replaceComponent<EditorAutoCompletion>(component)
             component.isEnabled = true
+        }
+    }
+
+    LaunchedEffect(textAction) {
+        val delegate = state.delegate
+        if (textAction == null) {
+            delegate.getComponent<EditorTextActionWindow>().isEnabled = false
+            state.textActionWindow?.isEnabled = false
+        } else {
+            delegate.getComponent<EditorTextActionWindow>().isEnabled = false
+            state.textActionWindow = state.createTextActionWindow(textAction!!)
+            state.textActionWindow?.isEnabled = true
         }
     }
 
