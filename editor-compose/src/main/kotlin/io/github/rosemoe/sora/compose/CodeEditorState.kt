@@ -41,6 +41,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import io.github.rosemoe.sora.compose.component.TextActionWindow
 import io.github.rosemoe.sora.compose.internal.CodeEditorHostImpl
 import io.github.rosemoe.sora.compose.internal.createDelegate
 import io.github.rosemoe.sora.event.Event
@@ -97,6 +98,8 @@ class CodeEditorState @RememberInComposition internal constructor(
     internal val host: CodeEditorHostImpl,
     internal val delegate: CodeEditorDelegate
 ) {
+
+    internal var textActionWindow: TextActionWindow? = null
 
     init {
         setCursorBlinkPeriod(cursorBlinkPeriod)
@@ -1565,7 +1568,10 @@ class CodeEditorState @RememberInComposition internal constructor(
     /**
      * Hide all built-in windows of the editor
      */
-    fun hideEditorWindows() = delegate.hideEditorWindows()
+    fun hideEditorWindows() {
+        textActionWindow?.dismiss()
+        delegate.hideEditorWindows()
+    }
 
     internal fun computeScroll() {
         val scroller = delegate.touchHandler.scroller
