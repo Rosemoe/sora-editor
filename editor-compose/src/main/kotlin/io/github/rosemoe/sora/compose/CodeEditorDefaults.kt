@@ -42,27 +42,34 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.rosemoe.sora.R
 import io.github.rosemoe.sora.compose.component.CompletionState
+import io.github.rosemoe.sora.compose.util.textActionWindowBackground
+import io.github.rosemoe.sora.compose.util.textActionWindowIconColor
 import io.github.rosemoe.sora.lang.completion.CompletionItem
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import kotlin.math.abs
@@ -72,6 +79,106 @@ import kotlin.math.abs
  */
 @Stable
 object CodeEditorDefaults {
+
+    /**
+     * Default implementation of the text action window (the floating toolbar for text operations).
+     * It provides common actions like Select All, Copy, Paste, and Cut based on the current state.
+     *
+     * @param state The current state of the code editor.
+     * @param modifier Modifier to be applied to the window container.
+     */
+    @Composable
+    fun TextActionWindow(
+        state: CodeEditorState,
+        modifier: Modifier = Modifier
+    ) {
+        val colorScheme = LocalEditorColorScheme.current
+
+        LazyRow(
+            modifier = modifier
+                .widthIn(max = 300.dp)
+                .shadow(4.dp, RoundedCornerShape(5.dp))
+                .clip(RoundedCornerShape(5.dp))
+                .background(colorScheme.textActionWindowBackground)
+                .animateContentSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            item {
+                IconButton(onClick = { state.selectAll() }) {
+                    Icon(
+                        painterResource(R.drawable.round_select_all_20),
+                        contentDescription = stringResource(android.R.string.selectAll),
+                        tint = colorScheme.textActionWindowIconColor
+                    )
+                }
+            }
+
+            if (state.cursor.isSelected) {
+                item {
+                    IconButton(
+                        onClick = {
+                            state.copyText()
+                            state.setSelection(state.cursor.rightLine, state.cursor.rightColumn)
+                        }
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.round_content_copy_20),
+                            contentDescription = stringResource(android.R.string.copy),
+                            tint = colorScheme.textActionWindowIconColor
+                        )
+                    }
+                }
+            }
+
+            if (state.isEditable) {
+                item {
+                    IconButton(
+                        onClick = {
+                            state.pasteText()
+                            state.setSelection(state.cursor.rightLine, state.cursor.rightColumn)
+                        },
+                        enabled = state.hasClip
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.round_content_paste_20),
+                            contentDescription = stringResource(android.R.string.paste),
+                            tint = colorScheme.textActionWindowIconColor
+                        )
+                    }
+                }
+            }
+
+            if (!state.cursor.isSelected && state.isEditable) {
+                item {
+                    IconButton(onClick = { state.beginLongSelect() }) {
+                        Icon(
+                            painterResource(R.drawable.editor_text_select_start),
+                            contentDescription = stringResource(R.string.sora_editor_long_select),
+                            tint = colorScheme.textActionWindowIconColor
+                        )
+                    }
+                }
+            }
+
+            if (state.cursor.isSelected && state.isEditable) {
+                item {
+                    IconButton(
+                        onClick = {
+                            if (state.cursor.isSelected) {
+                                state.cutText()
+                            }
+                        }
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.round_content_cut_20),
+                            contentDescription = stringResource(android.R.string.cut),
+                            tint = colorScheme.textActionWindowIconColor
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Default implementation of the auto-completion window.
