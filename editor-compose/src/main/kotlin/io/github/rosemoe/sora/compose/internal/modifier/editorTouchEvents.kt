@@ -28,18 +28,27 @@ import android.view.GestureDetector
 import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
+import androidx.compose.foundation.overscroll
+import androidx.compose.foundation.rememberOverscrollEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.debugInspectorInfo
+import androidx.compose.ui.unit.Velocity
 import io.github.rosemoe.sora.compose.internal.CodeEditorHostImpl
 import io.github.rosemoe.sora.widget.CodeEditorDelegate
 import io.github.rosemoe.sora.widget.DirectAccessProps
+import io.github.rosemoe.sora.widget.EditorOverscrollCallback
+import kotlinx.coroutines.launch
 
 internal fun Modifier.editorTouchEvents(
     host: CodeEditorHostImpl,
@@ -52,6 +61,62 @@ internal fun Modifier.editorTouchEvents(
     }
 ) {
     val context = LocalContext.current
+    val overscrollEffect = rememberOverscrollEffect()
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(overscrollEffect, scope) {
+        delegate.overscrollCallback = object : EditorOverscrollCallback {
+            override fun onScroll(
+                deltaX: Float,
+                deltaY: Float,
+                consumedX: Float,
+                consumedY: Float
+            ) {
+                overscrollEffect?.applyToScroll(
+                    delta = Offset(-deltaX, -deltaY),
+                    source = NestedScrollSource.UserInput
+                ) {
+                    // return how much was actually consumed by the editor
+                    Offset(-consumedX, -consumedY)
+                }
+            }
+
+            override fun onFling(velocityX: Float, velocityY: Float) {
+                scope.launch {
+                    overscrollEffect?.applyToFling(Velocity(velocityX, velocityY)) { available ->
+                        // Check which axes are already at their boundary
+                        // At boundary = content can't consume it = overscroll shows
+                        // Not at boundary = scroller handles it = report as consumed
+                        val currX = delegate.scroller.currX
+                        val currY = delegate.scroller.currY
+                        val maxX = delegate.scrollMaxX
+                        val maxY = delegate.scrollMaxY
+
+                        val consumedX = when {
+                            available.x < 0f && currX <= 0 -> 0f // at left edge
+                            available.x > 0f && currX >= maxX -> 0f // at right edge
+                            else -> available.x // scroller handles it
+                        }
+                        val consumedY = when {
+                            available.y < 0f && currY <= 0 -> 0f // at top edge
+                            available.y > 0f && currY >= maxY -> 0f // at bottom edge
+                            else -> available.y // scroller handles it
+                        }
+
+                        Velocity(consumedX, consumedY)
+                    }
+                }
+            }
+
+            override fun onAbsorb(velocityX: Float, velocityY: Float) {
+                scope.launch {
+                    overscrollEffect?.applyToFling(Velocity(velocityX, velocityY)) {
+                        Velocity.Zero
+                    }
+                }
+            }
+        }
+    }
 
     val detectors = remember(context, host, delegate) {
         val gestureDetector = GestureDetector(context, delegate.touchHandler)
@@ -116,7 +181,7 @@ internal fun Modifier.editorTouchEvents(
         }
 
         res3 || res2 || res
-    }
+    }.overscroll(overscrollEffect)
 }
 
 private data class EditorDetectors(

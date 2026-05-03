@@ -72,9 +72,6 @@ private class CodeEditorDrawModifier(
     }
 
     private fun onDraw(canvas: Canvas) {
-        delegate.verticalEdgeEffect?.finish()
-        delegate.horizontalEdgeEffect?.finish()
-
         delegate.renderer.draw(canvas)
 
         // Update magnifier

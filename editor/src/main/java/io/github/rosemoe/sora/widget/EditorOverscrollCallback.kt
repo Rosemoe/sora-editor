@@ -24,22 +24,13 @@
 
 package io.github.rosemoe.sora.widget
 
-/**
- * Returns the [CodeEditor] instance associated with this delegate, or null if the editor
- * is not an instance of [CodeEditor].
- *
- * Note: When using the editor within a Jetpack Compose environment (e.g., via `CodeEditor`
- * composable), this method will return **null** because the internal implementation uses
- * a different view structure. In standard View-based layouts, this will return the
- * non-null [CodeEditor] instance.
- */
-fun CodeEditorDelegate.asCodeEditor(): CodeEditor? = host.attachedView as? CodeEditor
+import androidx.annotation.RestrictTo
 
-/**
- * Returns true if the delegate is attached to a [CodeEditor] view.
- * This will return false in Jetpack Compose environments.
- */
-val CodeEditorDelegate.isViewMode: Boolean
-    get() = host.attachedView is CodeEditor
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+interface EditorOverscrollCallback {
+    fun onScroll(deltaX: Float, deltaY: Float, consumedX: Float, consumedY: Float)
 
-internal inline val CodeEditorDelegate.isComposeMode get() = !isViewMode
+    fun onFling(velocityX: Float, velocityY: Float)
+
+    fun onAbsorb(velocityX: Float, velocityY: Float)
+}
