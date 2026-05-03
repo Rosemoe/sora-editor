@@ -30,8 +30,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,29 +48,47 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.rosemoe.sora.I18nConfig
 import io.github.rosemoe.sora.R
 import io.github.rosemoe.sora.compose.component.CompletionState
+import io.github.rosemoe.sora.compose.component.DiagnosticTooltipState
+import io.github.rosemoe.sora.compose.util.diagnosticTooltipAction
+import io.github.rosemoe.sora.compose.util.diagnosticTooltipBackground
+import io.github.rosemoe.sora.compose.util.diagnosticTooltipBriefMessage
+import io.github.rosemoe.sora.compose.util.diagnosticTooltipDetailedMessage
 import io.github.rosemoe.sora.compose.util.textActionWindowBackground
 import io.github.rosemoe.sora.compose.util.textActionWindowIconColor
 import io.github.rosemoe.sora.lang.completion.CompletionItem
@@ -79,6 +100,143 @@ import kotlin.math.abs
  */
 @Stable
 object CodeEditorDefaults {
+
+    /**
+     * Default implementation of the diagnostic tooltip window.
+     * It displays the brief and detailed messages of a diagnostic and provides quickfix actions.
+     *
+     * @param state The current state of the diagnostic tooltip, including the diagnostic data.
+     * @param modifier Modifier to be applied to the window container.
+     */
+    @Composable
+    fun DiagnosticTooltipWindow(
+        state: DiagnosticTooltipState,
+        modifier: Modifier = Modifier,
+    ) {
+        val scheme = LocalEditorColorScheme.current
+        val context = LocalContext.current
+        val diagnostic = state.diagnostic
+
+        val background = scheme.diagnosticTooltipBackground
+        val briefColor = scheme.diagnosticTooltipBriefMessage
+        val detailColor = scheme.diagnosticTooltipDetailedMessage
+        val actionColor = scheme.diagnosticTooltipAction
+
+        val shape = RoundedCornerShape(5.dp)
+        val quickfixes = diagnostic.quickfixes
+
+        Column(
+            modifier = modifier
+                .widthIn(max = 480.dp)
+                .shadow(elevation = 2.dp, shape = shape)
+                .clip(shape)
+                .background(background),
+        ) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(8.dp),
+            ) {
+                Text(
+                    text = diagnostic.briefMessage.ifBlank { "<NULL>" }.toString(),
+                    color = briefColor,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                diagnostic.detailedMessage
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { detail ->
+                        Text(
+                            text = detail.toString(),
+                            color = detailColor,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                    }
+            }
+
+            if (!quickfixes.isNullOrEmpty()) {
+                var menuExpanded by remember { mutableStateOf(false) }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.Black.copy(alpha = 0x11 / 255f))
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    QuickfixButton(
+                        text = quickfixes[0].resolveTitle(context).toString(),
+                        color = actionColor,
+                        onClick = {
+                            quickfixes[0].executeQuickfix()
+                            state.onDismiss()
+                        },
+                    )
+
+                    if (quickfixes.size > 1) {
+                        Box {
+                            QuickfixButton(
+                                text = stringResource(
+                                    I18nConfig.getResourceId(
+                                        R.string.sora_editor_diagnostics_more_actions
+                                    )
+                                ),
+                                color = actionColor,
+                                onClick = {
+                                    menuExpanded = true
+                                    state.onMenuShowingChanged(true)
+                                },
+                            )
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = {
+                                    menuExpanded = false
+                                    state.onMenuShowingChanged(false)
+                                },
+                            ) {
+                                for (i in 1 until quickfixes.size) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(quickfixes[i].resolveTitle(context).toString())
+                                        },
+                                        onClick = {
+                                            quickfixes[i].executeQuickfix()
+                                            menuExpanded = false
+                                            state.onMenuShowingChanged(false)
+                                            state.onDismiss()
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun QuickfixButton(
+        text: String,
+        color: Color,
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier,
+    ) {
+        TextButton(
+            onClick = onClick,
+            modifier = modifier,
+            colors = ButtonDefaults.textButtonColors(contentColor = color),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+        ) {
+            Text(
+                text = text,
+                color = color,
+                maxLines = 1,
+                style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 0.sp),
+            )
+        }
+    }
 
     /**
      * Default implementation of the text action window (the floating toolbar for text operations).

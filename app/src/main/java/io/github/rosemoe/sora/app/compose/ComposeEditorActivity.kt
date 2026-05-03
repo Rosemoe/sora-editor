@@ -33,8 +33,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -53,12 +51,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import io.github.rosemoe.sora.app.R
 import io.github.rosemoe.sora.compose.CodeEditor
 import io.github.rosemoe.sora.compose.rememberCodeEditorState
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
+import io.github.rosemoe.sora.lang.diagnostic.Quickfix
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.text.ContentIO
+import io.github.rosemoe.sora.utils.toast
 import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -131,6 +133,19 @@ class ComposeEditorActivity : ComponentActivity() {
                         unzipSampleFile().inputStream().use { ContentIO.createFrom(it) }
                     }
                     withContext(Dispatchers.Main) { state.setText(content) }
+
+                    val diagnostics = state.diagnostics ?: DiagnosticsContainer()
+                    diagnostics.addDiagnostic(
+                        DiagnosticRegion(
+                            140, 145, DiagnosticRegion.SEVERITY_WARNING, 0,
+                            DiagnosticDetail(
+                                "Test Diagnostic",
+                                "Hellloooo, Worlddd.",
+                                listOf(Quickfix("Umm.", fixAction = { toast("Fixed.") }))
+                            )
+                        )
+                    )
+                    state.diagnostics = diagnostics
                 }
 
                 CodeEditor(

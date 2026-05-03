@@ -27,6 +27,7 @@ import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 import java.lang.ref.WeakReference;
 
@@ -77,7 +78,8 @@ public class EditorStyleDelegate implements StyleReceiver {
         return foundPair;
     }
 
-    void reset() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void reset() {
         foundPair = null;
         bracketsProvider = null;
     }

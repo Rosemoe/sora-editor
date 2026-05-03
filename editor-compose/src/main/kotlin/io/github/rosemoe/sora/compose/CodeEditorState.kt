@@ -41,15 +41,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import io.github.rosemoe.sora.compose.component.DiagnosticTooltipWindow
 import io.github.rosemoe.sora.compose.component.TextActionWindow
 import io.github.rosemoe.sora.compose.internal.CodeEditorHostImpl
 import io.github.rosemoe.sora.compose.internal.createDelegate
+import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.Event
 import io.github.rosemoe.sora.event.EventManager
 import io.github.rosemoe.sora.event.EventReceiver
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SubscriptionReceipt
 import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRenderer
+import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
@@ -100,6 +103,14 @@ class CodeEditorState @RememberInComposition internal constructor(
 ) {
 
     internal var textActionWindow: TextActionWindow? = null
+    internal var diagnosticTooltipWindow: DiagnosticTooltipWindow? = null
+
+    /**
+     * Check if the editor is released.
+     * When an editor is released, you are not expected to make any changes to it.
+     */
+    var isReleased = false
+        private set
 
     init {
         setCursorBlinkPeriod(cursorBlinkPeriod)
@@ -114,6 +125,38 @@ class CodeEditorState @RememberInComposition internal constructor(
 
     fun registerInlayHintRenderer(renderer: InlayHintRenderer) = delegate.registerInlayHintRenderer(renderer)
     fun removeInlayHintRenderer(renderer: InlayHintRenderer) = delegate.removeInlayHintRenderer(renderer)
+
+    /**
+     * Release some resources held by editor.
+     * This will stop completion threads and destroy using [Language] object.
+     * Also it prevents future editor tasks (such as posted Runnable) to be executed.
+     */
+    fun release() {
+        hideEditorWindows()
+        if (!isReleased) {
+            dispatchEvent(EditorReleaseEvent(delegate))
+        } else {
+            return
+        }
+
+        isReleased = true
+        editorLanguage.analyzeManager.destroy()
+        editorLanguage.formatter.apply {
+            setReceiver(null)
+            destroy()
+        }
+        editorLanguage.destroy()
+        editorLanguage = EmptyLanguage()
+
+        // avoid access to language related after releasing
+        delegate.textStyles = null
+        diagnostics = null
+        delegate.styleDelegate.reset()
+
+        delegate.text.removeContentListener(delegate)
+        delegate.colorScheme.detachEditor(delegate)
+        diagnosticTooltipWindow?.release()
+    }
 
     /**
      * Get KeyMetaStates, which manages alt/shift state in editor
@@ -1570,6 +1613,7 @@ class CodeEditorState @RememberInComposition internal constructor(
      */
     fun hideEditorWindows() {
         textActionWindow?.dismiss()
+        diagnosticTooltipWindow?.dismiss()
         delegate.hideEditorWindows()
     }
 
