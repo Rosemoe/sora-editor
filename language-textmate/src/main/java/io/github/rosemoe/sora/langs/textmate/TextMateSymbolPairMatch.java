@@ -24,6 +24,7 @@
 package io.github.rosemoe.sora.langs.textmate;
 
 import org.eclipse.tm4e.core.internal.grammar.tokenattrs.StandardTokenType;
+import org.eclipse.tm4e.languageconfiguration.internal.model.AutoClosingPairConditional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,10 +33,8 @@ import java.util.List;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 import io.github.rosemoe.sora.widget.SymbolPairMatch;
-
-import org.eclipse.tm4e.languageconfiguration.internal.model.AutoClosingPairConditional;
 
 public class TextMateSymbolPairMatch extends SymbolPairMatch {
 
@@ -155,7 +154,7 @@ public class TextMateSymbolPairMatch extends SymbolPairMatch {
         }
 
         @Override
-        public boolean shouldReplace(CodeEditor editor, ContentLine contentLine, int leftColumn) {
+        public boolean shouldReplace(CodeEditorDelegate editor, ContentLine contentLine, int leftColumn) {
             if (editor.getCursor().isSelected()) {
                 return isSurroundingPair;
             }

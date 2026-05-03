@@ -60,7 +60,8 @@ import io.github.rosemoe.sora.text.ContentReference;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.text.TextReference;
 import io.github.rosemoe.sora.util.KeyboardUtils;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
+import io.github.rosemoe.sora.widget.CodeEditorHost;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import kotlin.jvm.functions.Function1;
@@ -87,7 +88,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     public static final int WINDOW_POS_MODE_FULL_WIDTH_ALWAYS = 2;
 
     private final static long SHOW_PROGRESS_BAR_DELAY = 50;
-    private final CodeEditor editor;
+    private final CodeEditorDelegate editor;
     protected boolean cancelShowUp = false;
     protected long requestTime;
     protected int maxHeight;
@@ -100,19 +101,19 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     protected EventManager eventManager;
     private int completionWndPosMode = WINDOW_POS_MODE_AUTO;
     private CharPosition previousSelection;
-    private long requestShow = 0;
-    private long requestHide = -1;
+    protected long requestShow = 0;
+    protected long requestHide = -1;
     private boolean enabled = true;
-    private boolean loading = false;
-    private boolean highlightMatchedLabel = true;
+    protected boolean loading = false;
+    protected boolean highlightMatchedLabel = true;
 
     /**
      * Create a panel instance for the given editor
      *
      * @param editor Target editor
      */
-    public EditorAutoCompletion(@NonNull CodeEditor editor) {
-        super(editor, FEATURE_HIDE_WHEN_FAST_SCROLL);
+    public EditorAutoCompletion(@NonNull CodeEditorDelegate editor, @NonNull CodeEditorHost host) {
+        super(editor, host, FEATURE_HIDE_WHEN_FAST_SCROLL);
         this.editor = editor;
         adapter = new DefaultCompletionItemAdapter();
         setLayout(new DefaultCompletionLayout());
@@ -382,7 +383,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         }
         requestShow = System.currentTimeMillis();
         final var requireRequest = requestTime;
-        editor.postDelayedInLifecycle(() -> {
+        host.postDelayedInLifecycle(() -> {
             if (requestHide < requestShow && requestTime == requireRequest) {
                 super.show();
             }
@@ -422,7 +423,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     public void setLoading(boolean state) {
         loading = state;
         if (state) {
-            editor.postDelayedInLifecycle(() -> {
+            host.postDelayedInLifecycle(() -> {
                 if (loading) {
                     layout.setLoading(true);
                 }
@@ -474,7 +475,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     /**
      * Make current selection visible
      */
-    private void ensurePosition() {
+    protected void ensurePosition() {
         if (currentSelection != -1)
             layout.ensureListPositionVisible(currentSelection, adapter.getItemHeight());
     }
@@ -563,7 +564,7 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         cancelCompletion();
         requestTime = System.nanoTime();
         currentSelection = -1;
-        publisher = new CompletionPublisher(editor.getHandler(), () -> {
+        publisher = new CompletionPublisher(host.getHandler(), () -> {
             var items = publisher.getItems();
             if (highlightMatchedLabel) {
                 Comparators.highlightMatchLabel(items, editor.getColorScheme());
@@ -601,9 +602,9 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
     }
 
     public void resetScrollPosition() {
-        editor.postDelayedInLifecycle(() -> {
+        host.postDelayedInLifecycle(() -> {
             layout.ensureListPositionVisible(0, 0);
-        },10);
+        }, 10);
     }
 
     /**

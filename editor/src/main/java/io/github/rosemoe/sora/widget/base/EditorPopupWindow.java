@@ -33,7 +33,8 @@ import java.util.Objects;
 
 import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.ScrollEvent;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
+import io.github.rosemoe.sora.widget.CodeEditorHost;
 
 /**
  * Base class for all editor popup windows.
@@ -64,7 +65,8 @@ public class EditorPopupWindow {
     public final static int FEATURE_DISMISS_WHEN_OBSCURING_CURSOR = 1 << 3;
 
     private final PopupWindow window;
-    private final CodeEditor editor;
+    private final CodeEditorDelegate editor;
+    protected final CodeEditorHost host;
     private final int features;
     private final int[] locationBuffer = new int[2];
     private final EventReceiver<ScrollEvent> scrollListener;
@@ -84,10 +86,11 @@ public class EditorPopupWindow {
      * @see #FEATURE_HIDE_WHEN_FAST_SCROLL
      * @see #FEATURE_DISMISS_WHEN_OBSCURING_CURSOR
      */
-    public EditorPopupWindow(@NonNull CodeEditor editor, int features) {
+    public EditorPopupWindow(@NonNull CodeEditorDelegate editor, @NonNull CodeEditorHost host, int features) {
         this.editor = Objects.requireNonNull(editor);
+        this.host = Objects.requireNonNull(host);
         this.features = features;
-        parentView = editor;
+        parentView = host.getAttachedView();
         window = new PopupWindow();
         window.setElevation(editor.getDpUnit() * 8);
         editorLayoutChangeListener = (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
@@ -124,10 +127,10 @@ public class EditorPopupWindow {
     }
 
     /**
-     * Get editor instance
+     * Get editor delegate
      */
     @NonNull
-    public CodeEditor getEditor() {
+    public CodeEditorDelegate getEditor() {
         return editor;
     }
 
@@ -158,7 +161,7 @@ public class EditorPopupWindow {
             registered = true;
         }
         if (isFeatureEnabled(FEATURE_DISMISS_WHEN_OBSCURING_CURSOR) && !layoutChangeListenerRegistered) {
-            editor.addOnLayoutChangeListener(editorLayoutChangeListener);
+            host.getAttachedView().addOnLayoutChangeListener(editorLayoutChangeListener);
             layoutChangeListenerRegistered = true;
         }
         registerFlag = true;
@@ -170,7 +173,7 @@ public class EditorPopupWindow {
     public void unregister() {
         registerFlag = false;
         if (layoutChangeListenerRegistered) {
-            editor.removeOnLayoutChangeListener(editorLayoutChangeListener);
+            host.getAttachedView().removeOnLayoutChangeListener(editorLayoutChangeListener);
             layoutChangeListenerRegistered = false;
         }
     }
@@ -230,7 +233,7 @@ public class EditorPopupWindow {
             return;
         }
         // Show/update if needed
-        editor.getLocationInWindow(locationBuffer);
+        host.getLocationInWindow(locationBuffer);
         int width = right - left;
         int height = bottom - top;
         left += locationBuffer[0];

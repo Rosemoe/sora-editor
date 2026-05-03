@@ -37,7 +37,7 @@ import io.github.rosemoe.sora.graphics.Paint
 import io.github.rosemoe.sora.lang.styling.EmptyReader
 import io.github.rosemoe.sora.lang.styling.Span
 import io.github.rosemoe.sora.util.RendererUtils
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
 import io.github.rosemoe.sora.widget.rendering.RenderingConstants
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.subscribeAlways
@@ -51,7 +51,7 @@ import kotlin.math.min
  * @author Rosemoe
  */
 @Experimental
-class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
+class MinimapRenderer(val editor: CodeEditorDelegate) : AutoCloseable {
 
     companion object Config {
         const val CharHeight = 10

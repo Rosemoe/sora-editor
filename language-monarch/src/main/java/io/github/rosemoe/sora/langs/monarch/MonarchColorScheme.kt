@@ -30,7 +30,7 @@ import io.github.rosemoe.sora.langs.monarch.registry.ThemeRegistry
 import io.github.rosemoe.sora.langs.monarch.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.monarch.registry.model.ThemeSource
 import io.github.rosemoe.sora.langs.monarch.theme.ThemeDefaultColors
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 
@@ -233,12 +233,12 @@ class MonarchColorScheme(
         return themeModel?.isDark ?: false
     }
 
-    override fun detachEditor(editor: CodeEditor) {
+    override fun detachEditor(editor: CodeEditorDelegate) {
         super.detachEditor(editor)
         ThemeRegistry.removeListener(this)
     }
 
-    override fun attachEditor(editor: CodeEditor) {
+    override fun attachEditor(editor: CodeEditorDelegate) {
         super.attachEditor(editor)
         try {
             ThemeRegistry.loadTheme(currentThemeModel)

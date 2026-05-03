@@ -32,7 +32,7 @@ import java.util.List;
 
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.PublishDiagnosticsEvent;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * A thread-safe class for containing diagnostics
@@ -43,7 +43,7 @@ public class DiagnosticsContainer {
 
     private final List<DiagnosticRegion> regions = new ArrayList<>();
     private final boolean shiftEnabled;
-    private WeakReference<CodeEditor> editorRef = new WeakReference<>(null);
+    private WeakReference<CodeEditorDelegate> editorRef = new WeakReference<>(null);
 
     /**
      * Create a new DiagnosticsContainer, with auto-shifting enabled
@@ -157,7 +157,7 @@ public class DiagnosticsContainer {
     }
 
     @UnsupportedUserUsage
-    public void attachEditor(@NonNull CodeEditor editor) {
+    public void attachEditor(@NonNull CodeEditorDelegate editor) {
         this.editorRef = new WeakReference<>(editor);
     }
 

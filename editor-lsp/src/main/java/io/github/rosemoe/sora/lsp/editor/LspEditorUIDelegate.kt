@@ -28,8 +28,8 @@ import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.subscribeEvent
 import kotlinx.coroutines.launch
-import org.eclipse.lsp4j.ColorInformation
 import org.eclipse.lsp4j.CodeAction
+import org.eclipse.lsp4j.ColorInformation
 import org.eclipse.lsp4j.Command
 import org.eclipse.lsp4j.DocumentHighlight
 import org.eclipse.lsp4j.DocumentHighlightKind
@@ -44,7 +44,8 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
 
     private var currentEditorRef: WeakReference<CodeEditor?> = WeakReference(null as CodeEditor?)
     private var hoverWindowRef: WeakReference<HoverWindow?> = WeakReference(null as HoverWindow?)
-    private var signatureHelpWindowRef: WeakReference<SignatureHelpWindow?> = WeakReference(null as SignatureHelpWindow?)
+    private var signatureHelpWindowRef: WeakReference<SignatureHelpWindow?> =
+        WeakReference(null as SignatureHelpWindow?)
     private var subscriptionReceipts: MutableList<SubscriptionReceipt<out Event>> = mutableListOf()
     private var codeActionWindowRef: WeakReference<CodeActionWindow?> = WeakReference(null as CodeActionWindow?)
 
@@ -61,7 +62,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
             if (value) {
                 currentEditorRef.get()?.let {
                     hoverWindowRef.clear()
-                    hoverWindowRef = WeakReference(HoverWindow(it, editor.coroutineScope))
+                    hoverWindowRef = WeakReference(HoverWindow(it.delegate, it, editor.coroutineScope))
                 }
             } else {
                 hoverWindow?.setEnabled(false)
@@ -78,7 +79,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
             if (value) {
                 currentEditorRef.get()?.let {
                     signatureHelpWindowRef.clear()
-                    signatureHelpWindowRef = WeakReference(SignatureHelpWindow(it, editor.coroutineScope))
+                    signatureHelpWindowRef = WeakReference(SignatureHelpWindow(it.delegate, it, editor.coroutineScope))
                 }
             } else {
                 signatureHelpWindow?.setEnabled(false)
@@ -137,11 +138,12 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         currentEditorRef = WeakReference(codeEditor)
 
         if (isEnableSignatureHelp) {
-            signatureHelpWindowRef = WeakReference(SignatureHelpWindow(codeEditor, editor.coroutineScope))
+            signatureHelpWindowRef =
+                WeakReference(SignatureHelpWindow(codeEditor.delegate, codeEditor, editor.coroutineScope))
         }
 
         if (isEnableHover) {
-            hoverWindowRef = WeakReference(HoverWindow(codeEditor, editor.coroutineScope))
+            hoverWindowRef = WeakReference(HoverWindow(codeEditor.delegate, codeEditor, editor.coroutineScope))
         }
 
         if (isEnableInlayHint) {
@@ -155,7 +157,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
             }
         }
 
-        codeActionWindowRef = WeakReference(CodeActionWindow(editor, codeEditor))
+        codeActionWindowRef = WeakReference(CodeActionWindow(editor, codeEditor.delegate, codeEditor))
 
         val diagnosticWindow = codeEditor.getComponent<EditorDiagnosticTooltipWindow>()
         if (diagnosticWindow.layout is DefaultDiagnosticTooltipLayout) {

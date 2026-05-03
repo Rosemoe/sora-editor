@@ -33,7 +33,8 @@ import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.TextSizeChangeEvent
 import io.github.rosemoe.sora.event.subscribeEvent
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
+import io.github.rosemoe.sora.widget.CodeEditorHost
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.getComponent
@@ -46,10 +47,12 @@ import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.SignatureHelp
 
 open class SignatureHelpWindow(
-    editor: CodeEditor,
+    editor: CodeEditorDelegate,
+    host: CodeEditorHost,
     val coroutineScope: CoroutineScope,
 ) : EditorPopupWindow(
     editor,
+    host,
     FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT
 ) {
     private lateinit var rootView: View

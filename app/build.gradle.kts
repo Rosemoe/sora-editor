@@ -24,6 +24,7 @@
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -72,6 +73,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
     }
 
     packaging {
@@ -104,8 +106,19 @@ dependencies {
     implementation(projects.languageTextmate)
     implementation(projects.languageMonarch)
     implementation(projects.editorLsp)
+    implementation(projects.editorCompose)
     implementation(projects.languageTreesitter)
     implementation(projects.onigurumaNative)
+
+    // Compose
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
 
     // Tree-sitter languages
     implementation(libs.tree.sitter.java)

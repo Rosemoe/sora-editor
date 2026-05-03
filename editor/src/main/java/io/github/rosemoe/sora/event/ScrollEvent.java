@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.event;
 import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * Reports a scroll in editor.
@@ -65,11 +66,11 @@ public class ScrollEvent extends Event {
     private float flingVelocityX;
     private float flingVelocityY;
 
-    public ScrollEvent(@NonNull CodeEditor editor, int startX, int startY, int endX, int endY, int cause) {
+    public ScrollEvent(@NonNull CodeEditorDelegate editor, int startX, int startY, int endX, int endY, int cause) {
         this(editor, startX, startY, endX, endY, cause, 0f, 0f);
     }
 
-    public ScrollEvent(@NonNull CodeEditor editor, int startX, int startY, int endX, int endY, int cause, float vx, float vy) {
+    public ScrollEvent(@NonNull CodeEditorDelegate editor, int startX, int startY, int endX, int endY, int cause, float vx, float vy) {
         super(editor);
         this.startX = startX;
         this.startY = startY;

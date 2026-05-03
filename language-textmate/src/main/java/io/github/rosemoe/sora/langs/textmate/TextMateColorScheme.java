@@ -37,7 +37,7 @@ import java.util.List;
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 import io.github.rosemoe.sora.langs.textmate.utils.ColorUtils;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 public class TextMateColorScheme extends EditorColorScheme implements ThemeRegistry.ThemeChangeListener {
@@ -343,13 +343,13 @@ public class TextMateColorScheme extends EditorColorScheme implements ThemeRegis
     }
 
     @Override
-    public void detachEditor(@NonNull CodeEditor editor) {
+    public void detachEditor(@NonNull CodeEditorDelegate editor) {
         super.detachEditor(editor);
         themeRegistry.removeListener(this);
     }
 
     @Override
-    public void attachEditor(@NonNull CodeEditor editor) {
+    public void attachEditor(@NonNull CodeEditorDelegate editor) {
         super.attachEditor(editor);
         try {
             themeRegistry.loadTheme(currentTheme);
