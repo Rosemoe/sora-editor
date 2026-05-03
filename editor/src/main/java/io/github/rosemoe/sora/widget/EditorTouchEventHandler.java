@@ -943,6 +943,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 distanceX = 0;
             }
         }
+        int prevX = scroller.getCurrX();
+        int prevY = scroller.getCurrY();
         int endX = scroller.getCurrX() + (int) distanceX;
         int endY = scroller.getCurrY() + (int) distanceY;
         endX = Math.max(endX, 0);
@@ -951,64 +953,74 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         endX = Math.min(endX, editor.getScrollMaxX());
         boolean notifyY = true;
         boolean notifyX = true;
-        if (!editor.getVerticalEdgeEffect().isFinished()) {
-            float displacement = Math.max(0, Math.min(1, e2.getX() / host.getWidth()));
-            float distance = (glowTopOrBottom ? distanceY : -distanceY) / host.getMeasuredHeight();
-            if (distance > 0) {
-                endY = scroller.getCurrY();
-                editor.getVerticalEdgeEffect().onPull(distance, !glowTopOrBottom ? displacement : 1 - displacement);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                var edgeEffect = editor.getVerticalEdgeEffect();
-                edgeEffect.onPullDistance(distance, !glowTopOrBottom ? displacement : 1 - displacement);
-                if (edgeEffect.getDistance() != 0) {
+        if (DelegateKt.isViewMode(editor)) {
+            if (!editor.getVerticalEdgeEffect().isFinished()) {
+                float displacement = Math.max(0, Math.min(1, e2.getX() / host.getWidth()));
+                float distance = (glowTopOrBottom ? distanceY : -distanceY) / host.getMeasuredHeight();
+                if (distance > 0) {
                     endY = scroller.getCurrY();
+                    editor.getVerticalEdgeEffect().onPull(distance, !glowTopOrBottom ? displacement : 1 - displacement);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    var edgeEffect = editor.getVerticalEdgeEffect();
+                    edgeEffect.onPullDistance(distance, !glowTopOrBottom ? displacement : 1 - displacement);
+                    if (edgeEffect.getDistance() != 0) {
+                        endY = scroller.getCurrY();
+                    }
+                } else {
+                    editor.getVerticalEdgeEffect().finish();
                 }
-            } else {
-                editor.getVerticalEdgeEffect().finish();
+                notifyY = false;
             }
-            notifyY = false;
-        }
-        if (!editor.getHorizontalEdgeEffect().isFinished()) {
-            float displacement = Math.max(0, Math.min(1, e2.getY() / host.getHeight()));
-            float distance = (glowLeftOrRight ? distanceX : -distanceX) / host.getMeasuredWidth();
-            if (distance > 0) {
-                endX = scroller.getCurrX();
-                editor.getHorizontalEdgeEffect().onPull(distance, !glowLeftOrRight ? 1 - displacement : displacement);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                var edgeEffect = editor.getHorizontalEdgeEffect();
-                edgeEffect.onPullDistance(distance, !glowLeftOrRight ? 1 - displacement : displacement);
-                if (edgeEffect.getDistance() != 0) {
+            if (!editor.getHorizontalEdgeEffect().isFinished()) {
+                float displacement = Math.max(0, Math.min(1, e2.getY() / host.getHeight()));
+                float distance = (glowLeftOrRight ? distanceX : -distanceX) / host.getMeasuredWidth();
+                if (distance > 0) {
                     endX = scroller.getCurrX();
+                    editor.getHorizontalEdgeEffect().onPull(distance, !glowLeftOrRight ? 1 - displacement : displacement);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    var edgeEffect = editor.getHorizontalEdgeEffect();
+                    edgeEffect.onPullDistance(distance, !glowLeftOrRight ? 1 - displacement : displacement);
+                    if (edgeEffect.getDistance() != 0) {
+                        endX = scroller.getCurrX();
+                    }
+                } else {
+                    editor.getHorizontalEdgeEffect().finish();
                 }
-            } else {
-                editor.getHorizontalEdgeEffect().finish();
+                notifyX = false;
             }
-            notifyX = false;
         }
         scroller.startScroll(scroller.getCurrX(),
                 scroller.getCurrY(),
                 endX - scroller.getCurrX(),
                 endY - scroller.getCurrY(), 0);
-        final float minOverPull = 2f;
-        if (notifyY && scroller.getCurrY() + distanceY < -minOverPull) {
-            editor.getVerticalEdgeEffect().onPull(-distanceY / host.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / editor.getWidth())));
-            glowTopOrBottom = false;
-        }
-        if (notifyY && scroller.getCurrY() + distanceY > editor.getScrollMaxY() + minOverPull) {
-            editor.getVerticalEdgeEffect().onPull(distanceY / host.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / editor.getWidth())));
-            glowTopOrBottom = true;
-        }
-        if (notifyX && scroller.getCurrX() + distanceX < -minOverPull) {
-            editor.getHorizontalEdgeEffect().onPull(-distanceX / host.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / host.getHeight())));
-            glowLeftOrRight = false;
-        }
-        if (notifyX && scroller.getCurrX() + distanceX > editor.getScrollMaxX() + minOverPull) {
-            editor.getHorizontalEdgeEffect().onPull(distanceX / host.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / host.getHeight())));
-            glowLeftOrRight = true;
+        if (DelegateKt.isViewMode(editor)) {
+            final float minOverPull = 2f;
+            if (notifyY && scroller.getCurrY() + distanceY < -minOverPull) {
+                editor.getVerticalEdgeEffect().onPull(-distanceY / host.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / editor.getWidth())));
+                glowTopOrBottom = false;
+            }
+            if (notifyY && scroller.getCurrY() + distanceY > editor.getScrollMaxY() + minOverPull) {
+                editor.getVerticalEdgeEffect().onPull(distanceY / host.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / editor.getWidth())));
+                glowTopOrBottom = true;
+            }
+            if (notifyX && scroller.getCurrX() + distanceX < -minOverPull) {
+                editor.getHorizontalEdgeEffect().onPull(-distanceX / host.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / host.getHeight())));
+                glowLeftOrRight = false;
+            }
+            if (notifyX && scroller.getCurrX() + distanceX > editor.getScrollMaxX() + minOverPull) {
+                editor.getHorizontalEdgeEffect().onPull(distanceX / host.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / host.getHeight())));
+                glowLeftOrRight = true;
+            }
         }
         host.invalidate();
         editor.dispatchEvent(new ScrollEvent(editor, scroller.getCurrX(),
                 scroller.getCurrY(), endX, endY, ScrollEvent.CAUSE_USER_DRAG));
+
+        if (editor.overscrollCallback != null) {
+            float consumedX = endX - prevX; // how much scroller actually moved
+            float consumedY = endY - prevY;
+            editor.overscrollCallback.onScroll(distanceX, distanceY, consumedX, consumedY);
+        }
         return true;
     }
 
@@ -1041,6 +1053,11 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             notifyScrolled();
         }
         editor.releaseEdgeEffects();
+
+        if (editor.overscrollCallback != null) {
+            editor.overscrollCallback.onFling(velocityX, velocityY);
+        }
+
         editor.dispatchEvent(new ScrollEvent(editor, scroller.getCurrX(),
                 scroller.getCurrY(), scroller.getFinalX(), scroller.getFinalY(), ScrollEvent.CAUSE_USER_FLING));
         host.postInvalidateOnAnimation();

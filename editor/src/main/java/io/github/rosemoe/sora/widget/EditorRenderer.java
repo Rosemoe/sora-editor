@@ -635,7 +635,10 @@ public class EditorRenderer {
 
         drawStuckLineNumbers(canvas, stuckLines, offsetX, lineNumberWidth, editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER));
         drawScrollBarsAndMinimap(canvas);
-        drawEdgeEffect(canvas);
+
+        if (DelegateKt.isViewMode(editor)) {
+            drawEdgeEffect(canvas);
+        }
 
         releasePreloadedData();
         lastStuckLines = stuckLines;
