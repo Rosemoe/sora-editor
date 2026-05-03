@@ -240,11 +240,13 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
     EditorTextActionWindow textActionWindow;
     EditorDiagnosticTooltipWindow diagnosticTooltip;
     EditorContextMenuCreator contextMenuCreator;
-    EditorStyleDelegate styleDelegate;
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public EditorStyleDelegate styleDelegate;
     CharPosition selectionAnchor;
     EventManager eventManager;
     EditorAutoCompletion completionWindow;
-    Styles textStyles;
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public Styles textStyles;
     HighlightTextContainer highlightTextContainer;
     EditorInputConnection inputConnection;
     Layout layout;

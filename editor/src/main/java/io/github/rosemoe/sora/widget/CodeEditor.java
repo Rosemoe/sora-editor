@@ -2918,7 +2918,7 @@ public class CodeEditor extends View implements InlayHintRendererProvider, CodeE
     public void release() {
         delegate.hideEditorWindows();
         if (!released) {
-            delegate.dispatchEvent(new EditorReleaseEvent(delegate, this));
+            delegate.dispatchEvent(new EditorReleaseEvent(delegate));
         } else {
             return;
         }

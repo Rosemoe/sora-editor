@@ -91,8 +91,16 @@ data class CompletionState(
     val enableAnimation: Boolean = true,
 )
 
+/**
+ * Type alias for a Composable function that renders the content of the auto-completion window.
+ *
+ * @param state The current [CompletionState] containing items and selection info.
+ * @param onSelect A callback to be invoked when an item at the given index is selected by the user.
+ */
+typealias AutoCompletionWindowContent = @Composable (state: CompletionState, onSelect: (Int) -> Unit) -> Unit
+
 internal fun CodeEditorDelegate.createAutoCompletionWindow(
-    content: @Composable (CompletionState, onSelect: (Int) -> Unit) -> Unit
+    content: AutoCompletionWindowContent
 ): EditorAutoCompletion {
     val window = AutoCompletionWindow(this)
     window.content = content
@@ -111,7 +119,7 @@ private class AutoCompletionWindow(
     private val state = MutableStateFlow(CompletionState())
     private var colorSchemeState: MutableState<EditorColorScheme>? = null
 
-    var content: @Composable (CompletionState, onSelect: (Int) -> Unit) -> Unit by mutableStateOf({ _, _ -> })
+    var content: AutoCompletionWindowContent by mutableStateOf({ _, _ -> })
 
     @Composable
     private fun Content() {
