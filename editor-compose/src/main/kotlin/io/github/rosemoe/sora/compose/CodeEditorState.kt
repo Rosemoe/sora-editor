@@ -1619,34 +1619,44 @@ class CodeEditorState @RememberInComposition internal constructor(
 
     internal fun computeScroll() {
         val scroller = delegate.touchHandler.scroller
+
         if (scroller.computeScrollOffset()) {
-            if (!scroller.isFinished && (scroller.startX != scroller.finalX || scroller.startY != scroller.finalY)) {
-                delegate.scrollerFinalX = scroller.finalX.toFloat()
-                delegate.scrollerFinalY = scroller.finalY.toFloat()
-
-                val threshold = delegate.dpUnit * 5
-                delegate.horizontalAbsorb = abs(scroller.startX - scroller.finalX) > threshold
-                delegate.verticalAbsorb = abs(scroller.startY - scroller.finalY) > threshold
-            }
-
             val currX = scroller.currX
+            val currY = scroller.currY
             val maxX = delegate.scrollMaxX
-            if (currX <= 0 && delegate.scrollerFinalX <= 0 && delegate.horizontalEdgeEffect.isFinished && delegate.horizontalAbsorb) {
-                delegate.horizontalEdgeEffect.onAbsorb(scroller.currVelocity.toInt())
-                delegate.touchHandler.glowLeftOrRight = false
-            } else if (currX >= maxX && delegate.scrollerFinalX >= maxX && delegate.horizontalEdgeEffect.isFinished && delegate.horizontalAbsorb) {
-                delegate.horizontalEdgeEffect.onAbsorb(scroller.currVelocity.toInt())
-                delegate.touchHandler.glowLeftOrRight = true
+            val maxY = delegate.scrollMaxY
+
+            var absorbX = 0f
+            var absorbY = 0f
+            var hitWall = false
+
+            // X-AXIS COLLISION
+            // If we are at/past 0, and we STARTED the fling further inside the document
+            if (currX <= 0 && scroller.startX > 0) {
+                absorbX = scroller.currVelocity
+                hitWall = true
+            }
+            // If we hit the max bound, and we STARTED the fling before the max bound
+            else if (currX >= maxX && scroller.startX < maxX) {
+                absorbX = -scroller.currVelocity
+                hitWall = true
             }
 
-            val currY = scroller.currY
-            val maxY = delegate.scrollMaxY
-            if (currY <= 0 && delegate.scrollerFinalY <= 0 && delegate.verticalEdgeEffect.isFinished && delegate.verticalAbsorb) {
-                delegate.verticalEdgeEffect.onAbsorb(scroller.currVelocity.toInt())
-                delegate.touchHandler.glowTopOrBottom = false
-            } else if (currY >= maxY && delegate.scrollerFinalY >= maxY && delegate.verticalEdgeEffect.isFinished && delegate.verticalAbsorb) {
-                delegate.verticalEdgeEffect.onAbsorb(scroller.currVelocity.toInt())
-                delegate.touchHandler.glowTopOrBottom = true
+            // Y-AXIS COLLISION
+            if (currY <= 0 && scroller.startY > 0) {
+                absorbY = scroller.currVelocity
+                hitWall = true
+            } else if (currY >= maxY && scroller.startY < maxY) {
+                absorbY = -scroller.currVelocity
+                hitWall = true
+            }
+
+            if (hitWall) {
+                scroller.forceFinished(true)
+
+                if (delegate.overscrollCallback != null) {
+                    delegate.overscrollCallback?.onAbsorb(absorbX, absorbY)
+                }
             }
 
             host.postInvalidateOnAnimation()

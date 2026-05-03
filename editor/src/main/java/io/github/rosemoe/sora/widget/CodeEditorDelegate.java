@@ -258,6 +258,10 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public EditorKeyEventHandler keyEventHandler;
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @UnsupportedUserUsage
+    public EditorOverscrollCallback overscrollCallback;
+
     private final SnippetController snippetController;
     private final Map<String, InlayHintRenderer> inlayHintRendererMap = new HashMap<>();
 
@@ -303,8 +307,9 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
         handleDescLeft = new SelectionHandleStyle.HandleDescriptor();
         handleDescRight = new SelectionHandleStyle.HandleDescriptor();
 
-        edgeEffectVertical = new EdgeEffect(getContext());
-        edgeEffectHorizontal = new EdgeEffect(getContext());
+        var isComposeMode = DelegateKt.isComposeMode(this);
+        edgeEffectVertical = isComposeMode ? null : new EdgeEffect(getContext());
+        edgeEffectHorizontal = isComposeMode ? null : new EdgeEffect(getContext());
 
         setTextSize(CodeEditor.DEFAULT_TEXT_SIZE);
         setLineInfoTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, CodeEditor.DEFAULT_LINE_INFO_TEXT_SIZE, Resources.getSystem().getDisplayMetrics()));
@@ -619,8 +624,10 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
      * Release active edge effects on thumbs up
      */
     public void releaseEdgeEffects() {
-        getHorizontalEdgeEffect().onRelease();
-        getVerticalEdgeEffect().onRelease();
+        if (DelegateKt.isViewMode(this)) {
+            getHorizontalEdgeEffect().onRelease();
+            getVerticalEdgeEffect().onRelease();
+        }
     }
 
     /**

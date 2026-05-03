@@ -81,10 +81,6 @@ private class LayoutModifier(
         host._width = w
         host._height = h
         delegate.renderer.onSizeChanged(w, h)
-        delegate.verticalEdgeEffect?.setSize(w, h)
-        delegate.horizontalEdgeEffect?.setSize(h, w)
-        delegate.verticalEdgeEffect.finish()
-        delegate.horizontalEdgeEffect.finish()
 
         if (delegate.layout == null || (delegate.isWordwrap && w != oldWidth)) {
             delegate.createLayout()
@@ -97,9 +93,6 @@ private class LayoutModifier(
                 delegate.touchHandler.scrollBy(scrollDx.toFloat(), scrollDy.toFloat())
             }
         }
-
-        delegate.verticalAbsorb = false
-        delegate.horizontalAbsorb = false
 
         if (oldHeight > h && delegate.props.adjustToSelectionOnResize) {
             delegate.ensureSelectionVisible()

@@ -48,5 +48,4 @@ internal fun createDelegate(host: CodeEditorHost) = CodeEditorDelegate(host).app
 
     isLigatureEnabled = true
     props.symbolPairAutoCompletion = true
-    props.overScrollEnabled = false
 }
