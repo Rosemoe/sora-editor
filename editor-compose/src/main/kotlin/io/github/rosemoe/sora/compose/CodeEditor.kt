@@ -26,6 +26,7 @@ package io.github.rosemoe.sora.compose
 
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -56,14 +57,18 @@ import androidx.compose.ui.semantics.verticalScrollAxisRange
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.tooling.preview.Preview
-import io.github.rosemoe.sora.compose.component.CompletionState
+import io.github.rosemoe.sora.compose.component.AutoCompletionWindowContent
+import io.github.rosemoe.sora.compose.component.DiagnosticTooltipContent
+import io.github.rosemoe.sora.compose.component.TextActionWindowContent
 import io.github.rosemoe.sora.compose.component.createAutoCompletionWindow
+import io.github.rosemoe.sora.compose.component.createDiagnosticTooltipWindow
 import io.github.rosemoe.sora.compose.component.createTextActionWindow
 import io.github.rosemoe.sora.compose.internal.CodeEditorImpl
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.text.TextUtils
 import io.github.rosemoe.sora.widget.SelectionMovement
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
 import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
 import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.replaceComponent
@@ -77,6 +82,8 @@ import io.github.rosemoe.sora.widget.replaceComponent
  * @param enabled Controls the enabled state of the editor. When `false`, the editor will not respond to user input.
  * @param autoCompletionWindow A composable function to render the auto-completion window.
  * Pass `null` to disable the auto-completion feature. Defaults to [CodeEditorDefaults.AutoCompletionWindow].
+ * @param diagnosticTooltipWindow A composable function to render the diagnostic tooltip window.
+ * Pass `null` to disable the diagnostic tooltip. Defaults to [CodeEditorDefaults.DiagnosticTooltipWindow].
  * @param textActionWindow A composable function to render the text action window (selection menu/toolbar).
  * Pass `null` to disable the text action window. Defaults to [CodeEditorDefaults.TextActionWindow].
  */
@@ -87,11 +94,9 @@ fun CodeEditor(
     state: CodeEditorState = rememberCodeEditorState(),
     editable: Boolean = true,
     enabled: Boolean = true,
-    autoCompletionWindow: @Composable ((
-        state: CompletionState,
-        onItemClick: (index: Int) -> Unit
-    ) -> Unit)? = CodeEditorDefaults::AutoCompletionWindow,
-    textActionWindow: @Composable ((CodeEditorState) -> Unit)? = { state ->
+    autoCompletionWindow: AutoCompletionWindowContent? = CodeEditorDefaults::AutoCompletionWindow,
+    diagnosticTooltipWindow: DiagnosticTooltipContent? = CodeEditorDefaults::DiagnosticTooltipWindow,
+    textActionWindow: TextActionWindowContent? = { state ->
         CodeEditorDefaults.TextActionWindow(
             state = state,
             modifier = Modifier.fillMaxHeight()
@@ -105,6 +110,7 @@ fun CodeEditor(
 
     val autoCompletion by rememberUpdatedState(autoCompletionWindow)
     val textAction by rememberUpdatedState(textActionWindow)
+    val diagnosticTooltip by rememberUpdatedState(diagnosticTooltipWindow)
 
     LaunchedEffect(autoCompletion) {
         val delegate = state.delegate
@@ -126,6 +132,24 @@ fun CodeEditor(
             delegate.getComponent<EditorTextActionWindow>().isEnabled = false
             state.textActionWindow = state.createTextActionWindow(textAction!!)
             state.textActionWindow?.isEnabled = true
+        }
+    }
+
+    LaunchedEffect(diagnosticTooltip) {
+        val delegate = state.delegate
+        if (diagnosticTooltip == null) {
+            delegate.getComponent<EditorDiagnosticTooltipWindow>().isEnabled = false
+            state.diagnosticTooltipWindow?.isEnabled = false
+        } else {
+            delegate.getComponent<EditorDiagnosticTooltipWindow>().isEnabled = false
+            state.diagnosticTooltipWindow = state.createDiagnosticTooltipWindow(diagnosticTooltip!!)
+            state.diagnosticTooltipWindow?.isEnabled = true
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            state.release()
         }
     }
 

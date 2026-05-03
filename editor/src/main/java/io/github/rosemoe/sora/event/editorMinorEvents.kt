@@ -55,7 +55,7 @@ class EditorFormatEvent(editor: CodeEditorDelegate, val isSuccess: Boolean) : Ev
  *
  *  @author Rosemoe
  */
-class EditorReleaseEvent(editorDelegate: CodeEditorDelegate, val editor: CodeEditor) : Event(editorDelegate)
+class EditorReleaseEvent(editor: CodeEditorDelegate) : Event(editor)
 
 /**
  * Event for ime private command execution. When [android.view.inputmethod.InputConnection.performPrivateCommand]
@@ -170,4 +170,4 @@ class PublishDiagnosticsEvent(
     editor: CodeEditorDelegate,
     val oldDiagnostics: List<DiagnosticRegion>,
     val newDiagnosticsEvent: List<DiagnosticRegion>
-): Event(editor)
+) : Event(editor)

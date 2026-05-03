@@ -25,7 +25,6 @@
 package io.github.rosemoe.sora.compose.component
 
 import android.graphics.RectF
-import androidx.compose.animation.core.animateIntSizeAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -58,14 +57,31 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import kotlin.math.max
 import kotlin.math.min
 
+/**
+ * Type alias for a Composable function that provides the UI content for a [TextActionWindow].
+ *
+ * @param CodeEditorState The current state of the editor to which the window is attached.
+ */
+typealias TextActionWindowContent = @Composable (CodeEditorState) -> Unit
+
 internal fun CodeEditorState.createTextActionWindow(
-    content: @Composable (CodeEditorState) -> Unit
+    content: TextActionWindowContent
 ): TextActionWindow {
     val window = TextActionWindow(this)
     window.content = content
     return window
 }
 
+/**
+ * A specialized [EditorPopupWindow] designed to display contextual actions (like Copy, Paste, etc.)
+ * over the text selection or cursor position.
+ *
+ * This component is built specifically for the Compose implementation of sora-editor. It listens
+ * to editor events (scrolling, selection changes, focus changes) to automatically show, hide,
+ * or reposition itself.
+ *
+ * @param state The editor state associated with this window.
+ */
 internal class TextActionWindow(
     val state: CodeEditorState,
 ) : EditorPopupWindow(state.delegate, state.host, FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED), EditorBuiltinComponent {
@@ -92,7 +108,7 @@ internal class TextActionWindow(
     )
     private var colorScheme by mutableStateOf(editor.colorScheme)
 
-    var content: @Composable (CodeEditorState) -> Unit by mutableStateOf({})
+    var content: TextActionWindowContent by mutableStateOf({})
 
     init {
         applyColorScheme(editor.colorScheme)
