@@ -122,10 +122,6 @@ fun CodeEditor(
 /**
  * Composable for displaying and editing code.
  *
- * Use this version when you need full control over the editor via [CodeEditorState].
- * This allows for "state hoisting," enabling you to programmatically scroll,
- * change selection, set breakpoints, or manage diagnostics from your parent composables.
- *
  * @param modifier The [Modifier] to be applied to the editor container.
  * @param state The state object to be used to control or observe the editor's state.
  * @param editable Controls if the text in the editor can be modified by the user.
