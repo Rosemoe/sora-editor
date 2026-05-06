@@ -29,12 +29,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.UiComposable
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.semantics.ScrollAxisRange
 import androidx.compose.ui.semantics.accessibilityClassName
 import androidx.compose.ui.semantics.copyText
@@ -56,6 +58,8 @@ import androidx.compose.ui.semantics.textSelectionRange
 import androidx.compose.ui.semantics.verticalScrollAxisRange
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.resolveAsTypeface
 import androidx.compose.ui.tooling.preview.Preview
 import io.github.rosemoe.sora.compose.component.AutoCompletionWindowContent
 import io.github.rosemoe.sora.compose.component.DiagnosticTooltipContent
@@ -94,6 +98,7 @@ fun CodeEditor(
     state: CodeEditorState = rememberCodeEditorState(),
     editable: Boolean = true,
     enabled: Boolean = true,
+    fontFamily: FontFamily = FontFamily.Monospace,
     autoCompletionWindow: AutoCompletionWindowContent? = CodeEditorDefaults::AutoCompletionWindow,
     diagnosticTooltipWindow: DiagnosticTooltipContent? = CodeEditorDefaults::DiagnosticTooltipWindow,
     textActionWindow: TextActionWindowContent? = { state ->
@@ -106,6 +111,16 @@ fun CodeEditor(
     LaunchedEffect(enabled, editable) {
         state.host._isEnabled = enabled
         state.editable = editable
+    }
+
+    val resolver = LocalFontFamilyResolver.current
+    val typeface by remember(fontFamily) { resolver.resolveAsTypeface(fontFamily) }
+
+    LaunchedEffect(typeface) {
+        state.apply {
+            typefaceText = typeface
+            typefaceLineNumber = typeface
+        }
     }
 
     val autoCompletion by rememberUpdatedState(autoCompletionWindow)

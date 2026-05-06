@@ -383,11 +383,7 @@ public class Magnifier implements EditorBuiltinComponent {
         // The view system cannot be used here because Compose manages its own drawing layer.
         // We must manually invoke the renderer to paint onto the popup canvas.
         delegate.getRenderer().draw(viewCanvas);
-        // Update magnifier
-        //if ((delegate.lastCursorState != delegate.getCursorBlink().visibility || !delegate.touchHandler.getScroller().isFinished()) && delegate.touchHandler.magnifier.isShowing()) {
-        //    delegate.lastCursorState = delegate.getCursorBlink().visibility;
-        //    host.postInLifecycle(delegate.touchHandler.magnifier::updateDisplay);
-        //}
+
         var scaled = Bitmap.createScaledBitmap(clip, popup.getWidth(), popup.getHeight(), true);
         clip.recycle();
 

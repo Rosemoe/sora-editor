@@ -1379,8 +1379,8 @@ class CodeEditorState @RememberInComposition internal constructor(
      * Sets the text to be displayed.
      *
      * @param text               the new text you want to display
-     * @param reuseContentObject If the given {@code text} is an instance of {@link Content}, reuse it.
-     * @param extraArguments     Extra arguments for the document. This {@link Bundle} object is passed
+     * @param reuseContentObject If the given [text] is an instance of [io.github.rosemoe.sora.text.Content], reuse it.
+     * @param extraArguments     Extra arguments for the document. This [Bundle] object is passed
      *                           to all languages and plugins in editor.
      */
     fun setText(text: CharSequence?, extraArguments: Bundle? = null, reuseContentObject: Boolean = true) {
