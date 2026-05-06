@@ -36,6 +36,7 @@ import androidx.compose.ui.UiComposable
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.semantics.ScrollAxisRange
 import androidx.compose.ui.semantics.accessibilityClassName
@@ -61,6 +62,9 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.resolveAsTypeface
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
+import androidx.compose.ui.unit.sp
 import io.github.rosemoe.sora.compose.component.AutoCompletionWindowContent
 import io.github.rosemoe.sora.compose.component.DiagnosticTooltipContent
 import io.github.rosemoe.sora.compose.component.TextActionWindowContent
@@ -84,6 +88,8 @@ import io.github.rosemoe.sora.widget.replaceComponent
  * @param state The state object to be used to control or observe the editor's state.
  * @param editable Controls if the text in the editor can be modified by the user.
  * @param enabled Controls the enabled state of the editor. When `false`, the editor will not respond to user input.
+ * @param fontFamily The font family to be used for the editor text and line numbers. Defaults to [FontFamily.Monospace].
+ * @param fontSize The font size for the editor text. **Must be in `sp`**. Defaults to `14.sp`.
  * @param autoCompletionWindow A composable function to render the auto-completion window.
  * Pass `null` to disable the auto-completion feature. Defaults to [CodeEditorDefaults.AutoCompletionWindow].
  * @param diagnosticTooltipWindow A composable function to render the diagnostic tooltip window.
@@ -99,6 +105,7 @@ fun CodeEditor(
     editable: Boolean = true,
     enabled: Boolean = true,
     fontFamily: FontFamily = FontFamily.Monospace,
+    fontSize: TextUnit = 14.sp,
     autoCompletionWindow: AutoCompletionWindowContent? = CodeEditorDefaults::AutoCompletionWindow,
     diagnosticTooltipWindow: DiagnosticTooltipContent? = CodeEditorDefaults::DiagnosticTooltipWindow,
     textActionWindow: TextActionWindowContent? = { state ->
@@ -121,6 +128,14 @@ fun CodeEditor(
             typefaceText = typeface
             typefaceLineNumber = typeface
         }
+    }
+
+    val density = LocalDensity.current
+    LaunchedEffect(fontSize, density) {
+        check(fontSize.type == TextUnitType.Sp) {
+            "Only Sp is allowed for font size. Received: ${fontSize.type}"
+        }
+        state.textSizePx = with(density) { fontSize.toPx() }
     }
 
     val autoCompletion by rememberUpdatedState(autoCompletionWindow)
@@ -174,7 +189,7 @@ fun CodeEditor(
             .clipToBounds()
             .pointerHoverIcon(PointerIcon.Text, overrideDescendants = true)
             .semantics(mergeDescendants = true) {
-                stateDescription = if (enabled) "enabled" else "disabled"
+                stateDescription = if (enabled && editable) "editable" else if (enabled) "enabled" else "disabled"
 
                 if (enabled) {
                     val maxLength = state.props.maxAccessibilityTextLength
