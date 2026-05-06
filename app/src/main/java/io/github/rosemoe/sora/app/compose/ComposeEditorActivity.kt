@@ -51,6 +51,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import io.github.rosemoe.sora.app.R
 import io.github.rosemoe.sora.compose.CodeEditor
 import io.github.rosemoe.sora.compose.rememberCodeEditorState
@@ -123,8 +124,6 @@ class ComposeEditorActivity : ComponentActivity() {
                 val typeface = remember { Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf") }
 
                 LaunchedEffect(state) {
-                    state.typefaceText = typeface
-                    state.typefaceLineNumber = typeface
                     state.editorLanguage = JavaLanguage()
                     state.colorScheme = SchemeEclipse()
                     state.props.showMinimap = false
@@ -150,6 +149,7 @@ class ComposeEditorActivity : ComponentActivity() {
 
                 CodeEditor(
                     state = state,
+                    fontFamily = FontFamily(typeface),
                     modifier = Modifier.fillMaxSize()
                 )
             }
