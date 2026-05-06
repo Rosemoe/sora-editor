@@ -82,7 +82,49 @@ import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.replaceComponent
 
 /**
+ * A simplified version of [CodeEditor] for basic use cases.
+ *
+ * Use this version when you only need to provide initial text and basic configuration
+ * without needing to programmatically control the editor's behavior (like scrolling,
+ * selection, or diagnostic markers) after it's initialized.
+ *
+ * If you need to observe text changes or control the editor state, use the version
+ * that accepts a [CodeEditorState].
+ *
+ * @param text The initial text to be displayed in the editor.
+ * @param modifier The [Modifier] to be applied to the editor container.
+ * @param readOnly Whether the editor is in read-only mode.
+ * @param enabled Whether the editor is enabled and can receive focus.
+ * @param fontFamily The font family to be used. Defaults to [FontFamily.Monospace].
+ * @param fontSize The font size for the editor text. **Must be in `sp`**.
+ */
+@Composable
+fun CodeEditor(
+    text: String,
+    modifier: Modifier = Modifier,
+    readOnly: Boolean = false,
+    enabled: Boolean = true,
+    fontFamily: FontFamily = FontFamily.Monospace,
+    fontSize: TextUnit = 14.sp
+) {
+    val state = rememberCodeEditorState(initialText = text)
+
+    CodeEditor(
+        modifier = modifier,
+        state = state,
+        editable = !readOnly,
+        enabled = enabled,
+        fontSize = fontSize,
+        fontFamily = fontFamily
+    )
+}
+
+/**
  * Composable for displaying and editing code.
+ *
+ * Use this version when you need full control over the editor via [CodeEditorState].
+ * This allows for "state hoisting," enabling you to programmatically scroll,
+ * change selection, set breakpoints, or manage diagnostics from your parent composables.
  *
  * @param modifier The [Modifier] to be applied to the editor container.
  * @param state The state object to be used to control or observe the editor's state.
@@ -292,5 +334,8 @@ fun CodeEditor(
 @Preview
 @Composable
 private fun PreviewCodeEditor() {
-    CodeEditor()
+    CodeEditor(
+        text = "fun main() {\n    println(\"Hello Sora-Editor!\")\n}",
+        modifier = Modifier.fillMaxHeight()
+    )
 }
