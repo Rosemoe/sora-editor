@@ -96,6 +96,7 @@ import kotlin.math.abs
  * @author Vivek
  */
 @Stable
+@ExperimentalEditorApi
 class CodeEditorState @RememberInComposition internal constructor(
     cursorBlinkPeriod: Int,
     internal val host: CodeEditorHostImpl,
@@ -1673,6 +1674,7 @@ class CodeEditorState @RememberInComposition internal constructor(
  * @param initialText The initial text to be displayed in the editor. Defaults to `null`.
  */
 @Composable
+@ExperimentalEditorApi
 fun rememberCodeEditorState(initialText: String? = null): CodeEditorState {
     val context = LocalContext.current
     val view = LocalView.current

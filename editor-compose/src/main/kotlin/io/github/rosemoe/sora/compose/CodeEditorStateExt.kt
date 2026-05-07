@@ -22,6 +22,8 @@
  *     additional information or have any questions
  ******************************************************************************/
 
+@file:OptIn(ExperimentalEditorApi::class)
+
 package io.github.rosemoe.sora.compose
 
 import kotlinx.coroutines.Dispatchers

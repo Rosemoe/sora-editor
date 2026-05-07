@@ -39,7 +39,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.darkColorScheme
@@ -54,6 +53,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import io.github.rosemoe.sora.app.R
 import io.github.rosemoe.sora.compose.CodeEditor
+import io.github.rosemoe.sora.compose.ExperimentalEditorApi
 import io.github.rosemoe.sora.compose.rememberCodeEditorState
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
@@ -89,71 +89,70 @@ class ComposeEditorActivity : ComponentActivity() {
             }
 
             MaterialTheme(colorScheme = colorScheme) {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    Content()
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    topBar = {
+                        TopAppBar(
+                            title = { Text("Compose") },
+                            navigationIcon = {
+                                IconButton(onClick = { finish() }) {
+                                    Icon(
+                                        painterResource(R.drawable.round_arrow_back_24),
+                                        contentDescription = "back"
+                                    )
+                                }
+                            }
+                        )
+                    }
+                ) { paddingValues ->
+
+                    Box(
+                        modifier = Modifier
+                            .padding(paddingValues)
+                            .imePadding()
+                    ) {
+                        Content()
+                    }
                 }
             }
         }
     }
 
+    @OptIn(ExperimentalEditorApi::class)
     @Composable
     private fun Content() {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                TopAppBar(
-                    title = { Text("Compose") },
-                    navigationIcon = {
-                        IconButton(onClick = { finish() }) {
-                            Icon(
-                                painterResource(R.drawable.round_arrow_back_24),
-                                contentDescription = "back"
-                            )
-                        }
-                    }
-                )
+        val state = rememberCodeEditorState()
+        val typeface = remember { Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf") }
+
+        LaunchedEffect(state) {
+            state.editorLanguage = JavaLanguage()
+            state.colorScheme = SchemeEclipse()
+            state.props.showMinimap = false
+
+            val content = withContext(Dispatchers.IO) {
+                unzipSampleFile().inputStream().use { ContentIO.createFrom(it) }
             }
-        ) { paddingValues ->
+            withContext(Dispatchers.Main) { state.setText(content) }
 
-            Box(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .imePadding()
-            ) {
-                val state = rememberCodeEditorState()
-                val typeface = remember { Typeface.createFromAsset(assets, "JetBrainsMono-Regular.ttf") }
-
-                LaunchedEffect(state) {
-                    state.editorLanguage = JavaLanguage()
-                    state.colorScheme = SchemeEclipse()
-                    state.props.showMinimap = false
-
-                    val content = withContext(Dispatchers.IO) {
-                        unzipSampleFile().inputStream().use { ContentIO.createFrom(it) }
-                    }
-                    withContext(Dispatchers.Main) { state.setText(content) }
-
-                    val diagnostics = state.diagnostics ?: DiagnosticsContainer()
-                    diagnostics.addDiagnostic(
-                        DiagnosticRegion(
-                            140, 145, DiagnosticRegion.SEVERITY_WARNING, 0,
-                            DiagnosticDetail(
-                                "Test Diagnostic",
-                                "Hellloooo, Worlddd.",
-                                listOf(Quickfix("Umm.", fixAction = { toast("Fixed.") }))
-                            )
-                        )
+            val diagnostics = state.diagnostics ?: DiagnosticsContainer()
+            diagnostics.addDiagnostic(
+                DiagnosticRegion(
+                    140, 145, DiagnosticRegion.SEVERITY_WARNING, 0,
+                    DiagnosticDetail(
+                        "Test Diagnostic",
+                        "Hellloooo, Worlddd.",
+                        listOf(Quickfix("Umm.", fixAction = { toast("Fixed.") }))
                     )
-                    state.diagnostics = diagnostics
-                }
-
-                CodeEditor(
-                    state = state,
-                    fontFamily = FontFamily(typeface),
-                    modifier = Modifier.fillMaxSize()
                 )
-            }
+            )
+            state.diagnostics = diagnostics
         }
+
+        CodeEditor(
+            state = state,
+            fontFamily = FontFamily(typeface),
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     private fun unzipSampleFile(forced: Boolean = false): File {

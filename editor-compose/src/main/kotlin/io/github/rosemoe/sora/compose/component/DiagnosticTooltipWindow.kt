@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.util.fastForEach
 import io.github.rosemoe.sora.compose.CodeEditorState
+import io.github.rosemoe.sora.compose.ExperimentalEditorApi
 import io.github.rosemoe.sora.compose.LocalEditorColorScheme
 import io.github.rosemoe.sora.compose.LocalEditorFontFamily
 import io.github.rosemoe.sora.compose.internal.createPopupLayout
@@ -70,6 +71,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
+@ExperimentalEditorApi
 internal fun CodeEditorState.createDiagnosticTooltipWindow(
     content: DiagnosticTooltipContent,
 ): DiagnosticTooltipWindow {
@@ -78,6 +80,7 @@ internal fun CodeEditorState.createDiagnosticTooltipWindow(
     return window
 }
 
+@ExperimentalEditorApi
 internal class DiagnosticTooltipWindow(
     val state: CodeEditorState,
 ) : EditorPopupWindow(
