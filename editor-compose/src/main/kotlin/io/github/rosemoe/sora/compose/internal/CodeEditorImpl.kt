@@ -39,6 +39,7 @@ import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.unit.Constraints
 import io.github.rosemoe.sora.compose.CodeEditorState
+import io.github.rosemoe.sora.compose.ExperimentalEditorApi
 import io.github.rosemoe.sora.compose.internal.modifier.editorDragAndDrop
 import io.github.rosemoe.sora.compose.internal.modifier.editorMouseEvents
 import io.github.rosemoe.sora.compose.internal.modifier.editorTextInput
@@ -46,6 +47,7 @@ import io.github.rosemoe.sora.compose.internal.modifier.editorTouchEvents
 import io.github.rosemoe.sora.compose.internal.modifier.measureEditorLayout
 import io.github.rosemoe.sora.compose.internal.modifier.renderEditor
 
+@OptIn(ExperimentalEditorApi::class)
 @Composable
 internal fun CodeEditorImpl(
     state: CodeEditorState,

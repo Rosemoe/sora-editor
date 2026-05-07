@@ -99,6 +99,8 @@ import io.github.rosemoe.sora.widget.replaceComponent
  * @param fontSize The font size for the editor text. **Must be in `sp`**.
  */
 @Composable
+@UiComposable
+@ExperimentalEditorApi
 fun CodeEditor(
     text: String,
     modifier: Modifier = Modifier,
@@ -137,6 +139,7 @@ fun CodeEditor(
  */
 @Composable
 @UiComposable
+@ExperimentalEditorApi
 fun CodeEditor(
     modifier: Modifier = Modifier,
     state: CodeEditorState = rememberCodeEditorState(),
@@ -329,6 +332,7 @@ fun CodeEditor(
 
 @Preview
 @Composable
+@OptIn(ExperimentalEditorApi::class)
 private fun PreviewCodeEditor() {
     CodeEditor(
         text = "fun main() {\n    println(\"Hello Sora-Editor!\")\n}",

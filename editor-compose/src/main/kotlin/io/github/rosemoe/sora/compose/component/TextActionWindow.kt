@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.util.fastForEach
 import io.github.rosemoe.sora.compose.CodeEditorState
+import io.github.rosemoe.sora.compose.ExperimentalEditorApi
 import io.github.rosemoe.sora.compose.LocalEditorColorScheme
 import io.github.rosemoe.sora.compose.LocalEditorFontFamily
 import io.github.rosemoe.sora.compose.internal.createPopupLayout
@@ -62,8 +63,10 @@ import kotlin.math.min
  *
  * @param CodeEditorState The current state of the editor to which the window is attached.
  */
+@OptIn(ExperimentalEditorApi::class)
 typealias TextActionWindowContent = @Composable (CodeEditorState) -> Unit
 
+@ExperimentalEditorApi
 internal fun CodeEditorState.createTextActionWindow(
     content: TextActionWindowContent
 ): TextActionWindow {
@@ -82,6 +85,7 @@ internal fun CodeEditorState.createTextActionWindow(
  *
  * @param state The editor state associated with this window.
  */
+@ExperimentalEditorApi
 internal class TextActionWindow(
     val state: CodeEditorState,
 ) : EditorPopupWindow(state.delegate, state.host, FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED), EditorBuiltinComponent {

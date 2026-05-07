@@ -22,6 +22,8 @@
  *     additional information or have any questions
  ******************************************************************************/
 
+@file:OptIn(ExperimentalEditorApi::class)
+
 package io.github.rosemoe.sora.compose.internal.modifier
 
 import android.annotation.SuppressLint
@@ -44,6 +46,7 @@ import androidx.compose.ui.platform.PlatformTextInputModifierNode
 import androidx.compose.ui.platform.PlatformTextInputSessionScope
 import androidx.compose.ui.platform.establishTextInputSession
 import io.github.rosemoe.sora.compose.CodeEditorState
+import io.github.rosemoe.sora.compose.ExperimentalEditorApi
 import io.github.rosemoe.sora.event.BuildEditorInfoEvent
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.receiveAsFlow

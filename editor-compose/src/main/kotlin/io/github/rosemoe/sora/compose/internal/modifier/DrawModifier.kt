@@ -22,6 +22,8 @@
  *     additional information or have any questions
  ******************************************************************************/
 
+@file:OptIn(ExperimentalEditorApi::class)
+
 package io.github.rosemoe.sora.compose.internal.modifier
 
 import android.graphics.Canvas
@@ -34,6 +36,7 @@ import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.platform.InspectorInfo
 import io.github.rosemoe.sora.compose.CodeEditorState
+import io.github.rosemoe.sora.compose.ExperimentalEditorApi
 import io.github.rosemoe.sora.compose.internal.CodeEditorHostImpl
 import io.github.rosemoe.sora.widget.CodeEditorDelegate
 import kotlinx.coroutines.Job
