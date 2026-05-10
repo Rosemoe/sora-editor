@@ -97,6 +97,7 @@ import io.github.rosemoe.sora.widget.replaceComponent
  * @param enabled Whether the editor is enabled and can receive focus.
  * @param fontFamily The font family to be used. Defaults to [FontFamily.Monospace].
  * @param fontSize The font size for the editor text. **Must be in `sp`**.
+ * @param wordWrap Whether to enable word wrap. Defaults to `false`.
  */
 @Composable
 @UiComposable
@@ -107,7 +108,8 @@ fun CodeEditor(
     readOnly: Boolean = false,
     enabled: Boolean = true,
     fontFamily: FontFamily = FontFamily.Monospace,
-    fontSize: TextUnit = 14.sp
+    fontSize: TextUnit = 14.sp,
+    wordWrap: Boolean = false
 ) {
     val state = rememberCodeEditorState(initialText = text)
 
@@ -117,7 +119,8 @@ fun CodeEditor(
         editable = !readOnly,
         enabled = enabled,
         fontSize = fontSize,
-        fontFamily = fontFamily
+        fontFamily = fontFamily,
+        wordWrap = wordWrap
     )
 }
 
@@ -136,6 +139,8 @@ fun CodeEditor(
  * Pass `null` to disable the diagnostic tooltip. Defaults to [CodeEditorDefaults.DiagnosticTooltipWindow].
  * @param textActionWindow A composable function to render the text action window (selection menu/toolbar).
  * Pass `null` to disable the text action window. Defaults to [CodeEditorDefaults.TextActionWindow].
+ * @param wordWrap Whether to enable word wrap. When `true`, long lines will wrap to the next visual row.
+ * Defaults to `false`.
  */
 @Composable
 @UiComposable
@@ -154,7 +159,8 @@ fun CodeEditor(
             state = state,
             modifier = Modifier.fillMaxHeight()
         )
-    }
+    },
+    wordWrap: Boolean = false
 ) {
     LaunchedEffect(enabled, editable) {
         state.host._isEnabled = enabled
@@ -177,6 +183,10 @@ fun CodeEditor(
             "Only Sp is allowed for font size. Received: ${fontSize.type}"
         }
         state.textSizePx = with(density) { fontSize.toPx() }
+    }
+
+    LaunchedEffect(wordWrap) {
+        state.delegate.isWordwrap = wordWrap
     }
 
     val autoCompletion by rememberUpdatedState(autoCompletionWindow)
