@@ -228,11 +228,11 @@ fun CodeEditor(
         }
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            state.release()
-        }
-    }
+//    DisposableEffect(Unit) {
+//        onDispose {
+//            state.release()
+//        }
+//    }
 
     CodeEditorImpl(
         state = state,

@@ -140,3 +140,5 @@ private fun CharSequence.writeTo(
  * Clear the content of the editor.
  */
 fun CodeEditorState.clear() = setText(null)
+
+fun CodeEditorState.requestFocus() = host.requestFocus()
