@@ -26,7 +26,14 @@
 
 package io.github.rosemoe.sora.compose
 
+import android.util.Log
+import io.github.rosemoe.sora.event.ContentChangeEvent
+import io.github.rosemoe.sora.text.Content
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.InputStream
@@ -141,4 +148,38 @@ private fun CharSequence.writeTo(
  */
 fun CodeEditorState.clear() = setText(null)
 
+/**
+ * Request focus for the editor composable.
+ */
 fun CodeEditorState.requestFocus() = host.requestFocus()
+
+/**
+ * Observe the content of the editor as a [Flow].
+ *
+ * The current [Content] is emitted immediately upon collection, followed by
+ * any subsequent changes to the editor's text.
+ */
+val CodeEditorState.content: Flow<Content>
+    get() = callbackFlow {
+        val receipt = subscribeAlways<ContentChangeEvent> { event ->
+            trySend(event.editor.text).onFailure { cause ->
+                Log.w(
+                    "CodeEditorState",
+                    "Failed to emit content change because the flow is no longer accepting values.",
+                    cause
+                )
+            }
+        }
+
+        trySend(text).onFailure { cause ->
+            Log.w(
+                "CodeEditorState",
+                "Failed to emit initial editor content.",
+                cause
+            )
+        }
+
+        awaitClose {
+            receipt.unsubscribe()
+        }
+    }
