@@ -828,7 +828,7 @@ class CodeEditorState @RememberInComposition internal constructor(
     /**
      * Redo last action
      */
-    fun redo() = delegate.undo()
+    fun redo() = delegate.redo()
 
     /**
      * Checks whether we can undo
