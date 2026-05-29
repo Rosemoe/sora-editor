@@ -154,6 +154,11 @@ fun CodeEditorState.clear() = setText(null)
 fun CodeEditorState.requestFocus() = host.requestFocus()
 
 /**
+ * Invalidate the editor, causing it to be redrawn.
+ */
+fun CodeEditorState.invalidate() = host.invalidate()
+
+/**
  * Observe the content of the editor as a [Flow].
  *
  * The current [Content] is emitted immediately upon collection, followed by
