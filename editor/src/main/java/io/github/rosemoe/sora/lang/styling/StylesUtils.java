@@ -40,7 +40,7 @@ public class StylesUtils {
      */
     public static boolean checkNoCompletion(@Nullable Styles styles, @NonNull CharPosition pos) {
         var span = getSpanForPosition(styles, pos);
-        return span == null || TextStyle.isNoCompletion(span.getStyle());
+        return styles != null && (span == null || TextStyle.isNoCompletion(span.getStyle()));
     }
 
     /**

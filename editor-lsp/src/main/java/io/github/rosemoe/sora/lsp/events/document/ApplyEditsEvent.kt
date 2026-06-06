@@ -70,7 +70,8 @@ class ApplyEditsEvent : EventListener {
     fun calculateIndices(content: Content, range: Range): Pair<Int, Int> {
         var startIndex = content.getCharIndex(range.start.line, range.start.character)
         val endLine = range.end.line.coerceAtMost(content.lineCount - 1)
-        var endIndex = content.getCharIndex(endLine, range.end.character)
+        val endCharacter = range.end.character.coerceAtMost(content.getColumnCount(endLine))
+        var endIndex = content.getCharIndex(endLine, endCharacter)
 
         if (endIndex < startIndex) {
             Logger.instance(this.javaClass.name).w(
