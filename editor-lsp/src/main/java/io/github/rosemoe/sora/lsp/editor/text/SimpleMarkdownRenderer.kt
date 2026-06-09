@@ -588,6 +588,11 @@ object SimpleMarkdownRenderer {
             builder.append(line.trim())
             index++
         }
+        if (index == startIndex && index < lines.size) {
+            // Parse at least one line as this route is also fallback route
+            // Avoid dead loop due to possible predicate difference
+            builder.append(lines[index++].trim())
+        }
         return Pair(Block.Paragraph(parseInlines(builder.toString())), index)
     }
 
@@ -957,8 +962,8 @@ object SimpleMarkdownRenderer {
     }
 
     private const val SPAN_MODE = Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-    private val unorderedPattern = Regex("^[\\*\\-+]\\s+.+")
-    private val orderedPattern = Regex("^(\\d+)\\.\\s+.+")
+    private val unorderedPattern = Regex("^\\s*[\\*\\-+]\\s+.+")
+    private val orderedPattern = Regex("^\\s*(\\d+)\\.\\s+.+")
     private val markerPattern = Regex("^(?:\\d+\\.|[\\*\\-+])\\s+")
     private val brRegex = Regex("(?i)<br\\s*/?>")
     private val headingRegex = Regex("(?is)<h([1-6])[^>]*>(.*?)</h\\1>")
