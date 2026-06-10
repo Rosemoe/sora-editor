@@ -73,13 +73,14 @@ class LineStyles(override var line: Int) : LineAnchorStyle(line) {
     fun getElementAt(index: Int) = styles[index]
 
     fun <T : LineAnchorStyle> findOne(type: Class<T>): T? {
-        return styles.find { type.isInstance(it) } as T?
+        return styles.find { type.isInstance(it) }
+            ?.let { type.cast(it) }
     }
 
     fun <T : LineAnchorStyle> findAll(type: Class<T>) = styles.filter { type.isInstance(it) }
 
     fun typedElementCount(type: Class<Any>): Int {
-        return styles.filter { type.isInstance(it) }.size
+        return styles.count { type.isInstance(it) }
     }
 
 }

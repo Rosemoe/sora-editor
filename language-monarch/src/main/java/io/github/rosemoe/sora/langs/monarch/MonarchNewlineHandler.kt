@@ -30,10 +30,6 @@ import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.CompleteEnterAction
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.EnterAction
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.IndentAction
-import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.IndentAction.Indent
-import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.IndentAction.IndentOutdent
-import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.IndentAction.None
-import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.IndentAction.Outdent
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.support.IndentRulesSupport
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.support.OnEnterSupport
 import io.github.rosemoe.sora.langs.monarch.utils.getIndentationFromWhitespace
@@ -131,7 +127,7 @@ class MonarchNewlineHandler(
 
             //var invisibleColumn = TextUtils.invisibleColumnFromColumn(text, position.line, position.column, tabSpaces);
 
-            afterEnterIndent = beforeEnterIndent.toString() + indent
+            afterEnterIndent = beforeEnterIndent + indent
         }
 
         if (indentRulesSupport?.shouldDecrease(afterEnterText) == true) {
@@ -173,7 +169,7 @@ class MonarchNewlineHandler(
 
 
         when (enterAction.indentAction) {
-            None, Indent -> {
+            IndentAction.None, IndentAction.Indent -> {
                 // Nothing special
                 val increasedIndent =
                     (enterAction.indentation + enterAction.appendText).normalizeIndentation()
@@ -183,7 +179,7 @@ class MonarchNewlineHandler(
                 // offset value is not needed because the editor ignores the position of invisible characters when moving the cursor
                 return NewlineHandleResult(typeText, 0)
             } // Indent once
-            IndentOutdent -> {
+            IndentAction.IndentOutdent -> {
                 // Ultra special
                 val normalIndent = enterAction.indentation.normalizeIndentation()
                 val increasedIndent =
@@ -194,7 +190,7 @@ class MonarchNewlineHandler(
                 return NewlineHandleResult(typeText, caretOffset)
             }
 
-            Outdent -> {
+            IndentAction.Outdent -> {
                 val indentation = enterAction.indentation.getIndentationFromWhitespace(
                     language.tabSize,
                     language.useTab()
@@ -295,7 +291,7 @@ class MonarchNewlineHandler(
 
         if (appendText == null) {
             appendText = if (indentAction == IndentAction.Indent
-                || indentAction == IndentOutdent
+                || indentAction == IndentAction.IndentOutdent
             ) {
                 "\t"
             } else {
@@ -327,7 +323,7 @@ class MonarchNewlineHandler(
         // const languageId = model.tokenization.getLanguageIdAtPosition(lineNumber, 0);
         if (lineNumber > 0) {
             for (lastLineNumber in lineNumber - 1 downTo 0) {
-                val lineContent = content.getLineContent(lastLineNumber);
+                val lineContent = content.getLineContent(lastLineNumber)
                 if (indentRulesSupport?.shouldIgnore(lineContent) == true || precedingValidPattern.matches(
                         lineContent
                     ) || lineContent.isEmpty()
@@ -410,12 +406,12 @@ class MonarchNewlineHandler(
             }
 
 
-            val previousLine = precedingUnIgnoredLine - 1;
+            val previousLine = precedingUnIgnoredLine - 1
 
             val previousLineIndentMetadata =
-                indentRulesSupport.getIndentMetadata(model.getLineContent(previousLine));
+                indentRulesSupport.getIndentMetadata(model.getLineContent(previousLine))
 
-            if (((previousLineIndentMetadata and (IndentRulesSupport.IndentConsts.INCREASE_MASK or IndentRulesSupport.IndentConsts.DECREASE_MASK)) === 0) && ((previousLineIndentMetadata and IndentRulesSupport.IndentConsts.INDENT_NEXTLINE_MASK) === 0) && (previousLineIndentMetadata > 0)) {
+            if (((previousLineIndentMetadata and (IndentRulesSupport.IndentConsts.INCREASE_MASK or IndentRulesSupport.IndentConsts.DECREASE_MASK)) == 0) && ((previousLineIndentMetadata and IndentRulesSupport.IndentConsts.INDENT_NEXTLINE_MASK) == 0) && (previousLineIndentMetadata > 0)) {
 
                 var stopLine = 0
                 for (i in previousLine - 1 downTo 1) {

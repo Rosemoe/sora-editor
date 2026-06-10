@@ -86,7 +86,7 @@ class MonarchSymbolPairMatch(
         for (surroundingPair in surroundingPairs) {
             val originAutoClosingPair = autoClosingPairs.find {
                 it.open == surroundingPair.open && it.close == surroundingPair.close
-            } as? AutoClosingPairConditional
+            }
 
             val surroundingPairNotInList = if (surroundingPair is AutoClosingPairConditional) {
                 surroundingPair.notIn
@@ -177,7 +177,7 @@ class MonarchSymbolPairMatch(
 
             // No text was selected, so should not complete surrounding pair
             if (!isAutoClosingPair) {
-                return false;
+                return false
             }
 
             val excludedTokenTypes = excludeTokenTypesArray ?: return true
