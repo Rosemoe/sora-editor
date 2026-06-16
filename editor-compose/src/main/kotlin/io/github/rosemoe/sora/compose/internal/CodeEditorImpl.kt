@@ -27,6 +27,7 @@ package io.github.rosemoe.sora.compose.internal
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
@@ -37,6 +38,7 @@ import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Constraints
 import io.github.rosemoe.sora.compose.CodeEditorState
 import io.github.rosemoe.sora.compose.ExperimentalEditorApi
@@ -53,6 +55,23 @@ internal fun CodeEditorImpl(
     state: CodeEditorState,
     modifier: Modifier = Modifier
 ) {
+    val view = LocalView.current
+
+    DisposableEffect(state, view) {
+        val previousImmView = state.host.immView
+        val previousAttachedState = state.host.isAttached
+
+        // swap the dummy view for the real one so IME and WindowTokens work
+        state.host.immView = view
+        state.host.isAttached = true
+
+        onDispose {
+            // clean up view references to prevent memory leaks when this Composable unmounts
+            state.host.immView = previousImmView
+            state.host.isAttached = previousAttachedState
+        }
+    }
+
     LaunchedEffect(state) {
         while (true) {
             withFrameNanos {

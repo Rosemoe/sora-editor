@@ -25,10 +25,13 @@
 package io.github.rosemoe.sora.compose
 
 import android.content.ClipboardManager
+import android.content.Context
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.annotation.Px
 import androidx.annotation.UiThread
 import androidx.compose.runtime.Composable
@@ -41,6 +44,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import io.github.rosemoe.sora.compose.component.DiagnosticTooltipWindow
 import io.github.rosemoe.sora.compose.component.TextActionWindow
 import io.github.rosemoe.sora.compose.internal.CodeEditorHostImpl
@@ -79,7 +83,9 @@ import io.github.rosemoe.sora.widget.style.CursorAnimator
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle
 import io.github.rosemoe.sora.widget.style.LineNumberTipTextProvider
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle
-import kotlin.math.abs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * Represents the state of a [CodeEditor] in Jetpack Compose.
@@ -1672,6 +1678,8 @@ class CodeEditorState @RememberInComposition internal constructor(
  * the text content, cursor position, scroll state, and editor configurations.
  *
  * @param initialText The initial text to be displayed in the editor. Defaults to `null`.
+ *
+ * @see CodeEditorState
  */
 @Composable
 @ExperimentalEditorApi
@@ -1695,5 +1703,73 @@ fun rememberCodeEditorState(initialText: String? = null): CodeEditorState {
         CodeEditorState(CodeEditor.DEFAULT_CURSOR_BLINK_PERIOD, host, delegate).apply {
             setText(initialText)
         }
+    }
+}
+
+/**
+ * Creates a [CodeEditorState] instance.
+ *
+ * This function is useful for state hoisting, such as initializing the editor state
+ * inside a ViewModel or a presenter before the UI is fully drawn.
+ *
+ * Internally, this creates a headless dummy [View] to satisfy the underlying engine's
+ * hard dependency on Android View components (specifically for InputConnection, Handlers,
+ * and layout measurements). Because this internal view lacks a valid WindowToken,
+ * features like software keyboard handling (IME) and cursor blinking will remain dormant
+ * upon creation.
+ *
+ * However, when this state is later passed into a CodeEditor composable, the composable
+ * automatically resolves and binds the state to the real active Compose View.
+ *
+ * Note: If you do not strictly need to hoist the state outside of your Compose hierarchy,
+ * it is highly recommended to use [rememberCodeEditorState] instead.
+ *
+ * @param context The Android context.
+ * @param coroutineScope The scope used for asynchronous editor operations.
+ * Defaults to a new scope with a [SupervisorJob].
+ * @return A newly initialized [CodeEditorState].
+ *
+ * @see rememberCodeEditorState
+ */
+@ExperimentalEditorApi
+fun CodeEditorState(
+    context: Context,
+    coroutineScope: CoroutineScope = CoroutineScope(EmptyCoroutineContext + SupervisorJob())
+): CodeEditorState {
+    // WHY: The underlying (CodeEditorDelegate) and host (CodeEditorHostImpl)
+    // strictly require a View reference for measuring, handlers, and the InputConnection.
+    // Even if this view isn't visually added to an Android ViewGroup, it satisfies
+    // the internal dependencies needed to initialize the text state.
+    val dummyView = View(context)
+
+    val focusRequester = FocusRequester()
+
+    // We don't have LocalSoftwareKeyboardController.current here.
+    // We reuse the internal KeyboardController defined in this file, passing our dummy view.
+    val keyboardController = KeyboardController(context, dummyView)
+
+    val host = CodeEditorHostImpl(
+        context = context,
+        view = dummyView,
+        focusRequester = focusRequester,
+        coroutineScope = coroutineScope,
+        keyboardController = keyboardController
+    )
+
+    val delegate = createDelegate(host)
+    host.inputConnection = EditorInputConnection(dummyView, delegate)
+    return CodeEditorState(CodeEditor.DEFAULT_CURSOR_BLINK_PERIOD, host, delegate)
+}
+
+private class KeyboardController(context: Context, val view: View) : SoftwareKeyboardController {
+
+    val imm by lazy { context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager }
+
+    override fun show() {
+        imm.showSoftInput(view, 0)
+    }
+
+    override fun hide() {
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 }

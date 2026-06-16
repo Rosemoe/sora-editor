@@ -49,16 +49,12 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-internal fun interface Invalidator {
-    fun invalidate()
-}
-
 @Suppress("PropertyName")
 internal class CodeEditorHostImpl(
+    view: View,
+    coroutineScope: CoroutineScope,
     override val context: Context,
-    private val view: View,
     internal val focusRequester: FocusRequester,
-    private val coroutineScope: CoroutineScope,
     private val keyboardController: SoftwareKeyboardController?
 ) : CodeEditorHost {
 
@@ -105,8 +101,8 @@ internal class CodeEditorHostImpl(
     internal var positionOnScreen = Offset.Zero
     internal var positionInWindow = Offset.Zero
 
-    override val handler: Handler? get() = view.handler
-    override val attachedView: View get() = view
+    override val handler: Handler? get() = immView.handler
+    override val attachedView: View get() = immView
 
     override val width get() = _width
     override val height get() = _height
@@ -118,8 +114,8 @@ internal class CodeEditorHostImpl(
     override val isWrapContentHeight get() = _isWrapContentHeight
 
     internal var isAttached: Boolean? = null
-    override val isAttachedToWindow: Boolean get() = isAttached ?: view.isAttachedToWindow
-    override val isInTouchMode: Boolean get() = view.isInTouchMode
+    override val isAttachedToWindow: Boolean get() = isAttached ?: immView.isAttachedToWindow
+    override val isInTouchMode: Boolean get() = immView.isInTouchMode
 
     override val isEnabled get() = _isEnabled
     override val isFocused get() = _isFocused
@@ -164,7 +160,7 @@ internal class CodeEditorHostImpl(
     override fun postInvalidateOnAnimation() = invalidate()
 
     override fun post(action: Runnable): Boolean {
-        return view.post(action)
+        return immView.post(action)
     }
 
     override fun postInLifecycle(action: Runnable): Boolean {
