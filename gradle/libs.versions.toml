@@ -43,4 +43,4 @@ kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-publish = { id = "com.vanniktech.maven.publish.base", version = "0.36.0" }
+publish = { id = "com.vanniktech.maven.publish.base", version = "0.37.0" }
