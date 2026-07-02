@@ -2141,8 +2141,6 @@ public class EditorRenderer {
         verticalScrollBarRect.set(tmpRect);
         if (editor.getEventHandler().holdVerticalScrollBar()) {
             drawLineInfoPanel(canvas, tmpRect.top, tmpRect.height(), 30 * editor.getDpUnit());
-            getVerticalScrollBarRect(tmpRect, editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP);
-            verticalScrollBarRect.set(tmpRect);
         }
         if (verticalScrollbarThumbDrawable != null) {
             verticalScrollbarThumbDrawable.setState(editor.getEventHandler().holdVerticalScrollBar() ? PRESSED_DRAWABLE_STATE : DEFAULT_DRAWABLE_STATE);
