@@ -2154,7 +2154,7 @@ public class EditorRenderer {
                     (int) verticalScrollBarRect.bottom);
             verticalScrollbarThumbDrawable.draw(canvas);
         } else {
-            drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdVerticalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
+            drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdVerticalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), verticalScrollBarRect);
         }
     }
 
@@ -2479,10 +2479,10 @@ public class EditorRenderer {
         horizontalScrollBarRect.set(tmpRect);
         if (horizontalScrollbarThumbDrawable != null) {
             horizontalScrollbarThumbDrawable.setState(editor.getEventHandler().holdHorizontalScrollBar() ? PRESSED_DRAWABLE_STATE : DEFAULT_DRAWABLE_STATE);
-            horizontalScrollbarThumbDrawable.setBounds((int) tmpRect.left, (int) tmpRect.top, (int) tmpRect.right, (int) tmpRect.bottom);
+            horizontalScrollbarThumbDrawable.setBounds((int) horizontalScrollBarRect.left, (int) horizontalScrollBarRect.top, (int) horizontalScrollBarRect.right, (int) horizontalScrollBarRect.bottom);
             horizontalScrollbarThumbDrawable.draw(canvas);
         } else {
-            drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdHorizontalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), tmpRect);
+            drawColor(canvas, editor.getColorScheme().getColor(editor.getEventHandler().holdHorizontalScrollBar() ? EditorColorScheme.SCROLL_BAR_THUMB_PRESSED : EditorColorScheme.SCROLL_BAR_THUMB), horizontalScrollBarRect);
         }
     }
 
