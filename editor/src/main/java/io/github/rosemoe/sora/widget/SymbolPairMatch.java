@@ -156,6 +156,9 @@ public class SymbolPairMatch {
                 while (arrayIndex >= 0) {
                     if (insertIndex > 0) {
                         insertIndex--;
+                    } else {
+                        matchFlag = 0;
+                        break;
                     }
                     var contentChar = content.charAt(insertIndex);
                     matchFlag &= contentChar == openCharArray[arrayIndex] ? 1 : 0;
