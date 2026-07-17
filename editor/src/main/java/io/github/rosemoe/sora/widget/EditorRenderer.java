@@ -2527,6 +2527,8 @@ public class EditorRenderer {
                     tr.setRange(0, lineText.length());
                     tr.buildMeasureCacheTailor(widths);
                     cache.setUpdateTimestamp(timestamp);
+                } else {
+                    cache.setUpdateTimestamp(timestamp);
                 }
             }
             startLine++;
