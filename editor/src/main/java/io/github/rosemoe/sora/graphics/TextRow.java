@@ -199,7 +199,7 @@ public class TextRow {
         if (measureCache != null) {
             return measureCache.getAdvancesSum(start, offset);
         }
-        return GraphicsCompat.getRunAdvance(paint, text, start, end, contextStart, contextEnd, isRtl, offset);
+        return paint.myGetTextRunAdvances(text, start, offset - start, contextStart, contextEnd - start, isRtl, null, 0);
     }
 
     /**
