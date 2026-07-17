@@ -603,7 +603,7 @@ public class TextRow {
                     drawFunctionCharacter(canvas, isRtl ? initOffset - advance - chAdvance : initOffset + advance, chAdvance, ch);
                     advance += chAdvance;
                     drawOffset = initOffset + (isRtl ? -advance : advance);
-                    lastEnd = i;
+                    lastEnd = i + 1;
                 }
             }
         } else {
