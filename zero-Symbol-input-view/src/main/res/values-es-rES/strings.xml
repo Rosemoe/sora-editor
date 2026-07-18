@@ -1,0 +1,130 @@
+<resources>
+    <string name="symbol_manager_title">Quick Action Bar</string>
+    <string name="action_add_symbol">Add Symbol</string>
+    <string name="action_add_group">Add Group</string>
+
+    <string name="menu_import_clipboard">Import from Clipboard</string>
+    <string name="menu_export_clipboard">Export to Clipboard</string>
+    <string name="menu_import_file">Import from File</string>
+    <string name="menu_export_file">Export to File</string>
+
+    <string name="dialog_save">Save</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_delete">Delete</string>
+
+    <string name="toast_success">Success</string>
+    <string name="toast_fail">Operation failed, please check data</string>
+    <string name="toast_need_group_first">Please import data or create at least one group first</string>
+
+    <string name="group_name">Group Name</string>
+    <string name="display_text">Display Text</string>
+    <string name="short_action">Tap Action</string>
+    <string name="long_action">Long Press Action</string>
+    <string name="insert_text">Text to Insert</string>
+
+    <string name="action_batch_copy">Copy</string>
+    <string name="action_batch_cut">Cut</string>
+    <string name="action_batch_invert">Invert</string>
+    <string name="action_batch_close">Close</string>
+
+    <string name="menu_item_edit">Edit</string>
+    <string name="menu_item_copy">Copy</string>
+    <string name="menu_item_delete">Delete</string>
+    <string name="menu_item_batch">Batch</string>
+
+    <string name="dialog_confirm_delete_symbol">Delete this symbol permanently?</string>
+    <string name="dialog_confirm_delete_selected">Delete selected symbols permanently?</string>
+    <string name="dialog_move_to">Move to…</string>
+    <string name="dialog_copy_to">Copy to…</string>
+    <string name="dialog_new_group">New Group</string>
+
+    <string name="toast_no_selection">Please select at least one symbol</string>
+    <string name="toast_same_group_move">Target group is the same as current group</string>
+
+    <string name="settings_tab_title">⚙</string>
+    <string name="settings_lines_title">Action Bar Rows</string>
+    <string name="settings_min_rows">Minimum rows</string>
+    <string name="settings_symbols_per_row">Symbols per row</string>
+    <string name="settings_indicator_title">Group Indicator</string>
+    <string name="settings_remember_title">Remember Expanded State</string>
+    <string name="settings_remember_desc">Restore previous expanded state when re-entering editor</string>
+    <string name="settings_uniform_title">Uniform Group Height</string>
+    <string name="settings_uniform_desc">Keep all groups at the same height to avoid layout jumps</string>
+    <string name="settings_symbol_text_size">Symbol text size</string>
+    <string name="settings_show_drag_handle">Show drag handle</string>
+    <string name="settings_show_drag_handle_desc">Display drag handle icon in manager list</string>
+    <string name="settings_enable_advanced_actions">Enable advanced actions</string>
+    <string name="settings_enable_advanced_actions_desc">Show and allow advanced keyboard/combo actions</string>
+    <string name="settings_remember_page_title">Remember current symbol page</string>
+    <string name="settings_remember_page_desc">Keep the current symbol group page across activity switches and app restarts</string>
+    <string name="settings_style_standard">Standard</string>
+    <string name="settings_style_simple">Minimal</string>
+    <string name="settings_style_hidden">Hidden</string>
+    <string name="settings_style_top_line">Top Line</string>
+    <string name="settings_style_block">Block</string>
+
+    <string name="hint_display_title">Display text (title)</string>
+    <string name="label_short_action">Tap action</string>
+    <string name="hint_insert_text_for_insert_action">Insert text (for insert action)</string>
+    <string name="label_long_action_optional">Long press action (optional)</string>
+    <string name="dialog_title_add_symbol">Add Symbol</string>
+    <string name="dialog_title_edit_symbol">Edit Symbol</string>
+    <string name="action_no_long_press">No long-press action</string>
+    <string name="symbol_desc_short">Tap: %1$s</string>
+    <string name="symbol_desc_long">, Long press: %1$s</string>
+    <string name="action_unknown">Unknown</string>
+    <string name="action_insert_text">Insert text</string>
+    <string name="action_delete_line">Delete line</string>
+    <string name="action_clear_line">Clear line</string>
+    <string name="action_uppercase">To uppercase</string>
+    <string name="action_lowercase">To lowercase</string>
+    <string name="action_indent_tab">Indent (Tab)</string>
+    <string name="action_toggle_comment">Toggle comment</string>
+    <string name="action_line_start">Line start</string>
+    <string name="action_line_end">Line end</string>
+    <string name="action_cursor_left">Cursor left</string>
+    <string name="action_cursor_right">Cursor right</string>
+    <string name="action_cursor_up">Cursor up</string>
+    <string name="action_cursor_down">Cursor down</string>
+    <string name="action_open_manager">Open symbol manager</string>
+    <string name="action_file_start">Document start</string>
+    <string name="action_file_end">Document end</string>
+    <string name="action_select_all">Select all</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_cut">Cut</string>
+    <string name="action_paste">Paste</string>
+    <string name="action_format_code">Format code</string>
+    <string name="action_copy_line">Copy line</string>
+    <string name="action_cut_line">Cut line</string>
+    <string name="action_duplicate_line">Duplicate line</string>
+    <string name="action_replace_line">Replace line</string>
+    <string name="action_enter_key">Enter key</string>
+    <string name="action_tab_key">Tab key</string>
+    <string name="action_shift_tab">Shift + Tab</string>
+    <string name="action_f1">F1 key</string>
+    <string name="action_f2">F2 key</string>
+    <string name="action_f3">F3 key</string>
+    <string name="action_f4">F4 key</string>
+    <string name="action_f5">F5 key</string>
+    <string name="action_f6">F6 key</string>
+    <string name="action_f7">F7 key</string>
+    <string name="action_f8">F8 key</string>
+    <string name="action_f9">F9 key</string>
+    <string name="action_f10">F10 key</string>
+    <string name="action_f11">F11 key</string>
+    <string name="action_f12">F12 key</string>
+    <string name="action_ctrl_c">Ctrl + C</string>
+    <string name="action_ctrl_x">Ctrl + X</string>
+    <string name="action_ctrl_v">Ctrl + V</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_redo">Redo</string>
+    <string name="tab_action_move_left">Move Left</string>
+    <string name="tab_action_move_right">Move Right</string>
+    <string name="tab_action_add">Add</string>
+    <string name="tab_action_copy_to">Copy to…</string>
+    <string name="tab_action_rename">Rename</string>
+    <string name="tab_action_delete">Delete</string>
+    <string name="dialog_title_rename_group">Rename Group</string>
+    <string name="dialog_confirm_delete_group">Delete this group and all symbols permanently?</string>
+    <string name="symbol_macro_help">$$ significa $ \n $S establece la posición inicial de la selección \n $E establece la posición final de la selección \n $T indica el texto seleccionado actualmente \n Ejemplo: {$S$T$E}</string>
+</resources>
