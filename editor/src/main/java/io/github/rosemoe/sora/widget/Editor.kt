@@ -65,3 +65,39 @@ inline fun <reified T : EditorBuiltinComponent> CodeEditor.getComponent(): T {
 inline fun <reified T : EditorBuiltinComponent> CodeEditor.replaceComponent(component: T) {
     replaceComponent(T::class.java, component)
 }
+
+/**
+ * Subscribe event in editor, without [io.github.rosemoe.sora.event.Unsubscribe]
+ *
+ * @see CodeEditor.subscribeAlways
+ */
+inline fun <reified T : Event> CodeEditorDelegate.subscribeAlways(receiver: NoUnsubscribeReceiver<T>): SubscriptionReceipt<T> {
+    return subscribeAlways(T::class.java, receiver)
+}
+
+/**
+ * Subscribe event in editor
+ *
+ * @see CodeEditor.subscribeEvent
+ */
+inline fun <reified T : Event> CodeEditorDelegate.subscribeEvent(receiver: EventReceiver<T>): SubscriptionReceipt<T> {
+    return subscribeEvent(T::class.java, receiver)
+}
+
+/**
+ * Get builtin component so that you can enable/disable them or do some other actions.
+ *
+ * @see CodeEditor.getComponent
+ */
+inline fun <reified T : EditorBuiltinComponent> CodeEditorDelegate.getComponent(): T {
+    return getComponent(T::class.java)
+}
+
+/**
+ * Replace the built-in component to the given one. The new component's enabled state will extend the old one.
+ *
+ * @see CodeEditor.replaceComponent
+ */
+inline fun <reified T : EditorBuiltinComponent> CodeEditorDelegate.replaceComponent(component: T) {
+    replaceComponent(T::class.java, component)
+}

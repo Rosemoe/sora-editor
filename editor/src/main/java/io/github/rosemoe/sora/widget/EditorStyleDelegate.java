@@ -27,6 +27,7 @@ import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 import java.lang.ref.WeakReference;
 
@@ -42,11 +43,11 @@ import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
 
 public class EditorStyleDelegate implements StyleReceiver {
 
-    private final WeakReference<CodeEditor> editorRef;
+    private final WeakReference<CodeEditorDelegate> editorRef;
     private PairedBracket foundPair;
     private BracketsProvider bracketsProvider;
 
-    EditorStyleDelegate(@NonNull CodeEditor editor) {
+    EditorStyleDelegate(@NonNull CodeEditorDelegate editor) {
         editorRef = new WeakReference<>(editor);
         editor.subscribeEvent(SelectionChangeEvent.class, (event, __) -> {
             if (!event.isSelected()) {
@@ -67,7 +68,7 @@ public class EditorStyleDelegate implements StyleReceiver {
             final var editor = editorRef.get();
             if (provider != null && editor != null && !editor.getCursor().isSelected() && editor.isHighlightBracketPair()) {
                 foundPair = provider.getPairedBracketAt(editor.getText(), editor.getCursor().getLeft());
-                editor.invalidate();
+                editor.host.invalidate();
             }
         });
     }
@@ -77,7 +78,8 @@ public class EditorStyleDelegate implements StyleReceiver {
         return foundPair;
     }
 
-    void reset() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void reset() {
         foundPair = null;
         bracketsProvider = null;
     }

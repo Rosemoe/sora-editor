@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.text.method.KeyMetaStates;
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * Receives key related events in editor.
@@ -49,7 +50,7 @@ public class EditorKeyEvent extends ResultedEvent<Boolean> {
     private final boolean shiftPressed;
     private final boolean altPressed;
 
-    public EditorKeyEvent(@NonNull CodeEditor editor, @NonNull KeyEvent src, @NonNull Type type) {
+    public EditorKeyEvent(@NonNull CodeEditorDelegate editor, @NonNull KeyEvent src, @NonNull Type type) {
         super(editor);
         this.src = src;
         this.type = type;

@@ -34,16 +34,16 @@ import io.github.rosemoe.sora.event.Unsubscribe;
  *
  * @author Rose
  */
-final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent> {
+public final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent> {
 
-    final CodeEditor editor;
+    final CodeEditorDelegate editor;
     public boolean visibility;
     public boolean valid;
     long lastSelectionModificationTime = 0;
     int period;
     private float[] buffer;
 
-    public CursorBlink(CodeEditor editor, int period) {
+    public CursorBlink(CodeEditorDelegate editor, int period) {
         visibility = true;
         this.editor = editor;
         this.period = period;
@@ -53,6 +53,10 @@ final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent>
     @Override
     public void onReceive(@NonNull SelectionChangeEvent event, @NonNull Unsubscribe unsubscribe) {
         onSelectionChanged();
+    }
+
+    public int getPeriod() {
+        return period;
     }
 
     public void setPeriod(int period) {
@@ -83,12 +87,12 @@ final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent>
                 var left = editor.getCursor().left();
                 buffer = editor.getLayout().getCharLayoutOffset(left.line, left.column, buffer);
                 if (!editor.getCursor().isSelected() && isSelectionVisible()) {
-                    editor.postInvalidate();
+                    editor.host.postInvalidate();
                 }
             } else {
                 visibility = true;
             }
-            editor.postDelayedInLifecycle(this, period);
+            editor.host.postDelayedInLifecycle(this, period);
         } else {
             visibility = true;
         }

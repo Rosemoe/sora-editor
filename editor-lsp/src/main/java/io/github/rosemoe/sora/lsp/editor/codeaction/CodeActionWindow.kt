@@ -16,7 +16,8 @@ import io.github.rosemoe.sora.lsp.events.workspace.workSpaceApplyEdit
 import io.github.rosemoe.sora.lsp.events.workspace.workSpaceExecuteCommand
 import io.github.rosemoe.sora.lsp.utils.asCharPosition
 import io.github.rosemoe.sora.text.CharPosition
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
+import io.github.rosemoe.sora.widget.CodeEditorHost
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams
@@ -27,9 +28,11 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 
 class CodeActionWindow(
     private val lspEditor: LspEditor,
-    editor: CodeEditor,
+    editor: CodeEditorDelegate,
+    host: CodeEditorHost,
 ) : EditorPopupWindow(
     editor,
+    host,
     FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT
 ) {
 

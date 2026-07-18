@@ -26,7 +26,7 @@ package io.github.rosemoe.sora.event
 
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint
 import io.github.rosemoe.sora.text.CharPosition
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
 
 
 /**
@@ -36,7 +36,7 @@ import io.github.rosemoe.sora.widget.CodeEditor
  * calling [io.github.rosemoe.sora.event.InlayHintClickEvent.intercept]
  */
 class InlayHintClickEvent(
-    editor: CodeEditor,
+    editor: CodeEditorDelegate,
     val inlayHint: InlayHint,
     val textPosition: CharPosition
 ) : Event(editor) {
