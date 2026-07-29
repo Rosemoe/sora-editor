@@ -73,6 +73,7 @@ import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.tm4e.core.registry.IThemeSource
+import java.io.File
 import java.io.FileOutputStream
 import java.lang.ref.WeakReference
 import java.util.zip.ZipFile
@@ -204,7 +205,7 @@ class LspTestActivity : BaseEditorActivity() {
                         added =
                             listOf(
                                 WorkspaceFolder(
-                                    "file://$projectPath/std/Lua53",
+                                    File(projectPath).toURI().toString(),
                                     "MyLuaProject"
                                 )
                             )
