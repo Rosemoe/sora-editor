@@ -66,7 +66,7 @@ class SignatureHelpEvent : AsyncEventListener() {
 
         val signatureHelp: SignatureHelp?
 
-        withTimeout(Timeout[Timeouts.SIGNATURE].toLong()) {
+        withTimeout(Timeout[Timeouts.SIGNATURE, editor].toLong()) {
             signatureHelp =
                 future.await()
         }

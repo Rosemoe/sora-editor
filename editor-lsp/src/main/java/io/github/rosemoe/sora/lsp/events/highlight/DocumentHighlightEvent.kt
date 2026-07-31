@@ -70,7 +70,7 @@ class DocumentHighlightEvent : AsyncEventListener() {
 
         val documentHighlights: List<DocumentHighlight>?
 
-        withTimeout(Timeout[Timeouts.DOC_HIGHLIGHT].toLong()) {
+        withTimeout(Timeout[Timeouts.DOC_HIGHLIGHT, editor].toLong()) {
             documentHighlights = future.await()
         }
 

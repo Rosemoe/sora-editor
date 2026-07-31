@@ -55,7 +55,7 @@ class WorkSpaceExecuteCommand : AsyncEventListener() {
 
         val result: Any?
 
-        withTimeout(Timeout[Timeouts.EXECUTE_COMMAND].toLong()) {
+        withTimeout(Timeout[Timeouts.EXECUTE_COMMAND, editor].toLong()) {
             result =
                 future?.await()
         }

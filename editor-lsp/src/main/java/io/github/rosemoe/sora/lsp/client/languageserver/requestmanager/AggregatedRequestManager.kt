@@ -80,6 +80,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either3
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.eclipse.lsp4j.services.WorkspaceService
 import io.github.rosemoe.sora.lsp.utils.merge
+import io.github.rosemoe.sora.lsp.requests.Timeouts
 import java.util.LinkedHashMap
 import java.util.concurrent.CompletableFuture
 
@@ -90,6 +91,11 @@ class AggregatedRequestManager(
     override val serverName = "NO-SERVER"
 
     private var sessionEntries = sessions
+
+    fun getMaximumTimeout(type: Timeouts): Int? {
+        val timeouts = sessionEntries.mapNotNull { it.serverDefinition.customTimeouts[type] }
+        return if (timeouts.isEmpty()) null else timeouts.maxOrNull()
+    }
 
     var activeManagers: List<RequestManager> = sessionEntries.mapNotNull { it.requestManager }
         private set

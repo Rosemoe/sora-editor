@@ -71,7 +71,7 @@ class CodeActionEvent : AsyncEventListener() {
 
         var codeActions: List<Either<Command, CodeAction>>? = null
 
-        withTimeout(Timeout[Timeouts.CODEACTION].toLong()) {
+        withTimeout(Timeout[Timeouts.CODEACTION, editor].toLong()) {
             codeActions =
                 future.await() ?: emptyList()
         }

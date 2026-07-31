@@ -70,7 +70,7 @@ class RangeFormattingEvent : AsyncEventListener() {
 
         val textEditList: List<TextEdit>
 
-        withTimeout(Timeout[Timeouts.FORMATTING].toLong()) {
+        withTimeout(Timeout[Timeouts.FORMATTING, editor].toLong()) {
             textEditList = formattingFuture.await() ?: listOf()
         }
 

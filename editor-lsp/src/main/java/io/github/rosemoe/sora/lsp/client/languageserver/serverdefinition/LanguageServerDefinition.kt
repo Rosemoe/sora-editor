@@ -28,6 +28,7 @@ import android.util.Log
 import io.github.rosemoe.sora.lsp.client.connection.StreamConnectionProvider
 import io.github.rosemoe.sora.lsp.client.languageserver.LspFeature
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
+import io.github.rosemoe.sora.lsp.requests.Timeouts
 
 import org.eclipse.lsp4j.ServerCapabilities
 
@@ -52,6 +53,8 @@ abstract class LanguageServerDefinition {
 
     private val streamConnectionProviders: MutableMap<String, StreamConnectionProvider> =
         ConcurrentHashMap()
+
+    open val customTimeouts: Map<Timeouts, Int> = emptyMap()
 
     open val disabledFeatures: Set<LspFeature> = emptySet()
 

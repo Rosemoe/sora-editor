@@ -24,6 +24,8 @@
 
 package io.github.rosemoe.sora.lsp.requests
 
+import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.LanguageServerDefinition
+import io.github.rosemoe.sora.lsp.editor.LspEditor
 import java.util.concurrent.ConcurrentHashMap
 
 
@@ -63,6 +65,22 @@ object Timeout {
      */
     operator fun get(type: Timeouts): Int {
         return timeouts[type] ?: type.defaultTimeout
+    }
+
+    /**
+     * Get the timeout for a request. The [type] is the request type and the result is the timeout in milliseconds.
+     * If [definition] is provided, it will check for custom timeouts first.
+     */
+    operator fun get(type: Timeouts, definition: LanguageServerDefinition?): Int {
+        return definition?.customTimeouts?.get(type) ?: get(type)
+    }
+
+    /**
+     * Get the timeout for a request. The [type] is the request type and the result is the timeout in milliseconds.
+     * Resolves the timeout using the [editor]'s context.
+     */
+    operator fun get(type: Timeouts, editor: LspEditor): Int {
+        return editor.requestManager.getMaximumTimeout(type) ?: get(type)
     }
 
     /**

@@ -151,7 +151,7 @@ class LanguageServerWrapper(
             start(true)
 
             initializeFuture?.get(
-                if (capabilitiesAlreadyRequested) 0L else Timeout[Timeouts.INIT].toLong(),
+                if (capabilitiesAlreadyRequested) 0L else Timeout[Timeouts.INIT, serverDefinition].toLong(),
                 TimeUnit.MILLISECONDS
             )
         } catch (_: TimeoutException) {
@@ -159,7 +159,7 @@ class LanguageServerWrapper(
                 Locale.getDefault(),
                 "%s \n is not initialized after %d seconds",
                 serverDefinition.toString(),
-                Timeout[Timeouts.INIT] / 1000
+                Timeout[Timeouts.INIT, serverDefinition] / 1000
             )
             Log.w(TAG, msg)
             serverDefinition.eventListener.onHandlerException(LSPException(msg))
@@ -297,7 +297,7 @@ class LanguageServerWrapper(
             try {
                 val shutdown = languageServer?.shutdown()
 
-                shutdown?.get(Timeout[Timeouts.SHUTDOWN].toLong(), TimeUnit.MILLISECONDS)
+                shutdown?.get(Timeout[Timeouts.SHUTDOWN, serverDefinition].toLong(), TimeUnit.MILLISECONDS)
 
                 if (exit && serverDefinition.callExitForLanguageServer()) {
                     languageServer?.exit()
@@ -436,7 +436,7 @@ class LanguageServerWrapper(
             return
         }
 
-        localInitializeFuture.get(Timeout[Timeouts.INIT].toLong(), TimeUnit.MILLISECONDS)
+        localInitializeFuture.get(Timeout[Timeouts.INIT, serverDefinition].toLong(), TimeUnit.MILLISECONDS)
 
         try {
             val syncOptions =

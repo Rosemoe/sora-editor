@@ -66,7 +66,7 @@ class HoverEvent : AsyncEventListener() {
 
         val hover: Hover?
 
-        withTimeout(Timeout[Timeouts.HOVER].toLong()) {
+        withTimeout(Timeout[Timeouts.HOVER, editor].toLong()) {
             hover = future.await()
         }
 
