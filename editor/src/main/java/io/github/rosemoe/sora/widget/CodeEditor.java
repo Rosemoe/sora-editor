@@ -111,7 +111,9 @@ import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.format.Formatter;
+import io.github.rosemoe.sora.lang.format.FormatterProvider;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
+import io.github.rosemoe.sora.lang.styling.ExtraStylesProvider;
 import io.github.rosemoe.sora.lang.styling.HighlightTextContainer;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
@@ -338,6 +340,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private LineNumberTipTextProvider lineNumberTipTextProvider;
     private String formatTip;
     private Language editorLanguage;
+    private FormatterProvider formatterProvider;
+    private ExtraStylesProvider extraStylesProvider;
     private DiagnosticIndicatorStyle diagnosticStyle = DiagnosticIndicatorStyle.WAVY_LINE;
     private long lastMakeVisible = 0;
     private EditorAutoCompletion completionWindow;
@@ -958,7 +962,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // Destroy old one
         var old = editorLanguage;
         if (old != null) {
-            var formatter = old.getFormatter();
+            var formatter = getFormatter();
             formatter.setReceiver(null);
             formatter.destroy();
             old.getAnalyzeManager().setReceiver(null);
@@ -2490,7 +2494,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (isFormatting()) {
             return false;
         }
-        var formatter = editorLanguage.getFormatter();
+        var formatter = getFormatter();
         formatter.setReceiver(this);
         var formatContent = text.copyText(false);
         formatContent.setUndoEnabled(false);
@@ -2516,13 +2520,25 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (isFormatting()) {
             return false;
         }
-        var formatter = editorLanguage.getFormatter();
+        var formatter = getFormatter();
         formatter.setReceiver(this);
         var formatContent = text.copyText(false);
         formatContent.setUndoEnabled(false);
         formatter.formatRegion(formatContent, new TextRange(start, end), getCursorRange());
         postInvalidate();
         return true;
+    }
+
+    @NonNull
+    private Formatter getFormatter() {
+        Formatter formatter = null;
+        if (formatterProvider != null) {
+            formatter = formatterProvider.getFormatter(this);
+        }
+        if (formatter == null) {
+            formatter = editorLanguage.getFormatter();
+        }
+        return formatter;
     }
 
     /**
@@ -3686,6 +3702,24 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         onSelectionChanged(cause);
     }
 
+    public void setFormatterProvider(@Nullable FormatterProvider provider) {
+        this.formatterProvider = provider;
+    }
+
+    @Nullable
+    public FormatterProvider getFormatterProvider() {
+        return formatterProvider;
+    }
+
+    public void setExtraStylesProvider(@Nullable ExtraStylesProvider provider) {
+        this.extraStylesProvider = provider;
+    }
+
+    @Nullable
+    public ExtraStylesProvider getExtraStylesProvider() {
+        return extraStylesProvider;
+    }
+
     /**
      * Get system clipboard manager used by editor
      */
@@ -4111,7 +4145,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return whether the editor is currently formatting
      */
     public boolean isFormatting() {
-        return editorLanguage.getFormatter().isRunning();
+        return getFormatter().isRunning();
     }
 
     /**
@@ -4602,7 +4636,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         released = true;
         if (editorLanguage != null) {
             editorLanguage.getAnalyzeManager().destroy();
-            var formatter = editorLanguage.getFormatter();
+            var formatter = getFormatter();
             formatter.setReceiver(null);
             formatter.destroy();
             editorLanguage.destroy();
