@@ -1111,7 +1111,11 @@ public class EditorRenderer {
                 if (result == null) {
                     result = new LineStyles(line);
                 } else {
-                    // TODO: Do we need to create a copy of LineStyles object here?
+                    var copy = new LineStyles(line);
+                    for (int i = 0; i < result.getElementCount(); i++) {
+                        copy.addStyle(result.getElementAt(i));
+                    }
+                    result = copy;
                 }
 
                 for (var style : extra) {
