@@ -255,7 +255,7 @@ class LspEditor(
         var isConnected = false
 
         var start = System.currentTimeMillis()
-        val retryTime = Timeout[Timeouts.INIT]
+        val retryTime = Timeout[Timeouts.INIT, this]
         val maxRetryTime: Long = start + retryTime
 
         while (start < maxRetryTime) {

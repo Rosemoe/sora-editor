@@ -114,7 +114,7 @@ class DocumentColorEvent : AsyncEventListener() {
             val documentColors: List<ColorInformation>?
 
             try {
-                withTimeout(Timeout[Timeouts.DOC_HIGHLIGHT].toLong()) {
+                withTimeout(Timeout[Timeouts.DOC_HIGHLIGHT, editor].toLong()) {
                     documentColors =
                         future.await()
                 }

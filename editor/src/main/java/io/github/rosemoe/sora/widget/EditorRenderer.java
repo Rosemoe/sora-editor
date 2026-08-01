@@ -67,6 +67,7 @@ import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
+import io.github.rosemoe.sora.lang.styling.ExtraStylesProvider;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.Styles;
@@ -1093,15 +1094,37 @@ public class EditorRenderer {
     protected LineStyles getLineStyles(int line) {
         Styles styles;
         List<LineStyles> lineStylesList;
-        if ((styles = editor.getStyles()) == null || (lineStylesList = styles.lineStyles) == null) {
-            return null;
+        LineStyles result = null;
+        if ((styles = editor.getStyles()) != null && (lineStylesList = styles.lineStyles) != null) {
+            coordinateLine.setLine(line);
+            var index = Collections.binarySearch(lineStylesList, coordinateLine);
+            if (index >= 0 && index < lineStylesList.size()) {
+                result = lineStylesList.get(index);
+            }
         }
-        coordinateLine.setLine(line);
-        var index = Collections.binarySearch(lineStylesList, coordinateLine);
-        if (index >= 0 && index < lineStylesList.size()) {
-            return lineStylesList.get(index);
+
+        ExtraStylesProvider provider = editor.getExtraStylesProvider();
+        if (provider != null) {
+            List<LineAnchorStyle> extra = new ArrayList<>();
+            provider.getExtraStyles(line, extra);
+            if (!extra.isEmpty()) {
+                if (result == null) {
+                    result = new LineStyles(line);
+                } else {
+                    var copy = new LineStyles(line);
+                    for (int i = 0; i < result.getElementCount(); i++) {
+                        copy.addStyle(result.getElementAt(i));
+                    }
+                    result = copy;
+                }
+
+                for (var style : extra) {
+                    result.addStyle(style);
+                }
+            }
         }
-        return null;
+
+        return result;
     }
 
     @Nullable

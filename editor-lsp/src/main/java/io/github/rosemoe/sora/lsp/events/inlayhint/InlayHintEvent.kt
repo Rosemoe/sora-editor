@@ -135,7 +135,7 @@ class InlayHintEvent : AsyncEventListener() {
             val inlayHints: List<InlayHint>?
 
             try {
-                withTimeout(Timeout[Timeouts.INLAY_HINT].toLong()) {
+                withTimeout(Timeout[Timeouts.INLAY_HINT, editor].toLong()) {
                     inlayHints = future.await()
                 }
             } catch (e: Exception) {
