@@ -23,6 +23,8 @@
  */
 package io.github.rosemoe.sora.widget;
 
+import static io.github.rosemoe.sora.widget.CodeEditor.LOG_TAG;
+
 import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -3414,7 +3416,7 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
             }
             pasteText(ClipDataUtils.clipDataToString(clip));
         } catch (Exception e) {
-            Log.w(CodeEditor.LOG_TAG, "Error pasting text to editor", e);
+            Log.w(LOG_TAG, "Error pasting text to editor", e);
             Toast.makeText(host.getContext(), e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
@@ -3474,7 +3476,7 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
             if (e.getCause() instanceof TransactionTooLargeException) {
                 Toast.makeText(host.getContext(), I18nConfig.getResourceId(R.string.sora_editor_clip_text_length_too_large), Toast.LENGTH_SHORT).show();
             } else {
-                Log.w(CodeEditor.LOG_TAG, e);
+                Log.w(LOG_TAG, e);
                 Toast.makeText(host.getContext(), e.getClass().toString(), Toast.LENGTH_SHORT).show();
             }
         }
@@ -4370,7 +4372,7 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
                 highlightTextContainer.updateOnInsertion(startLine, startColumn, endLine, endColumn);
             }
         } catch (Exception e) {
-            Log.w(CodeEditor.LOG_TAG, "Update failure", e);
+            Log.w(LOG_TAG, "Update failure", e);
         }
 
         layout.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
@@ -4419,7 +4421,7 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
                 highlightTextContainer.updateOnDeletion(startLine, startColumn, endLine, endColumn);
             }
         } catch (Exception e) {
-            Log.w(CodeEditor.LOG_TAG, "Update failure", e);
+            Log.w(LOG_TAG, "Update failure", e);
         }
 
         layout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
@@ -4479,7 +4481,7 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
                     var end = cursorRange.getEnd();
                     setSelectionRegion(start.line, start.column, end.line, end.column);
                 } catch (IndexOutOfBoundsException e) {
-                    Log.w(CodeEditor.LOG_TAG, e);
+                    Log.w(LOG_TAG, e);
                 }
             }
             getScroller().forceFinished(true);
