@@ -44,20 +44,16 @@ class PublishDiagnosticsEvent : EventListener {
         val data = context.getOrNull<List<Diagnostic>>("data") ?: return
 
         val diagnosticsContainer =
-            originEditor.diagnostics ?: DiagnosticsContainer()
+            originEditor.diagnostics ?: DiagnosticsContainer().also { it.attachEditor(originEditor) }
 
-        diagnosticsContainer.reset()
-
-        diagnosticsContainer.addDiagnostics(
-            data.transformToEditorDiagnostics(originEditor)
-        )
+        diagnosticsContainer.setDiagnostics(data.transformToEditorDiagnostics(originEditor))
 
         // run on ui thread
-        originEditor.postOnAnimation {
+        originEditor.post {
             if (data.isEmpty()) {
                 originEditor.diagnostics = null
                 originEditor.getComponent<EditorDiagnosticTooltipWindow>().dismiss()
-                return@postOnAnimation
+                return@post
             }
             originEditor.diagnostics = diagnosticsContainer
         }
