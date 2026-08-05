@@ -73,6 +73,16 @@ public class DiagnosticsContainer {
     }
 
     /**
+     * Set multiple diagnostics and clear old ones. Only one event will be dispatched.
+     */
+    public void setDiagnostics(Collection<DiagnosticRegion> regions) {
+        modifyAndDispatch(() -> {
+            this.regions.clear();
+            this.regions.addAll(regions);
+        });
+    }
+
+    /**
      * Add multiple diagnostics
      */
     public void addDiagnostics(Collection<DiagnosticRegion> regions) {
