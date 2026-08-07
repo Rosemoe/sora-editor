@@ -241,6 +241,9 @@ public class EditorPopupWindow {
         if (window.isShowing()) {
             window.update(left, top, width, height);
         } else if (show) {
+            if (!parentView.isAttachedToWindow() || parentView.getWindowToken() == null) {
+                return;
+            }
             window.setHeight(height);
             window.setWidth(width);
             window.showAtLocation(parentView, Gravity.START | Gravity.TOP, left, top);
