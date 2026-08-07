@@ -33,7 +33,7 @@ import io.github.rosemoe.sora.text.TextRange
  * @see io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
  * @author Rosemoe
  */
-class TextInlayHint(
+open class TextInlayHint(
     line: Int,
     column: Int,
     val text: String
@@ -45,7 +45,7 @@ class TextInlayHint(
 
 }
 
-class ColorInlayHint(
+open class ColorInlayHint(
     line: Int,
     column: Int,
     val color: ResolvableColor,

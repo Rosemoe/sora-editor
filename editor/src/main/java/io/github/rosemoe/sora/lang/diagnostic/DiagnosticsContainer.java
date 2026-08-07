@@ -183,4 +183,9 @@ public class DiagnosticsContainer {
         modifyAndDispatch(regions::clear);
     }
 
+    @NonNull
+    public synchronized List<DiagnosticRegion> getRegions() {
+        return new ArrayList<>(regions);
+    }
+
 }
