@@ -152,6 +152,7 @@ import io.github.rosemoe.sora.widget.component.EditorContextMenuCreator;
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow;
 import io.github.rosemoe.sora.widget.component.EditorTextActionWindow;
 import io.github.rosemoe.sora.widget.component.Magnifier;
+import io.github.rosemoe.sora.widget.internal.util.SpansUtils;
 import io.github.rosemoe.sora.widget.layout.Layout;
 import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
 import io.github.rosemoe.sora.widget.layout.ViewMeasureHelper;
@@ -269,7 +270,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     protected EditorTextActionWindow textActionWindow;
     protected EditorDiagnosticTooltipWindow diagnosticTooltip;
     protected EditorContextMenuCreator contextMenuCreator;
-    protected List<Span> defaultSpans = new ArrayList<>(2);
     protected EditorStyleDelegate styleDelegate;
     private final List<ExtraStylesProvider> extraStylesProviders = new ArrayList<>();
     private final List<InlayHintProvider> inlayHintProviders = new ArrayList<>();
@@ -1679,17 +1679,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @NonNull
     public List<Span> getSpansForLine(int line) {
         var spanMap = textStyles == null ? null : textStyles.spans;
-        if (defaultSpans.isEmpty()) {
-            defaultSpans.add(SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL));
-        }
-        try {
-            if (spanMap != null) {
-                return spanMap.read().getSpansOnLine(line);
-            } else {
-                return defaultSpans;
-            }
-        } catch (Exception e) {
-            return defaultSpans;
+        if (spanMap != null) {
+            return SpansUtils.getSpansOnLine(spanMap.read(), line);
+        } else {
+            return SpansUtils.getDefaultLineSpans();
         }
     }
 
