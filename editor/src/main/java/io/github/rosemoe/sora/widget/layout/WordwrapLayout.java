@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -74,6 +75,15 @@ public class WordwrapLayout extends AbstractLayout {
     private final boolean supportRtlRow;
     private List<RowRegion> rowTable;
 
+    /**
+     * 折叠启用时可见行 -> rowTable 下标 的映射缓存，避免每次访问都线性扫描。
+     */
+    private int[] visibleRowToTableRow = new int[0];
+    private int[] tableRowToVisibleRow = new int[0];
+    private long lastMappingVersion = -1;
+    private long lastRowTableVersion = -1;
+    private long rowTableVersion = 0;
+
     public WordwrapLayout(@NonNull CodeEditor editor, @NonNull Content text, boolean antiWordBreaking, boolean supportRtlRow, @Nullable WordwrapLayout oldLayout, boolean clearCache) {
         super(editor, text);
         this.antiWordBreaking = antiWordBreaking;
@@ -113,6 +123,7 @@ public class WordwrapLayout extends AbstractLayout {
                     for (WordwrapResult wordwrapResult : r2) {
                         rowTable.addAll(wordwrapResult.regions);
                     }
+                    rowTableVersion++;
                     editor.setLayoutBusy(false);
                     editor.getEventHandler().scrollBy(0, 0);
                 });
@@ -124,6 +135,41 @@ public class WordwrapLayout extends AbstractLayout {
             var end = i + 1 == taskCount ? (text.getLineCount() - 1) : (sizeEachTask * (i + 1) - 1);
             submitTask(new WordwrapAnalyzeTask(monitor, i, start, end));
         }
+    }
+
+    private boolean isFoldingEnabled() {
+        return editor != null && editor.isFoldingEnabled();
+    }
+
+    private void ensureFoldingCache() {
+        if (!isFoldingEnabled() || rowTable == null || rowTable.isEmpty()) {
+            return;
+        }
+        final long mappingVersion = editor.getFoldingManager().getMappingVersion();
+        if (lastMappingVersion == mappingVersion && lastRowTableVersion == rowTableVersion) {
+            return;
+        }
+        lastMappingVersion = mappingVersion;
+        lastRowTableVersion = rowTableVersion;
+        final int size = rowTable.size();
+        final int[] tableToVisible = new int[size];
+        Arrays.fill(tableToVisible, -1);
+        int visibleCount = 0;
+        for (int i = 0; i < size; i++) {
+            final int line = rowTable.get(i).line;
+            if (!editor.isLineHiddenByFolding(line)) {
+                tableToVisible[i] = visibleCount++;
+            }
+        }
+        final int[] visibleToTable = new int[visibleCount];
+        int vi = 0;
+        for (int i = 0; i < size; i++) {
+            if (tableToVisible[i] >= 0) {
+                visibleToTable[vi++] = i;
+            }
+        }
+        tableRowToVisibleRow = tableToVisible;
+        visibleRowToTableRow = visibleToTable;
     }
 
     private int findRow(int line) {
@@ -183,6 +229,7 @@ public class WordwrapLayout extends AbstractLayout {
             newRegions.addAll(breakLine(i, text.getLine(i), null));
         }
         rowTable.addAll(insertPosition, newRegions);
+        rowTableVersion++;
     }
 
     /**
@@ -270,13 +317,37 @@ public class WordwrapLayout extends AbstractLayout {
     public Row getRowAt(int rowIndex) {
         if (rowTable.isEmpty()) {
             var r = new Row();
+            final int line = isFoldingEnabled() ? editor.getFoldingManager().getLineForVisibleRow(rowIndex) : rowIndex;
             r.startColumn = 0;
-            r.endColumn = text.getColumnCount(rowIndex);
+            r.endColumn = text.getColumnCount(line);
             r.isLeadingRow = true;
             r.isTrailingRow = true;
-            r.lineIndex = rowIndex;
-            r.inlayHints = getInlayHints(rowIndex);
+            r.lineIndex = line;
+            r.inlayHints = getInlayHints(line);
             return r;
+        }
+        if (isFoldingEnabled()) {
+            ensureFoldingCache();
+            if (rowIndex < 0) {
+                rowIndex = 0;
+            } else if (rowIndex >= visibleRowToTableRow.length) {
+                rowIndex = Math.max(0, visibleRowToTableRow.length - 1);
+            }
+            if (visibleRowToTableRow.length == 0) {
+                var r = new Row();
+                r.startColumn = 0;
+                r.endColumn = text.getColumnCount(0);
+                r.isLeadingRow = true;
+                r.isTrailingRow = true;
+                r.lineIndex = 0;
+                r.inlayHints = getInlayHints(0);
+                return r;
+            }
+            final int tableIndex = visibleRowToTableRow[rowIndex];
+            final RowRegion region = rowTable.get(tableIndex);
+            final boolean isLeadingRow = rowIndex <= 0 || rowTable.get(visibleRowToTableRow[rowIndex - 1]).line != region.line;
+            final boolean isTrailingRow = rowIndex + 1 >= visibleRowToTableRow.length || rowTable.get(visibleRowToTableRow[rowIndex + 1]).line != region.line;
+            return region.toRow(isLeadingRow, isTrailingRow, width);
         }
         var region = rowTable.get(rowIndex);
         var isLeadingRow = rowIndex <= 0 || rowTable.get(rowIndex - 1).line != region.line;
@@ -287,7 +358,18 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public int getLineNumberForRow(int row) {
         if (rowTable.isEmpty()) {
+            if (isFoldingEnabled()) {
+                return editor.getFoldingManager().getLineForVisibleRow(row);
+            }
             return Math.max(0, Math.min(row, text.getLineCount() - 1));
+        }
+        if (isFoldingEnabled()) {
+            ensureFoldingCache();
+            if (visibleRowToTableRow.length == 0) {
+                return 0;
+            }
+            row = Math.max(0, Math.min(row, visibleRowToTableRow.length - 1));
+            return rowTable.get(visibleRowToTableRow[row]).line;
         }
         return row >= rowTable.size() ? rowTable.get(rowTable.size() - 1).line : rowTable.get(row).line;
     }
@@ -295,7 +377,7 @@ public class WordwrapLayout extends AbstractLayout {
     @NonNull
     @Override
     public RowIterator obtainRowIterator(int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
-        return rowTable.isEmpty() ? new LineBreakLayout.LineBreakLayoutRowItr(this, text, initialRow, preloadedLines) : new WordwrapLayoutRowItr(initialRow);
+        return rowTable.isEmpty() ? new LineBreakLayout.LineBreakLayoutRowItr(this, editor, text, initialRow, preloadedLines) : new WordwrapLayoutRowItr(initialRow);
     }
 
     @Override
@@ -304,13 +386,32 @@ public class WordwrapLayout extends AbstractLayout {
             if (line - 1 < 0) {
                 return IntPair.pack(0, 0);
             }
-            int c_column = text.getColumnCount(line - 1);
+            int prev = line - 1;
+            while (prev > 0 && editor.isLineHiddenByFolding(prev)) {
+                prev--;
+            }
+            int c_column = text.getColumnCount(prev);
             if (column > c_column) {
                 column = c_column;
             }
-            return IntPair.pack(line - 1, column);
+            return IntPair.pack(prev, column);
         }
         int row = findRow(line, column);
+        if (isFoldingEnabled()) {
+            ensureFoldingCache();
+            int vr = row >= 0 && row < tableRowToVisibleRow.length ? tableRowToVisibleRow[row] : -1;
+            if (vr < 0) {
+                vr = editor.getFoldingManager().getVisibleRowForLine(line);
+            }
+            if (vr > 0) {
+                final var lastRow = rowTable.get(visibleRowToTableRow[vr - 1]);
+                var offset = column - rowTable.get(row).startColumn;
+                var max = lastRow.endColumn - lastRow.startColumn;
+                offset = Math.min(offset, max);
+                return IntPair.pack(lastRow.line, lastRow.startColumn + offset);
+            }
+            return IntPair.pack(0, 0);
+        }
         if (row > 0) {
             var offset = column - rowTable.get(row).startColumn;
             var lastRow = rowTable.get(row - 1);
@@ -325,17 +426,35 @@ public class WordwrapLayout extends AbstractLayout {
     public long getDownPosition(int line, int column) {
         if (rowTable.isEmpty()) {
             int c_line = text.getLineCount();
-            if (line + 1 >= c_line) {
-                return IntPair.pack(line, text.getColumnCount(line));
-            } else {
-                int c_column = text.getColumnCount(line + 1);
-                if (column > c_column) {
-                    column = c_column;
-                }
-                return IntPair.pack(line + 1, column);
+            int next = line + 1;
+            while (next < c_line && editor.isLineHiddenByFolding(next)) {
+                next++;
             }
+            if (next >= c_line) {
+                return IntPair.pack(line, text.getColumnCount(line));
+            }
+            int c_column = text.getColumnCount(next);
+            if (column > c_column) {
+                column = c_column;
+            }
+            return IntPair.pack(next, column);
         }
         int row = findRow(line, column);
+        if (isFoldingEnabled()) {
+            ensureFoldingCache();
+            int vr = row >= 0 && row < tableRowToVisibleRow.length ? tableRowToVisibleRow[row] : -1;
+            if (vr < 0) {
+                vr = editor.getFoldingManager().getVisibleRowForLine(line);
+            }
+            if (vr + 1 < visibleRowToTableRow.length) {
+                final var nextRow = rowTable.get(visibleRowToTableRow[vr + 1]);
+                var offset = column - rowTable.get(row).startColumn;
+                var max = nextRow.endColumn - nextRow.startColumn;
+                offset = Math.min(offset, max);
+                return IntPair.pack(nextRow.line, nextRow.startColumn + offset);
+            }
+            return IntPair.pack(line, text.getColumnCount(line));
+        }
         if (row + 1 < rowTable.size()) {
             var offset = column - rowTable.get(row).startColumn;
             var nextRow = rowTable.get(row + 1);
@@ -354,10 +473,7 @@ public class WordwrapLayout extends AbstractLayout {
 
     @Override
     public int getLayoutHeight() {
-        if (rowTable.isEmpty()) {
-            return editor.getRowHeight() * text.getLineCount();
-        }
-        return rowTable.size() * editor.getRowHeight();
+        return getRowCount() * editor.getRowHeight();
     }
 
     @Override
@@ -365,14 +481,14 @@ public class WordwrapLayout extends AbstractLayout {
         var pos = editor.getText().getIndexer().getCharPosition(index);
         var line = pos.line;
         if (rowTable.isEmpty()) {
-            return line;
+            return isFoldingEnabled() ? editor.getFoldingManager().getVisibleRowForLine(line) : line;
         }
         var column = pos.column;
         int row = findRow(line);
         if (row < rowTable.size()) {
             var region = rowTable.get(row);
             if (region.line != line) {
-                return 0;
+                return isFoldingEnabled() ? editor.getFoldingManager().getVisibleRowForLine(line) : 0;
             }
             while (region.startColumn < column && row + 1 < rowTable.size()) {
                 row++;
@@ -382,9 +498,14 @@ public class WordwrapLayout extends AbstractLayout {
                     break;
                 }
             }
+            if (isFoldingEnabled()) {
+                ensureFoldingCache();
+                final int vr = row >= 0 && row < tableRowToVisibleRow.length ? tableRowToVisibleRow[row] : -1;
+                return vr >= 0 ? vr : editor.getFoldingManager().getVisibleRowForLine(line);
+            }
             return row;
         }
-        return 0;
+        return isFoldingEnabled() ? editor.getFoldingManager().getVisibleRowForLine(line) : 0;
     }
 
     @Override
@@ -400,13 +521,34 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public VisualLocation getVisualPositionForLayoutOffset(float offsetX, float offsetY) {
         if (rowTable.isEmpty()) {
-            int lineCount = text.getLineCount();
-            int line = Math.min(lineCount - 1, Math.max((int) (offsetY / editor.getRowHeight()), 0));
-            var tr = editor.getRenderer().createTextRow(line);
+            int row = Math.max((int) (offsetY / editor.getRowHeight()), 0);
+            if (isFoldingEnabled()) {
+                row = Math.max(0, Math.min(row, editor.getFoldingManager().getVisibleRowCount() - 1));
+            }
+            final int line = isFoldingEnabled() ? editor.getFoldingManager().getLineForVisibleRow(row) : Math.min(text.getLineCount() - 1, row);
+            if (line < 0) {
+                return new VisualLocation(0, 0, null, false);
+            }
+            var tr = editor.getRenderer().createTextRow(row);
             var pos = tr.getElementPositionForCursorOffset(offsetX);
             return new VisualLocation(line, pos.textOffset, pos.element, pos.isInElementBounds);
         }
         int row = (int) (offsetY / editor.getRowHeight());
+        if (isFoldingEnabled()) {
+            ensureFoldingCache();
+            row = Math.max(0, Math.min(row, visibleRowToTableRow.length - 1));
+            if (visibleRowToTableRow.length == 0) {
+                return new VisualLocation(0, 0, null, false);
+            }
+            RowRegion region = rowTable.get(visibleRowToTableRow[row]);
+            if (region.startColumn != 0) {
+                offsetX -= miniGraphWidth;
+            }
+            offsetX -= region.getRenderTranslateX(width);
+            var tr = editor.getRenderer().createTextRow(row);
+            var pos = tr.getElementPositionForCursorOffset(offsetX);
+            return new VisualLocation(region.line, pos.textOffset, pos.element, pos.isInElementBounds);
+        }
         row = Math.max(0, Math.min(row, rowTable.size() - 1));
         RowRegion region = rowTable.get(row);
         if (region.startColumn != 0) {
@@ -425,8 +567,9 @@ public class WordwrapLayout extends AbstractLayout {
             dest = new float[2];
         }
         if (rowTable.isEmpty()) {
-            dest[0] = editor.getRowBottom(line);
-            var tr = editor.getRenderer().createTextRow(line);
+            final int row = isFoldingEnabled() ? editor.getFoldingManager().getVisibleRowForLine(line) : line;
+            dest[0] = editor.getRowBottom(row);
+            var tr = editor.getRenderer().createTextRow(row);
             dest[1] = tr.getCursorOffsetForIndex(column);
             return dest;
         }
@@ -446,8 +589,16 @@ public class WordwrapLayout extends AbstractLayout {
                     break;
                 }
             }
-            dest[0] = editor.getRowBottom(row);
-            var tr = editor.getRenderer().createTextRow(row);
+            final int visibleRow;
+            if (isFoldingEnabled()) {
+                ensureFoldingCache();
+                final int vr = row >= 0 && row < tableRowToVisibleRow.length ? tableRowToVisibleRow[row] : -1;
+                visibleRow = vr >= 0 ? vr : editor.getFoldingManager().getVisibleRowForLine(line);
+            } else {
+                visibleRow = row;
+            }
+            dest[0] = editor.getRowBottom(visibleRow);
+            var tr = editor.getRenderer().createTextRow(visibleRow);
             dest[1] = tr.getCursorOffsetForIndex(column);
             if (region.startColumn != 0) {
                 dest[1] += miniGraphWidth;
@@ -461,6 +612,9 @@ public class WordwrapLayout extends AbstractLayout {
 
     @Override
     public int getRowCountForLine(int line) {
+        if (editor.isLineHiddenByFolding(line)) {
+            return 0;
+        }
         if (rowTable.isEmpty()) {
             return 1;
         }
@@ -495,7 +649,14 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public int getRowCount() {
         if (rowTable.isEmpty()) {
+            if (isFoldingEnabled()) {
+                return editor.getFoldingManager().getVisibleRowCount();
+            }
             return text.getLineCount();
+        }
+        if (isFoldingEnabled()) {
+            ensureFoldingCache();
+            return visibleRowToTableRow.length;
         }
         return rowTable.size();
     }
@@ -572,19 +733,42 @@ public class WordwrapLayout extends AbstractLayout {
             result = new Row();
         }
 
+        private int tableRowForCurrent() {
+            if (isFoldingEnabled()) {
+                ensureFoldingCache();
+                return visibleRowToTableRow[currentRow];
+            }
+            return currentRow;
+        }
+
+        private int rowCount() {
+            return getRowCount();
+        }
+
+        private boolean sameLineAsNeighbor(int tableRow, int delta) {
+            final int neighbor;
+            if (isFoldingEnabled()) {
+                neighbor = visibleRowToTableRow[currentRow + delta];
+            } else {
+                neighbor = tableRow + delta;
+            }
+            return rowTable.get(neighbor).line == rowTable.get(tableRow).line;
+        }
+
         @NonNull
         @Override
         public Row next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            RowRegion region = rowTable.get(currentRow);
+            final int tableRow = tableRowForCurrent();
+            RowRegion region = rowTable.get(tableRow);
             result.lineIndex = region.line;
             result.startColumn = region.startColumn;
             result.endColumn = region.endColumn;
             result.inlayHints = region.inlayHints == null ? Collections.emptyList() : region.inlayHints;
-            result.isLeadingRow = currentRow <= 0 || rowTable.get(currentRow - 1).line != region.line;
-            result.isTrailingRow = currentRow + 1 >= rowTable.size() || rowTable.get(currentRow + 1).line != region.line;
+            result.isLeadingRow = currentRow <= 0 || !sameLineAsNeighbor(tableRow, -1);
+            result.isTrailingRow = currentRow + 1 >= rowCount() || !sameLineAsNeighbor(tableRow, 1);
             result.renderTranslateX = region.getRenderTranslateX(width);
             currentRow++;
             return result;
@@ -592,6 +776,10 @@ public class WordwrapLayout extends AbstractLayout {
 
         @Override
         public boolean hasNext() {
+            if (isFoldingEnabled()) {
+                ensureFoldingCache();
+                return currentRow >= 0 && currentRow < visibleRowToTableRow.length;
+            }
             return currentRow >= 0 && currentRow < rowTable.size();
         }
 

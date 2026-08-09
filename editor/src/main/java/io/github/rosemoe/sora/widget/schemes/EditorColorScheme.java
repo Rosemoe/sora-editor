@@ -179,6 +179,12 @@ public class EditorColorScheme {
     public static final int MINIMAP_VIEWPORT = 82;
     public static final int MINIMAP_VIEWPORT_BORDER = 83;
 
+    //-------------Folding colors------------------
+    public static final int FOLDING_ICON = 84;
+    public static final int FOLDING_ICON_BACKGROUND = 85;
+    public static final int FOLDED_TEXT_BACKGROUND = 86;
+    public static final int FOLDED_TEXT_COLOR = 87;
+
     /**
      * Min pre-defined color id
      */
@@ -187,7 +193,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 83;
+    protected static final int END_COLOR_ID = 87;
 
 
     /**
@@ -307,6 +313,18 @@ public class EditorColorScheme {
                 break;
             case MINIMAP_VIEWPORT_BORDER:
                 color = isDark() ? 0xb0ffffff : 0xb0333333;
+                break;
+            case FOLDING_ICON:
+                color = isDark() ? 0xffbdbdbd : 0xff616161;
+                break;
+            case FOLDING_ICON_BACKGROUND:
+                color = isDark() ? 0x14ffffff : 0x14000000;
+                break;
+            case FOLDED_TEXT_BACKGROUND:
+                color = isDark() ? 0x26ffffff : 0x1D000000;
+                break;
+            case FOLDED_TEXT_COLOR:
+                color = isDark() ? 0xffeeeeee : 0xff000000;
                 break;
             case LINE_NUMBER_PANEL_TEXT:
                 color = 0xffffffff;

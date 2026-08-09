@@ -28,6 +28,7 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.Build;
 import android.os.SystemClock;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.HapticFeedbackConstants;
@@ -72,6 +73,8 @@ import kotlin.jvm.functions.Function7;
  */
 @SuppressWarnings("CanBeFinal")
 public final class EditorTouchEventHandler implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
+
+    private static final String TAG = "SoraFoldingTouch";
 
     private final static int HIDE_DELAY = 3000;
     private final static int HIDE_DELAY_HANDLE = 3500;
@@ -851,8 +854,61 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         int line = visualPosition.line;
         int column = visualPosition.column;
         editor.performClick();
+
+        // Folding icon click should be handled regardless of resolved region
+        // because gutter is sometimes treated differently when line numbers are pinned/not pinned.
+        if (editor.isFoldingEnabled()) {
+            final boolean gutterPinned = editor.isLineNumberPinned() && !editor.isWordwrap();
+            final float x = gutterPinned ? e.getX() : (e.getX() + editor.getOffsetX());
+            final float lineNumberWidth = editor.measureLineNumber();
+            final float iconSize = editor.getProps().foldingIconSize * editor.getDpUnit();
+            final float padding = editor.getDpUnit() * 2f;
+            final float iconRight = lineNumberWidth - padding;
+            final float iconLeft = iconRight - iconSize;
+            final float hitSlop = Math.max(touchSlop, editor.getDpUnit() * 4f);
+            final float foldAreaLeft = Math.max(0f, lineNumberWidth - (iconSize + padding * 2f));
+            // Allow tapping the whole reserved folding area (including the whitespace between line number and icon)
+            final float hitLeft = Math.max(0f, foldAreaLeft - hitSlop);
+            // Allow a small overshoot into the divider margin area, because the icon is right-aligned
+            // and it's easy to tap slightly outside the line number region on touch devices.
+            final float hitRight = iconRight + hitSlop;
+            if (editor.getProps().foldingDebugLogEnabled) {
+                Log.d(
+                        TAG,
+                        "tap: raw=(" + e.getX() + "," + e.getY() + ")" +
+                                " offset=(" + editor.getOffsetX() + "," + editor.getOffsetY() + ")" +
+                                " wordwrap=" + editor.isWordwrap() +
+                                " lnPinned=" + editor.isLineNumberPinned() +
+                                " gutterPinned=" + gutterPinned +
+                                " region=" + region +
+                                " line=" + line +
+                                " xForHit=" + x +
+                                " icon=[" + iconLeft + "," + iconRight + "]" +
+                                " hit=[" + hitLeft + "," + hitRight + "]" +
+                                " lnWidth=" + lineNumberWidth +
+                                " iconSize=" + iconSize
+                );
+            }
+            if (x >= hitLeft && x <= hitRight) {
+                int row = (int) ((e.getY() + editor.getOffsetY()) / editor.getRowHeight());
+                row = Math.max(0, Math.min(row, editor.getLayout().getRowCount() - 1));
+                var rowInf = editor.getLayout().getRowAt(row);
+                if (rowInf.isLeadingRow) {
+                    final int tappedLine = rowInf.lineIndex;
+                    final boolean foldable = editor.getFoldingManager().isFoldableLine(tappedLine);
+                    final boolean toggled = foldable && editor.toggleFold(tappedLine);
+                    if (editor.getProps().foldingDebugLogEnabled) {
+                        Log.d(TAG, "tap: hitFoldIcon row=" + row + " tappedLine=" + tappedLine + " foldable=" + foldable + " toggled=" + toggled);
+                    }
+                    if (toggled) {
+                        notifyLater();
+                        return true;
+                    }
+                }
+            }
+        }
         if (region == RegionResolverKt.REGION_SIDE_ICON) {
-            int row = (int) (e.getY() + editor.getOffsetX()) / editor.getRowHeight();
+            int row = (int) (e.getY() + editor.getOffsetY()) / editor.getRowHeight();
             row = Math.max(0, Math.min(row, editor.getLayout().getRowCount() - 1));
             var inf = editor.getLayout().getRowAt(row);
             if (inf.isLeadingRow) {
@@ -860,6 +916,38 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 if (style != null) {
                     if ((editor.dispatchEvent(new SideIconClickEvent(editor, style)) & InterceptTarget.TARGET_EDITOR) != 0) {
                         return true;
+                    }
+                }
+            }
+        }
+
+        // Check if clicked on folding placeholder to unfold
+        if (editor.isFoldingEnabled() && region == RegionResolverKt.REGION_TEXT) {
+            int row = (int) (e.getY() + editor.getOffsetY()) / editor.getRowHeight();
+            row = Math.max(0, Math.min(row, editor.getLayout().getRowCount() - 1));
+            var rowInf = editor.getLayout().getRowAt(row);
+            if (rowInf.isTrailingRow) {
+                int lineIndex = rowInf.lineIndex;
+                var foldRegion = editor.getFoldingManager().getFoldRegion(lineIndex);
+                if (foldRegion != null && foldRegion.collapsed) {
+                    String placeholder = editor.getProps().foldingPlaceholder;
+                    if (placeholder != null && !placeholder.isEmpty()) {
+                        final float paddingX = editor.getDpUnit() * 3f;
+                        final float placeholderWidth = editor.getRenderer().getPaint().measureText(placeholder);
+
+                        // xOffset coordinate
+                        float textRegionOffset = editor.measureTextRegionOffset();
+                        int endColumn = editor.getText().getColumnCount(lineIndex);
+                        float lineEndX = textRegionOffset + editor.getLayout().getCharLayoutOffset(lineIndex, endColumn)[1];
+                        float clickX = e.getX() + editor.getOffsetX();
+
+                        // Only unfold when clicking on the folding placeholder background ("...")
+                        if (clickX >= lineEndX && clickX <= lineEndX + placeholderWidth + paddingX * 2f) {
+                            // Unfold the region
+                            editor.unfold(lineIndex);
+                            notifyLater();
+                            return true;
+                        }
                     }
                 }
             }

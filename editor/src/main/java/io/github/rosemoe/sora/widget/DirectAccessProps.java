@@ -502,6 +502,31 @@ public class DirectAccessProps implements Serializable {
     public boolean disableTextExtracting = false;
 
     /**
+     * Whether code folding is enabled.
+     * <p>
+     * Note: if you modify this field directly, call {@link CodeEditor#setFoldingEnabled(boolean)}
+     * to trigger a layout refresh.
+     */
+    @InvalidateRequired
+    public boolean foldingEnabled = true;
+
+    /**
+     * Whether to output folding related debug logs (off by default).
+     */
+    public boolean foldingDebugLogEnabled = false;
+
+    /**
+     * Folding icon size (dp).
+     */
+    @InvalidateRequired
+    public float foldingIconSize = 12f;
+
+    /**
+     * Placeholder text drawn for collapsed regions.
+     */
+    public String foldingPlaceholder = "...";
+
+    /**
      * Specifies the cursor line background rendering behavior when the cursor is at a line which
      * also has a custom line background set.
      */

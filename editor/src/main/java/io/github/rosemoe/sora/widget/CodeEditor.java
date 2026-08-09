@@ -366,6 +366,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private DirectAccessProps props;
     private Bundle extraArguments;
     private Styles textStyles;
+    @NonNull
+    private final FoldingManager foldingManager = new FoldingManager(this);
     private DiagnosticsContainer diagnostics;
     private InlayHintsContainer inlayHints;
     private HighlightTextContainer highlightTextContainer;
@@ -1709,7 +1711,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         for (int i = 0; i < len; i += 2) {
             single = Math.max(single, buffer[i]);
         }
-        return single * count + lineNumberMarginLeft;
+        float result = single * count + lineNumberMarginLeft;
+        if (props.foldingEnabled) {
+            // Reserve space for folding icon on the right side of the line number region
+            final float iconSize = props.foldingIconSize * dpUnit;
+            final float padding = dpUnit * 2f;
+            result += iconSize + padding * 2f;
+        }
+        return result;
     }
 
     protected void createLayout() {
@@ -3558,6 +3567,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @param makeItVisible Make the character visible
      */
     public void setSelection(int line, int column, boolean makeItVisible, int cause) {
+        boolean foldingChanged = ensureLineVisibleForFolding(line);
+        if (foldingChanged) {
+            onFoldingChanged();
+        }
         cursorAnimator.markStartPos();
         if (column > 0 && Character.isHighSurrogate(text.charAt(line, column - 1))) {
             column++;
@@ -3646,6 +3659,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight,
                                    int columnRight, boolean makeRightVisible, int cause) {
+        boolean foldingChanged = ensureLineVisibleForFolding(lineLeft) | ensureLineVisibleForFolding(lineRight);
+        if (foldingChanged) {
+            onFoldingChanged();
+        }
         requestFocus();
         int start = getText().getCharIndex(lineLeft, columnLeft);
         int end = getText().getCharIndex(lineRight, columnRight);
@@ -4045,6 +4062,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             this.text = new Content(text);
         }
         styleDelegate.reset();
+        foldingManager.resetForNewText();
         textStyles = null;
         cursor = this.text.getCursor();
         selectionAnchor = cursor.right();
@@ -4300,8 +4318,13 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @UiThread
     public void setStyles(@Nullable Styles styles) {
         textStyles = styles;
+        final boolean foldingAffectsLayout = foldingManager.onStylesUpdated(styles);
         if (highlightCurrentBlock) {
             cursorPosition = findCursorBlock();
+        }
+        if (props.foldingEnabled && foldingAffectsLayout) {
+            onFoldingChanged();
+            return;
         }
         renderContext.invalidateRenderNodes();
         renderer.updateTimestamp();
@@ -4314,10 +4337,159 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             setStyles(styles);
             return;
         }
+        final boolean foldingAffectsLayout = foldingManager.onStylesUpdated(styles);
         if (highlightCurrentBlock) {
             cursorPosition = findCursorBlock();
         }
+        if (props.foldingEnabled && foldingAffectsLayout) {
+            onFoldingChanged();
+            return;
+        }
         renderContext.updateForRange(range);
+        renderer.updateTimestamp();
+        invalidate();
+    }
+
+    /**
+     * 获取折叠管理器（折叠功能的状态与映射均在此处维护）。
+     */
+    @NonNull
+    public FoldingManager getFoldingManager() {
+        return foldingManager;
+    }
+
+    /**
+     * 是否启用代码折叠（仅影响渲染/布局，文本本身不变）。
+     */
+    public boolean isFoldingEnabled() {
+        return props.foldingEnabled;
+    }
+
+    public void setFoldingEnabled(boolean enabled) {
+        if (props.foldingEnabled == enabled) {
+            return;
+        }
+        props.foldingEnabled = enabled;
+        requestLayoutIfNeeded();
+        onFoldingChanged();
+    }
+
+    public boolean isLineHiddenByFolding(int line) {
+        return props.foldingEnabled && foldingManager.isLineHidden(line);
+    }
+
+    /**
+     * 获取指定文本行在屏幕上的可见行号（row）。
+     * 未启用折叠时，行号与可见行号一一对应，直接返回 {@code line}。
+     */
+    public int getVisibleRowForLine(int line) {
+        if (props.foldingEnabled) {
+            return foldingManager.getVisibleRowForLine(line);
+        }
+        return line;
+    }
+
+    public boolean toggleFold(int startLine) {
+        if (!props.foldingEnabled) {
+            return false;
+        }
+        final var region = foldingManager.getFoldRegion(startLine);
+        if (region == null) {
+            if (props.foldingDebugLogEnabled) {
+                Log.d(LOG_TAG, "folding: toggleFold startLine=" + startLine + " region=null");
+            }
+            return false;
+        }
+        final boolean changed = foldingManager.toggle(startLine);
+        if (!changed) {
+            if (props.foldingDebugLogEnabled) {
+                Log.d(LOG_TAG, "folding: toggleFold startLine=" + startLine + " changed=false collapsed=" + foldingManager.isCollapsed(startLine));
+            }
+            return false;
+        }
+        if (props.foldingDebugLogEnabled) {
+            Log.d(LOG_TAG, "folding: toggleFold startLine=" + startLine + " -> collapsed=" + foldingManager.isCollapsed(startLine) + " region=(" + region.startLine + "," + region.endLine + ")");
+        }
+        if (foldingManager.isCollapsed(startLine) && foldingManager.isLineHidden(cursor.getLeftLine())) {
+            setSelection(startLine, Math.min(cursor.getLeftColumn(), text.getColumnCount(startLine)), SelectionChangeEvent.CAUSE_TAP);
+        }
+        onFoldingChanged();
+        return true;
+    }
+
+    public boolean fold(int startLine) {
+        if (!props.foldingEnabled) {
+            return false;
+        }
+        final boolean changed = foldingManager.fold(startLine);
+        if (changed) {
+            onFoldingChanged();
+        }
+        return changed;
+    }
+
+    public boolean unfold(int startLine) {
+        if (!props.foldingEnabled) {
+            return false;
+        }
+        final boolean changed = foldingManager.unfold(startLine);
+        if (changed) {
+            onFoldingChanged();
+        }
+        return changed;
+    }
+
+    public boolean foldAll() {
+        if (!props.foldingEnabled) {
+            return false;
+        }
+        final boolean changed = foldingManager.foldAll();
+        if (changed) {
+            if (foldingManager.isLineHidden(cursor.getLeftLine())) {
+                final int curLine = cursor.getLeftLine();
+                final int startLine = foldingManager.findCollapsedStartLineForLine(curLine);
+                if (startLine >= 0) {
+                    setSelection(startLine, Math.min(cursor.getLeftColumn(), text.getColumnCount(startLine)), SelectionChangeEvent.CAUSE_TAP);
+                }
+            }
+            onFoldingChanged();
+        }
+        return changed;
+    }
+
+    public void unfoldAll() {
+        foldingManager.unfoldAll();
+        if (props.foldingEnabled) {
+            onFoldingChanged();
+        }
+    }
+
+    private boolean ensureLineVisibleForFolding(int line) {
+        if (!props.foldingEnabled) {
+            return false;
+        }
+        boolean changed = false;
+        while (foldingManager.isLineHidden(line)) {
+            final int startLine = foldingManager.findCollapsedStartLineForLine(line);
+            if (startLine < 0) {
+                break;
+            }
+            changed |= foldingManager.unfold(startLine);
+        }
+        return changed;
+    }
+
+    private void onFoldingChanged() {
+        if (layout == null || renderContext == null || renderer == null) {
+            invalidate();
+            return;
+        }
+        if (wordwrap) {
+            createLayout(false);
+        } else if (touchHandler != null) {
+            touchHandler.scrollBy(0, 0);
+        }
+        renderContext.invalidateRenderNodes();
         renderer.updateTimestamp();
         invalidate();
     }
@@ -5395,6 +5567,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             Log.w(LOG_TAG, "Update failure", e);
         }
 
+        final int deltaLinesInsert = endLine - startLine;
+        if (deltaLinesInsert != 0) {
+            foldingManager.onLineShift(startLine, deltaLinesInsert, startLine);
+        }
+        if (textStyles != null) {
+            foldingManager.onStylesUpdated(textStyles);
+        }
+
         layout.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
         renderer.buildMeasureCacheForLines(startLine, endLine);
         checkForRelayout();
@@ -5443,6 +5623,14 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             }
         } catch (Exception e) {
             Log.w(LOG_TAG, "Update failure", e);
+        }
+
+        final int deltaLinesDelete = startLine - endLine;
+        if (deltaLinesDelete != 0) {
+            foldingManager.onLineShift(startLine, deltaLinesDelete, endLine);
+        }
+        if (textStyles != null) {
+            foldingManager.onStylesUpdated(textStyles);
         }
 
         layout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);

@@ -60,6 +60,11 @@ public class Styles {
 
     public List<CodeBlock> blocks;
 
+    /**
+     * Internal, automatically generated
+     */
+    public List<CodeBlock> blocksByStart;
+
     public int suppressSwitch = Integer.MAX_VALUE;
 
     public boolean indentCountMode = false;
@@ -264,6 +269,10 @@ public class Styles {
             if (sort) {
                 Collections.sort(blocks, CodeBlock.COMPARATOR_END);
             }
+            blocksByStart = new ArrayList<>(blocks);
+            Collections.sort(blocksByStart, CodeBlock.COMPARATOR_START);
+        } else {
+            blocksByStart = null;
         }
         if (lineStyles != null) {
             Collections.sort(lineStyles);
