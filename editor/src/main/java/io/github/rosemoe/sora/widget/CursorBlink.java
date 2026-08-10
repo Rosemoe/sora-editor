@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import io.github.rosemoe.sora.event.EventReceiver;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.Unsubscribe;
+import io.github.rosemoe.sora.widget.style.CursorBlinkingType;
 
 /**
  * This class is used to control cursor visibility
@@ -35,6 +36,21 @@ import io.github.rosemoe.sora.event.Unsubscribe;
  * @author Rose
  */
 final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent> {
+
+    /**
+     * Frame interval used to refresh the cursor while a smooth animation is active
+     */
+    private static final long SMOOTH_FRAME_INTERVAL = 16L;
+
+    /**
+     * The lowest alpha used by {@link CursorBlinkingType#PHASE}
+     */
+    private static final float PHASE_MIN_ALPHA = 0.25f;
+
+    /**
+     * The lowest size factor used by {@link CursorBlinkingType#EXPAND}
+     */
+    private static final float EXPAND_MIN_FACTOR = 0.5f;
 
     final CodeEditor editor;
     public boolean visibility;
@@ -70,6 +86,76 @@ final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent>
         visibility = true;
     }
 
+    /**
+     * Whether the cursor is currently considered visible at all.
+     * For smooth animations this is {@code true} whenever the animation is running,
+     * since the actual visibility is expressed by {@link #getAlpha()}.
+     */
+    public boolean isCursorVisible() {
+        if (period <= 0 || !valid) {
+            return true;
+        }
+        if (System.currentTimeMillis() - lastSelectionModificationTime < period * 2L) {
+            return true;
+        }
+        switch (editor.getCursorBlinkingType()) {
+            case BLINK:
+                return visibility;
+            case SMOOTH:
+            case PHASE:
+            case EXPAND:
+                return true;
+        }
+        return true;
+    }
+
+    /**
+     * The alpha value (0..1) the cursor should be drawn with right now.
+     * Always 1 when the cursor must stay fully visible (e.g. blink disabled).
+     */
+    public float getAlpha() {
+        if (period <= 0 || !valid) {
+            return 1f;
+        }
+        if (System.currentTimeMillis() - lastSelectionModificationTime < period * 2L) {
+            return 1f;
+        }
+        switch (editor.getCursorBlinkingType()) {
+            case BLINK:
+                return visibility ? 1f : 0f;
+            case SMOOTH:
+                return smoothWave(0f, 1f);
+            case PHASE:
+                return smoothWave(PHASE_MIN_ALPHA, 1f);
+            case EXPAND:
+            default:
+                return 1f;
+        }
+    }
+
+    /**
+     * The size factor (0..1) used by the expand animation to grow and shrink the cursor.
+     */
+    public float getExpandFactor() {
+        if (period <= 0 || !valid || editor.getCursorBlinkingType() != CursorBlinkingType.EXPAND) {
+            return 1f;
+        }
+        if (System.currentTimeMillis() - lastSelectionModificationTime < period * 2L) {
+            return 1f;
+        }
+        double cycle = period * 2L;
+        double t = (System.currentTimeMillis() % (long) cycle) / cycle;
+        double v = (1 + Math.cos(t * 2 * Math.PI)) / 2.0;
+        return (float) (EXPAND_MIN_FACTOR + (1 - EXPAND_MIN_FACTOR) * v);
+    }
+
+    private float smoothWave(float min, float max) {
+        double cycle = period * 2L;
+        double t = (System.currentTimeMillis() % (long) cycle) / cycle;
+        double v = (1 + Math.cos(t * 2 * Math.PI)) / 2.0;
+        return (float) (min + (max - min) * v);
+    }
+
     public boolean isSelectionVisible() {
         return (buffer[0] >= editor.getOffsetY() && buffer[0] - editor.getRowHeight() <= editor.getOffsetY() + editor.getHeight()
                 && buffer[1] >= editor.getOffsetX() && buffer[1] - 100f/* larger than a single character */ <= editor.getOffsetX() + editor.getWidth());
@@ -78,17 +164,21 @@ final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent>
     @Override
     public void run() {
         if (valid && period > 0) {
+            boolean smooth = editor.getCursorBlinkingType() != CursorBlinkingType.BLINK;
             if (System.currentTimeMillis() - lastSelectionModificationTime >= period * 2L) {
-                visibility = !visibility;
                 var left = editor.getCursor().left();
                 buffer = editor.getLayout().getCharLayoutOffset(left.line, left.column, buffer);
-                if (!editor.getCursor().isSelected() && isSelectionVisible()) {
+                if (!editor.getCursor().isSelected() && isSelectionVisible() && (!smooth || getAlpha() > 0f)) {
+                    // Keep refreshing the cursor to drive the continuous animation
                     editor.postInvalidate();
+                }
+                if (!smooth) {
+                    visibility = !visibility;
                 }
             } else {
                 visibility = true;
             }
-            editor.postDelayedInLifecycle(this, period);
+            editor.postDelayedInLifecycle(this, smooth ? SMOOTH_FRAME_INTERVAL : period);
         } else {
             visibility = true;
         }

@@ -60,6 +60,7 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SideIconClickEvent
 import io.github.rosemoe.sora.event.TextSizeChangeEvent
 import io.github.rosemoe.sora.graphics.inlayHint.ColorInlayHintRenderer
+import io.github.rosemoe.sora.graphics.inlayHint.GhostTextInlayHintRenderer
 import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.JavaLanguageSpec
@@ -68,8 +69,10 @@ import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.styling.color.ConstColor
 import io.github.rosemoe.sora.lang.styling.inlayHint.ColorInlayHint
+import io.github.rosemoe.sora.lang.styling.inlayHint.GhostTextInlayHint
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintProvider
 import io.github.rosemoe.sora.lang.styling.inlayHint.TextInlayHint
+import io.github.rosemoe.sora.lang.styling.inlayHint.addGhostText
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.monarch.MonarchColorScheme
 import io.github.rosemoe.sora.langs.monarch.MonarchLanguage
@@ -106,6 +109,8 @@ import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
 import io.github.rosemoe.sora.widget.schemes.SchemeGitHub
 import io.github.rosemoe.sora.widget.schemes.SchemeNotepadXX
 import io.github.rosemoe.sora.widget.schemes.SchemeVS2019
+import io.github.rosemoe.sora.widget.style.CursorBlinkingType
+import io.github.rosemoe.sora.widget.style.CursorType
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
 import io.github.rosemoe.sora.widget.subscribeAlways
@@ -225,11 +230,14 @@ class MainActivity : AppCompatActivity() {
         binding.editor.apply {
             registerInlayHintRenderers(
                 TextInlayHintRenderer.DefaultInstance,
-                ColorInlayHintRenderer.DefaultInstance
+                ColorInlayHintRenderer.DefaultInstance,
+                GhostTextInlayHintRenderer.DefaultInstance
             )
             typefaceText = typeface
             props.stickyScroll = true
             setLineSpacing(2f, 1.1f)
+            cursorType = CursorType.UNDERLINE
+            cursorBlinkingType = CursorBlinkingType.PHASE
             nonPrintablePaintingFlags =
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION or CodeEditor.FLAG_DRAW_SOFT_WRAP
             // Update display dynamically
@@ -588,11 +596,19 @@ class MainActivity : AppCompatActivity() {
 
                 demoInlayHintProvider?.let { binding.editor.unregisterInlayHintProvider(it) }
                 if ("big_sample" !in name) {
-                    demoInlayHintProvider = InlayHintProvider { container ->
-                        container.add(ColorInlayHint(10, 30, ConstColor("#f44336")))
-                        container.add(TextInlayHint(29, 7, "^DigitTens"))
-                        container.add(TextInlayHint(100, 1, "^Numbers"))
-                    }
+                demoInlayHintProvider = InlayHintProvider { container ->
+                    container.add(ColorInlayHint(10, 30, ConstColor("#f44336")))
+                    container.add(TextInlayHint(29, 7, "^DigitTens"))
+                    container.add(TextInlayHint(100, 1, "^Numbers"))
+                    // Ghost text demo (single line)
+                    container.add(GhostTextInlayHint(11, 40, " // RED color value"))
+                    // Ghost text demo (multi-line)
+                    container.addGhostText(
+                        100, 0,
+                        "    private static final int GHOST_VALUE = 42;\n" +
+                            "    // end of ghost text demo"
+                    )
+                }
                     binding.editor.registerInlayHintProvider(demoInlayHintProvider!!)
                 } else {
                     demoInlayHintProvider = null

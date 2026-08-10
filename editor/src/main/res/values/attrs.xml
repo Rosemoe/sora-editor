@@ -52,6 +52,17 @@
         <attr name="autoCompleteEnabled" format="boolean" />
         <attr name="symbolCompletionEnabled" format="boolean" />
         <attr name="cursorBlinkPeriod" format="integer" />
+        <attr name="cursorType">
+            <enum name="line" value="0" />
+            <enum name="block" value="1" />
+            <enum name="underline" value="2" />
+        </attr>
+        <attr name="cursorBlinkingType">
+            <enum name="blink" value="0" />
+            <enum name="smooth" value="1" />
+            <enum name="phase" value="2" />
+            <enum name="expand" value="3" />
+        </attr>
         <attr name="verticalScrollbarEnabled" format="boolean" />
         <attr name="horizontalScrollbarEnabled" format="boolean" />
         <attr name="pinLineNumber" format="boolean" />

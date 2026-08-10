@@ -161,6 +161,8 @@ import io.github.rosemoe.sora.widget.rendering.RenderContext;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 import io.github.rosemoe.sora.widget.snippet.SnippetController;
 import io.github.rosemoe.sora.widget.style.CursorAnimator;
+import io.github.rosemoe.sora.widget.style.CursorBlinkingType;
+import io.github.rosemoe.sora.widget.style.CursorType;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition;
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode;
@@ -363,6 +365,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private CursorAnimator cursorAnimator;
     private SelectionHandleStyle handleStyle;
     private CursorBlink cursorBlink;
+    private CursorType cursorType = CursorType.LINE;
+    private CursorBlinkingType cursorBlinkingType = CursorBlinkingType.BLINK;
     private DirectAccessProps props;
     private Bundle extraArguments;
     private Styles textStyles;
@@ -710,6 +714,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         setTextSizePx(array.getDimension(R.styleable.CodeEditor_textSize, getTextSizePx()));
         setCursorBlinkPeriod(array.getInt(R.styleable.CodeEditor_cursorBlinkPeriod, getCursorBlink().period));
+        setCursorType(array.getInt(R.styleable.CodeEditor_cursorType, getCursorType().ordinal()));
+        setCursorBlinkingType(array.getInt(R.styleable.CodeEditor_cursorBlinkingType, getCursorBlinkingType().ordinal()));
         setTabWidth(array.getInt(R.styleable.CodeEditor_tabWidth, getTabWidth()));
 
         int wordwrapMode = array.getInt(R.styleable.CodeEditor_wordwrapMode, 0);
@@ -842,6 +848,60 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     protected CursorBlink getCursorBlink() {
         return cursorBlink;
+    }
+
+    /**
+     * Get the shape of the insert cursor.
+     *
+     * @see CursorType
+     */
+    public CursorType getCursorType() {
+        return cursorType;
+    }
+
+    /**
+     * Set the shape of the insert cursor.
+     *
+     * @param cursorType The type of the cursor
+     * @see CursorType
+     */
+    public void setCursorType(CursorType cursorType) {
+        this.cursorType = Objects.requireNonNull(cursorType);
+        invalidate();
+    }
+
+    void setCursorType(int type) {
+        if (type < 0 || type >= CursorType.values().length) {
+            type = CursorType.LINE.ordinal();
+        }
+        setCursorType(CursorType.values()[type]);
+    }
+
+    /**
+     * Get the blinking animation of the insert cursor.
+     *
+     * @see CursorBlinkingType
+     */
+    public CursorBlinkingType getCursorBlinkingType() {
+        return cursorBlinkingType;
+    }
+
+    /**
+     * Set the blinking animation of the insert cursor.
+     *
+     * @param cursorBlinkingType The blinking type of the cursor
+     * @see CursorBlinkingType
+     */
+    public void setCursorBlinkingType(CursorBlinkingType cursorBlinkingType) {
+        this.cursorBlinkingType = Objects.requireNonNull(cursorBlinkingType);
+        invalidate();
+    }
+
+    void setCursorBlinkingType(int type) {
+        if (type < 0 || type >= CursorBlinkingType.values().length) {
+            type = CursorBlinkingType.BLINK.ordinal();
+        }
+        setCursorBlinkingType(CursorBlinkingType.values()[type]);
     }
 
     /**

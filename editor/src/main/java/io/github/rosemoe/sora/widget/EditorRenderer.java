@@ -95,6 +95,8 @@ import io.github.rosemoe.sora.widget.minimap.MinimapRenderer;
 import io.github.rosemoe.sora.widget.rendering.RenderingConstants;
 import io.github.rosemoe.sora.widget.rendering.TextAdvancesCache;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
+import io.github.rosemoe.sora.widget.style.CursorBlinkingType;
+import io.github.rosemoe.sora.widget.style.CursorType;
 import io.github.rosemoe.sora.widget.style.DiagnosticIndicatorStyle;
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition;
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode;
@@ -366,6 +368,20 @@ public class EditorRenderer {
 
     int getColumnCount(int line) {
         return getLine(line).length();
+    }
+
+    /**
+     * The visual width of the character at the given position, used by the block and underline cursors.
+     */
+    protected float getCharWidthAt(int line, int column) {
+        int columnCount = getColumnCount(line);
+        if (column >= columnCount) {
+            return paintGeneral.getSpaceWidth();
+        }
+        float left = editor.getLayout().getCharLayoutOffset(line, column)[1];
+        float right = editor.getLayout().getCharLayoutOffset(line, column + 1)[1];
+        float width = Math.abs(right - left);
+        return width > 0f ? width : paintGeneral.getSpaceWidth();
     }
 
     // draw methods
@@ -1667,6 +1683,7 @@ public class EditorRenderer {
             } else if (cursor.getLeftLine() == line && isInside(cursor.getLeftColumn(), rowInf.startColumn, rowInf.endColumn, rowInf.isTrailingRow)) {
                 float centerX = editor.measureTextRegionOffset() + layout.getCharLayoutOffset(cursor.getLeftLine(), cursor.getLeftColumn())[1] - editor.getOffsetX();
                 var task = new DrawCursorTask(centerX, getRowBottomForBackground(row) - editor.getOffsetY(), SelectionHandleStyle.HANDLE_TYPE_INSERT, editor.getInsertHandleDescriptor());
+                task.setCharWidth(getCharWidthAt(line, cursor.getLeftColumn()));
                 postDrawCursor.add(task);
                 applyBidiIndicatorAttrs(task, cursor.getLeftLine(), cursor.getLeftColumn());
             }
@@ -2793,8 +2810,21 @@ public class EditorRenderer {
         tmpRect.bottom = editor.getCursorAnimator().animatedY() - editor.getOffsetY();
         tmpRect.top = tmpRect.bottom - (editor.getProps().textBackgroundWrapTextOnly ? editor.getRowHeightOfText() : editor.getRowHeight());
         float centerX = editor.getCursorAnimator().animatedX() - editor.getOffsetX();
-        tmpRect.left = centerX - editor.getInsertSelectionWidth() / 2;
-        tmpRect.right = centerX + editor.getInsertSelectionWidth() / 2;
+        switch (editor.getCursorType()) {
+            case BLOCK:
+                tmpRect.left = centerX;
+                tmpRect.right = centerX + getCharWidthAt(cursor.getLeftLine(), cursor.getLeftColumn());
+                break;
+            case UNDERLINE:
+                tmpRect.left = centerX;
+                tmpRect.right = centerX + getCharWidthAt(cursor.getLeftLine(), cursor.getLeftColumn());
+                tmpRect.top = tmpRect.bottom - editor.getInsertSelectionWidth();
+                break;
+            case LINE:
+            default:
+                tmpRect.left = centerX - editor.getInsertSelectionWidth() / 2;
+                tmpRect.right = centerX + editor.getInsertSelectionWidth() / 2;
+        }
         drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT), tmpRect);
         var bidiAttrs = getBidiIndicatorAttrs(cursor.getLeftLine(), cursor.getLeftColumn());
         if (IntPair.getFirst(bidiAttrs) == 1) {
@@ -2914,7 +2944,7 @@ public class EditorRenderer {
         protected SelectionHandleStyle.HandleDescriptor descriptor;
         protected boolean isBidiIndicatorRequired;
         protected boolean isRightToLeft;
-
+        protected float charWidth;
 
         public DrawCursorTask(float x, float y, int handleType, SelectionHandleStyle.HandleDescriptor descriptor) {
             this.x = x;
@@ -2929,6 +2959,10 @@ public class EditorRenderer {
 
         public void setRightToLeft(boolean rightToLeft) {
             isRightToLeft = rightToLeft;
+        }
+
+        public void setCharWidth(float charWidth) {
+            this.charWidth = charWidth;
         }
 
         private int getActualHandleType() {
@@ -2948,12 +2982,51 @@ public class EditorRenderer {
 
         private boolean drawSelForInsert() {
             return (!(handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT)
-                    && (editor.getCursorBlink().visibility || editor.getEventHandler().holdInsertHandle() || editor.isInLongSelect()));
+                    && (editor.getCursorBlink().isCursorVisible() || editor.getEventHandler().holdInsertHandle() || editor.isInLongSelect()));
         }
 
         private boolean isSelForLongSelect() {
             return editor.isInLongSelect() && !(handleType == SelectionHandleStyle.HANDLE_TYPE_LEFT
                     || handleType == SelectionHandleStyle.HANDLE_TYPE_RIGHT);
+        }
+
+        private void drawInsertCursor(Canvas canvas, int color, float x, float startY, float stopY, float alpha) {
+            var blinkingType = editor.getCursorBlinkingType();
+            float expand = blinkingType == CursorBlinkingType.EXPAND ? editor.getCursorBlink().getExpandFactor() : 1f;
+            float width = Math.max(charWidth > 0f ? charWidth : paintGeneral.getSpaceWidth(), editor.getInsertSelectionWidth()) * expand;
+            switch (editor.getCursorType()) {
+                case BLOCK:
+                    paintGeneral.setColor(withAlpha(color, alpha));
+                    paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
+                    tmpRect.set(x, startY, x + width, stopY);
+                    canvas.drawRect(tmpRect, paintGeneral);
+                    break;
+                case UNDERLINE:
+                    paintGeneral.setColor(withAlpha(color, alpha));
+                    paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
+                    tmpRect.set(x, stopY - Math.max(editor.getInsertSelectionWidth(), editor.getDpUnit()) * expand, x + width, stopY);
+                    canvas.drawRect(tmpRect, paintGeneral);
+                    break;
+                case LINE:
+                default:
+                    paintGeneral.setColor(withAlpha(color, alpha));
+                    paintGeneral.setStyle(android.graphics.Paint.Style.STROKE);
+                    paintGeneral.setStrokeWidth(editor.getInsertSelectionWidth() * expand);
+                    canvas.drawLine(x, startY, x, stopY, paintGeneral);
+                    paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
+                    break;
+            }
+        }
+
+        private static int withAlpha(int color, float alpha) {
+            if (alpha >= 1f) {
+                return color;
+            }
+            int a = (int) (Color.alpha(color) * alpha);
+            if (a <= 0) {
+                return 0;
+            }
+            return (color & 0x00FFFFFF) | (a << 24);
         }
 
         protected void execute(Canvas canvas) {
@@ -2981,20 +3054,35 @@ public class EditorRenderer {
             if (drawSelForLeftRight() || drawSelForInsert() || handleType == SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
                 float startY = y - (editor.getProps().textBackgroundWrapTextOnly ? editor.getRowHeightOfText() : editor.getRowHeight());
                 float stopY = y;
-                paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT));
-                paintGeneral.setStrokeWidth(editor.getInsertSelectionWidth());
-                paintGeneral.setStyle(android.graphics.Paint.Style.STROKE);
+                int color = editor.getColorScheme().getColor(EditorColorScheme.SELECTION_INSERT);
+                boolean isInsert = handleType == SelectionHandleStyle.HANDLE_TYPE_INSERT;
                 if (isSelForLongSelect()) {
-                    paintGeneral.setPathEffect(new DashPathEffect(new float[]{(stopY - startY) / 8f, (stopY - startY) / 8f}, (stopY - startY) / 16f));
+                    paintGeneral.setColor(color);
                     paintGeneral.setStrokeWidth(editor.getInsertSelectionWidth() * 1.5f);
-                }
-                canvas.drawLine(x, startY, x, stopY, paintGeneral);
-                paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
-                paintGeneral.setPathEffect(null);
-                if (drawSelForInsert() && isBidiIndicatorRequired) {
-                    // Draw a flag for LTR/RTL mixed row
-                    float height = (stopY - startY);
-                    drawBidiSelectionIndicator(canvas, x, startY, height, isRightToLeft);
+                    paintGeneral.setStyle(android.graphics.Paint.Style.STROKE);
+                    paintGeneral.setPathEffect(new DashPathEffect(new float[]{(stopY - startY) / 8f, (stopY - startY) / 8f}, (stopY - startY) / 16f));
+                    canvas.drawLine(x, startY, x, stopY, paintGeneral);
+                    paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
+                    paintGeneral.setPathEffect(null);
+                    if (isBidiIndicatorRequired) {
+                        // Draw a flag for LTR/RTL mixed row
+                        drawBidiSelectionIndicator(canvas, x, startY, stopY - startY, isRightToLeft);
+                    }
+                } else if (isInsert) {
+                    float alpha = editor.getEventHandler().holdInsertHandle() ? 1f : editor.getCursorBlink().getAlpha();
+                    if (alpha > 0f) {
+                        drawInsertCursor(canvas, color, x, startY, stopY, alpha);
+                        if (isBidiIndicatorRequired) {
+                            // Draw a flag for LTR/RTL mixed row
+                            drawBidiSelectionIndicator(canvas, x, startY, stopY - startY, isRightToLeft);
+                        }
+                    }
+                } else {
+                    paintGeneral.setColor(color);
+                    paintGeneral.setStrokeWidth(editor.getInsertSelectionWidth());
+                    paintGeneral.setStyle(android.graphics.Paint.Style.STROKE);
+                    canvas.drawLine(x, startY, x, stopY, paintGeneral);
+                    paintGeneral.setStyle(android.graphics.Paint.Style.FILL);
                 }
             }
             var handleType = this.handleType;
