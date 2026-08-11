@@ -41,6 +41,7 @@ import io.github.rosemoe.sora.lang.styling.Styles;
  *
  * <p>折叠区域基于 {@link Styles#blocksByStart}（即 {@link CodeBlock}）生成：每个 startLine 对应一个最外层 endLine。 折叠后隐藏
  * (startLine, endLine] 的所有行，但 startLine 自身仍保持可见。
+ *  @author Ghost
  */
 public final class FoldingManager {
 

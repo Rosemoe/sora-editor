@@ -26,7 +26,7 @@ package io.github.rosemoe.sora.widget.style;
 /**
  * The shape of the insert cursor
  *
- * @author Rosemoe
+ * @author Ghost
  */
 public enum CursorType {
     /**

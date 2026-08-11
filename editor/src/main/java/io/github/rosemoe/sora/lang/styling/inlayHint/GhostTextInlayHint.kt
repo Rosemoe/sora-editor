@@ -38,7 +38,7 @@ package io.github.rosemoe.sora.lang.styling.inlayHint
  * are anchored to the start of the following lines.
  *
  * @see io.github.rosemoe.sora.graphics.inlayHint.GhostTextInlayHintRenderer
- * @author Rosemoe
+ * @author Ghost
  */
 open class GhostTextInlayHint(
     line: Int,

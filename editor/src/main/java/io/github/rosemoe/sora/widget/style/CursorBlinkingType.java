@@ -26,7 +26,7 @@ package io.github.rosemoe.sora.widget.style;
 /**
  * The blinking animation of the insert cursor
  *
- * @author Rosemoe
+ * @author Ghost
  */
 public enum CursorBlinkingType {
     /**

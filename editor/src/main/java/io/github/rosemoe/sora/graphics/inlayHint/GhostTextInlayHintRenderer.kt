@@ -39,7 +39,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
  * preview of the suggested text.
  *
  * @see GhostTextInlayHint
- * @author Rosemoe
+ * @author Ghost
  */
 open class GhostTextInlayHintRenderer : InlayHintRenderer() {
 
