@@ -38,24 +38,30 @@ import androidx.annotation.NonNull;
  */
 public class I18nConfig {
 
-  private static final SparseIntArray mapping = new SparseIntArray();
+    private static final SparseIntArray mapping = new SparseIntArray();
 
-  /** Map the given editor resId to new one */
-  public static void mapTo(int originalResId, int newResId) {
-    mapping.put(originalResId, newResId);
-  }
-
-  /** Get mapped resource id or itself */
-  public static int getResourceId(int resId) {
-    int newResource = mapping.get(resId);
-    if (newResource == 0) {
-      return resId;
+    /**
+     * Map the given editor resId to new one
+     */
+    public static void mapTo(int originalResId, int newResId) {
+        mapping.put(originalResId, newResId);
     }
-    return newResource;
-  }
 
-  /** Get mapped resource string */
-  public static String getString(@NonNull Context context, int resId) {
-    return context.getString(getResourceId(resId));
-  }
+    /**
+     * Get mapped resource id or itself
+     */
+    public static int getResourceId(int resId) {
+        int newResource = mapping.get(resId);
+        if (newResource == 0) {
+            return resId;
+        }
+        return newResource;
+    }
+
+    /**
+     * Get mapped resource string
+     */
+    public static String getString(@NonNull Context context, int resId) {
+        return context.getString(getResourceId(resId));
+    }
 }

@@ -57,15 +57,33 @@ open class GhostTextInlayHint(
          * The first line is anchored at the given [line] and [column], while
          * every following line is anchored to the start (column 0) of the
          * corresponding following line.
+         *
+         * A trailing newline in [text] does not produce an empty trailing hint.
+         * If [lineCount] is given, hints anchored past the end of the document
+         * are dropped instead of silently referencing a non-existent line.
          */
-        fun split(line: Int, column: Int, text: String): List<GhostTextInlayHint> {
-            val lines = text.split('\n')
-            return lines.mapIndexed { index, lineText ->
-                GhostTextInlayHint(
-                    line = line + index,
-                    column = if (index == 0) column else 0,
-                    text = lineText
-                )
+        fun split(
+            line: Int,
+            column: Int,
+            text: String,
+            lineCount: Int = Int.MAX_VALUE
+        ): List<GhostTextInlayHint> {
+            var lines = text.split('\n')
+            if (lines.size > 1 && lines.last().isEmpty()) {
+                lines = lines.dropLast(1)
+            }
+            val maxLine = (lineCount - 1).coerceAtLeast(0)
+            return lines.mapIndexedNotNull { index, lineText ->
+                val targetLine = line + index
+                if (targetLine > maxLine) {
+                    null
+                } else {
+                    GhostTextInlayHint(
+                        line = targetLine,
+                        column = if (index == 0) column else 0,
+                        text = lineText
+                    )
+                }
             }
         }
     }
@@ -77,6 +95,11 @@ open class GhostTextInlayHint(
  *
  * @see GhostTextInlayHint.split
  */
-fun InlayHintsContainer.addGhostText(line: Int, column: Int, text: String) {
-    GhostTextInlayHint.split(line, column, text).forEach(::add)
+fun InlayHintsContainer.addGhostText(
+    line: Int,
+    column: Int,
+    text: String,
+    lineCount: Int = Int.MAX_VALUE
+) {
+    GhostTextInlayHint.split(line, column, text, lineCount).forEach(::add)
 }

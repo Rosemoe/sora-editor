@@ -371,7 +371,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private Bundle extraArguments;
     private Styles textStyles;
     @NonNull
-    private final FoldingManager foldingManager = new FoldingManager(this);
+    private final FoldingManager foldingManager = new FoldingManager(this::getLineCount, () -> props.foldingDebugLogEnabled);
     private DiagnosticsContainer diagnostics;
     private InlayHintsContainer inlayHints;
     private HighlightTextContainer highlightTextContainer;

@@ -109,8 +109,6 @@ import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
 import io.github.rosemoe.sora.widget.schemes.SchemeGitHub
 import io.github.rosemoe.sora.widget.schemes.SchemeNotepadXX
 import io.github.rosemoe.sora.widget.schemes.SchemeVS2019
-import io.github.rosemoe.sora.widget.style.CursorBlinkingType
-import io.github.rosemoe.sora.widget.style.CursorType
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPosition
 import io.github.rosemoe.sora.widget.style.LineInfoPanelPositionMode
 import io.github.rosemoe.sora.widget.subscribeAlways
@@ -235,9 +233,8 @@ class MainActivity : AppCompatActivity() {
             )
             typefaceText = typeface
             props.stickyScroll = true
+            props.foldingEnabled = true
             setLineSpacing(2f, 1.1f)
-            cursorType = CursorType.UNDERLINE
-            cursorBlinkingType = CursorBlinkingType.PHASE
             nonPrintablePaintingFlags =
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION or CodeEditor.FLAG_DRAW_SOFT_WRAP
             // Update display dynamically
@@ -596,19 +593,21 @@ class MainActivity : AppCompatActivity() {
 
                 demoInlayHintProvider?.let { binding.editor.unregisterInlayHintProvider(it) }
                 if ("big_sample" !in name) {
-                demoInlayHintProvider = InlayHintProvider { container ->
-                    container.add(ColorInlayHint(10, 30, ConstColor("#f44336")))
-                    container.add(TextInlayHint(29, 7, "^DigitTens"))
-                    container.add(TextInlayHint(100, 1, "^Numbers"))
-                    // Ghost text demo (single line)
-                    container.add(GhostTextInlayHint(11, 40, " // RED color value"))
-                    // Ghost text demo (multi-line)
-                    container.addGhostText(
-                        100, 0,
-                        "    private static final int GHOST_VALUE = 42;\n" +
-                            "    // end of ghost text demo"
-                    )
-                }
+                    val lineCount = binding.editor.text.lineCount
+                    demoInlayHintProvider = InlayHintProvider { container ->
+                        container.add(ColorInlayHint(10, 30, ConstColor("#f44336")))
+                        container.add(TextInlayHint(29, 7, "^DigitTens"))
+                        container.add(TextInlayHint(100, 1, "^Numbers"))
+                        // Ghost text demo (single line)
+                        container.add(GhostTextInlayHint(11, 40, " // RED color value"))
+                        // Ghost text demo (multi-line)
+                        container.addGhostText(
+                            100, 0,
+                            "    private static final int GHOST_VALUE = 42;\n" +
+                                "    // end of ghost text demo",
+                            lineCount
+                        )
+                    }
                     binding.editor.registerInlayHintProvider(demoInlayHintProvider!!)
                 } else {
                     demoInlayHintProvider = null

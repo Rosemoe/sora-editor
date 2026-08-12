@@ -503,12 +503,9 @@ public class DirectAccessProps implements Serializable {
 
     /**
      * Whether code folding is enabled.
-     * <p>
-     * Note: if you modify this field directly, call {@link CodeEditor#setFoldingEnabled(boolean)}
-     * to trigger a layout refresh.
      */
     @InvalidateRequired
-    public boolean foldingEnabled = true;
+    public boolean foldingEnabled = false;
 
     /**
      * Whether to output folding related debug logs (off by default).

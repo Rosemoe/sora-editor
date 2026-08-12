@@ -128,6 +128,15 @@ public class EditorRenderer {
     private final List<DiagnosticRegion> collectedDiagnostics = new ArrayList<>();
     protected List<CodeBlock> lastStuckLines;
     Paint.FontMetricsInt metricsText;
+
+    // Cache for drawFoldingPlaceholder(): the structural part of the computation (which columns on
+    // the end line make up the closing suffix) only depends on the document content, not on the
+    // frame being drawn, so it is safe to reuse across frames until the text actually changes.
+    private int foldPlaceholderCacheStartLine = -1;
+    private int foldPlaceholderCacheEndLine = -1;
+    private long foldPlaceholderCacheDocVersion = -1L;
+    private int foldPlaceholderCacheSuffixStart = -1;
+    private int foldPlaceholderCacheSuffixEnd = -1;
     @Nullable
     private Drawable horizontalScrollbarThumbDrawable;
     @Nullable
@@ -1808,156 +1817,32 @@ public class EditorRenderer {
         final int oldColor = paintGeneral.getColor();
         final float baseline = editor.getRowBaseline(0);
 
-        // 1. Get current row info
         var rowInfo = editor.getLayout().getRowAt(row);
         int line = rowInfo.lineIndex;
 
-        // 2. Get the fold region for this line
         var foldRegion = editor.getFoldingManager().getFoldRegion(line);
         if (foldRegion == null) {
             return;
         }
 
-        // 3. Determine start line and end line content
         final int lineCount = content.getLineCount();
         if (lineCount <= 0) {
             return;
         }
 
-        // --- Step A: Probe Start Line for Opening Character ---
-        // We need to know if this block started with '{', '[', or '('
-        var startLineContent = getLine(line);
-        String startLineRaw = startLineContent.toString();
-        char expectedCloser = '\0';
-
-        // Ignore trailing comments on start line
-        int startScanEnd = startLineRaw.length() - 1;
-        int commentIndex = startLineRaw.indexOf("//");
-        if (commentIndex >= 0) startScanEnd = commentIndex - 1;
-
-        // Scan backwards on start line to find the last opener
-        for (int i = startScanEnd; i >= 0; i--) {
-            char c = startLineRaw.charAt(i);
-            if (c == '{') { expectedCloser = '}'; break; }
-            if (c == '[') { expectedCloser = ']'; break; }
-            if (c == '(') { expectedCloser = ')'; break; }
-        }
-        // ------------------------------------------------------
-
         int endLine = foldRegion.endLine;
         if (endLine < 0 || endLine >= lineCount) {
             endLine = Math.max(0, Math.min(endLine, lineCount - 1));
         }
-        var endLineContent = getLine(endLine);
-        final String endLineRaw = endLineContent.toString();
 
-        // 4. Determine the rough range of the suffix on the end line
-        int suffixEnd = endLineRaw.length() - 1;
-        while (suffixEnd >= 0 && Character.isWhitespace(endLineRaw.charAt(suffixEnd))) {
-            suffixEnd--;
-        }
+        computeFoldingClosingSuffix(line, endLine);
+        final int suffixStart = foldPlaceholderCacheSuffixStart;
+        final int suffixEnd = foldPlaceholderCacheSuffixEnd;
+        final boolean hasClosingSuffix = suffixStart >= 0 && suffixEnd >= suffixStart;
+        final ContentLine endLineContent = hasClosingSuffix ? getLine(endLine) : null;
 
-        // Ignore trailing comments on end line (// or */)
-        if (suffixEnd >= 1) {
-            // Check for block comment end: */
-            if (suffixEnd >= 1 && endLineRaw.charAt(suffixEnd) == '/' && endLineRaw.charAt(suffixEnd - 1) == '*') {
-                final int start = endLineRaw.lastIndexOf("/*", suffixEnd - 2);
-                if (start >= 0) {
-                    suffixEnd = start - 1;
-                    while (suffixEnd >= 0 && Character.isWhitespace(endLineRaw.charAt(suffixEnd))) {
-                        suffixEnd--;
-                    }
-                }
-            }
-            // Check for line comment: //
-            final int lineComment = endLineRaw.lastIndexOf("//", suffixEnd);
-            if (lineComment >= 0) {
-                suffixEnd = lineComment - 1;
-                while (suffixEnd >= 0 && Character.isWhitespace(endLineRaw.charAt(suffixEnd))) {
-                    suffixEnd--;
-                }
-            }
-        }
-
-        String closingSuffix = "";
-        int closingSuffixStartColumn = -1;
-
-        if (suffixEnd >= 0) {
-            int suffixStart = suffixEnd;
-            // Scan backwards for the first non-punctuation character
-            while (suffixStart >= 0) {
-                final char ch = endLineRaw.charAt(suffixStart);
-                // Allow brackets, commas, semicolons in the potential suffix
-                if (ch == '}' || ch == ')' || ch == ']' || ch == ',' || ch == ';') {
-                    suffixStart--;
-                    continue;
-                }
-                if (Character.isWhitespace(ch)) {
-                    break;
-                }
-                // Stop at any other character (letters, numbers, etc.)
-                break;
-            }
-            suffixStart++;
-
-            // --- Step B: Refined Trimming (The Fix) ---
-            // Remove semicolons, commas, or spaces that appear *before* the closing bracket.
-            // Example: "; }" -> "}"
-            // Example: ", ]" -> "]"
-            // Example: "};"  -> "};" (preserved because ; is after })
-            while (suffixStart <= suffixEnd) {
-                final char ch = endLineRaw.charAt(suffixStart);
-                if (Character.isWhitespace(ch)) {
-                    suffixStart++;
-                } else if (ch == ';' || ch == ',') {
-                    suffixStart++;
-                } else {
-                    break;
-                }
-            }
-
-            if (suffixStart <= suffixEnd) {
-                final String candidate = endLineRaw.substring(suffixStart, suffixEnd + 1);
-
-                // --- Step C: Validation ---
-                // Ensure the suffix contains the *expected* closing bracket.
-                // If we started with '{' but the suffix is ']', we shouldn't show it.
-                boolean isValid = false;
-                boolean hasBracket = false;
-
-                for (int i = 0; i < candidate.length(); i++) {
-                    final char ch = candidate.charAt(i);
-                    if (ch == '}' || ch == ']' || ch == ')') {
-                        hasBracket = true;
-                        if (expectedCloser != '\0') {
-                            if (ch == expectedCloser) {
-                                isValid = true;
-                                break; // Found matching closer
-                            }
-                        } else {
-                            // If we couldn't determine start char, allow any closer
-                            isValid = true;
-                        }
-                    }
-                }
-
-                // Logic:
-                // 1. If we found a bracket but it doesn't match expected -> Don't show (avoids { ... ] )
-                // 2. If we found a bracket and it matches -> Show it
-                // 3. If we found no brackets (just ;), it was probably trimmed above, but safety check -> Don't show
-                if (expectedCloser != '\0' && hasBracket && !isValid) {
-                    closingSuffix = ""; // Mismatch
-                } else if (hasBracket) {
-                    closingSuffix = candidate;
-                    closingSuffixStartColumn = suffixStart;
-                }
-            }
-        }
-
-        // 5. Drawing logic
         final float placeholderWidth = paintGeneral.measureText(placeholder);
 
-        // Compute layout X end
         var tr = createTextRow(row);
         float lineEndX = tr.computeRowWidth();
         float x = lineEndX + paddingX;
@@ -1965,36 +1850,180 @@ public class EditorRenderer {
         canvas.save();
         canvas.translate(-offsetCopy, editor.getRowTop(row) - editor.getOffsetY());
 
-        // Draw placeholder background
         tmpRect.left = x - paddingX;
         tmpRect.right = x + placeholderWidth + paddingX;
         tmpRect.top = editor.getRowTopOfText(0) - paddingY;
         tmpRect.bottom = editor.getRowBottomOfText(0) + paddingY;
         drawColorRound(canvas, editor.getColorScheme().getColor(EditorColorScheme.FOLDED_TEXT_BACKGROUND), tmpRect);
 
-        // Draw placeholder text "..."
         paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.FOLDED_TEXT_COLOR));
         canvas.drawText(placeholder, x, baseline, paintGeneral);
 
-        // Draw valid closing suffix
-        if (!closingSuffix.isEmpty() && closingSuffixStartColumn >= 0) {
+        if (hasClosingSuffix) {
             float closingX = x + placeholderWidth + paddingX;
-            closingX += editor.getDpUnit(); // Add tiny spacing
+            closingX += editor.getDpUnit();
 
             final int fallback = editor.getColorScheme().getColor(EditorColorScheme.TEXT_NORMAL);
-            for (int i = 0; i < closingSuffix.length(); i++) {
-                final int col = closingSuffixStartColumn + i;
+            for (int col = suffixStart; col <= suffixEnd; col++) {
                 final int color = resolveCharForegroundColor(endLine, col, fallback);
                 paintGeneral.setColor(color);
-
-                final String chStr = String.valueOf(closingSuffix.charAt(i));
-                canvas.drawText(chStr, closingX, baseline, paintGeneral);
-                closingX += paintGeneral.measureText(chStr);
+                canvas.drawText(endLineContent, col, col + 1, closingX, baseline, paintGeneral);
+                closingX += paintGeneral.measureText(endLineContent, col, col + 1);
             }
         }
 
         canvas.restore();
         paintGeneral.setColor(oldColor);
+    }
+
+    /**
+     * Determines which columns on {@code endLine} make up the closing suffix shown after the
+     * fold placeholder (e.g. the trailing brace, or a trailing "};"), and caches the result in
+     * the {@code foldPlaceholderCache} fields until the document changes.
+     * <p>
+     * Uses the syntax spans already computed for highlighting (rather than scanning raw line
+     * text) to tell code apart from comments and string/template literals, so a line comment or
+     * block comment marker inside a string is not misread as the start of a real comment.
+     */
+    private void computeFoldingClosingSuffix(int startLine, int endLine) {
+        final long docVersion = content.getDocumentVersion();
+        if (foldPlaceholderCacheStartLine == startLine
+                && foldPlaceholderCacheEndLine == endLine
+                && foldPlaceholderCacheDocVersion == docVersion) {
+            return;
+        }
+
+        char expectedCloser = findExpectedCloser(startLine);
+        int[] suffixRange = findClosingSuffixRange(endLine, expectedCloser);
+
+        foldPlaceholderCacheStartLine = startLine;
+        foldPlaceholderCacheEndLine = endLine;
+        foldPlaceholderCacheDocVersion = docVersion;
+        foldPlaceholderCacheSuffixStart = suffixRange[0];
+        foldPlaceholderCacheSuffixEnd = suffixRange[1];
+    }
+
+    /** Scans backward on the start line, outside of any comment/string span, for the last opener. */
+    private char findExpectedCloser(int startLine) {
+        ContentLine lineContent = getLine(startLine);
+        int length = lineContent.length();
+        List<Span> spans = getSpansOnLineSafely(startLine);
+        for (int i = length - 1; i >= 0; i--) {
+            if (isCommentOrLiteralAt(spans, i)) {
+                continue;
+            }
+            char c = lineContent.charAt(i);
+            if (c == '{') return '}';
+            if (c == '[') return ']';
+            if (c == '(') return ')';
+        }
+        return '\0';
+    }
+
+    /**
+     * @return {startColumn, endColumn} (inclusive, both -1 if there is no suffix to show) of the
+     * closing punctuation on {@code endLine} that should be drawn next to the placeholder.
+     */
+    private int[] findClosingSuffixRange(int endLine, char expectedCloser) {
+        ContentLine lineContent = getLine(endLine);
+        List<Span> spans = getSpansOnLineSafely(endLine);
+        int length = lineContent.length();
+
+        int scanEnd = length - 1;
+        while (scanEnd >= 0 && Character.isWhitespace(lineContent.charAt(scanEnd))) {
+            scanEnd--;
+        }
+        // Trailing comment (// or /* ... */) on the end line is not part of the code suffix.
+        while (scanEnd >= 0 && isCommentOrLiteralAt(spans, scanEnd)
+                && getColorIdAt(spans, scanEnd) == EditorColorScheme.COMMENT) {
+            scanEnd--;
+        }
+        while (scanEnd >= 0 && Character.isWhitespace(lineContent.charAt(scanEnd))) {
+            scanEnd--;
+        }
+
+        if (scanEnd < 0) {
+            return new int[]{-1, -1};
+        }
+
+        int suffixStart = scanEnd;
+        while (suffixStart >= 0) {
+            char ch = lineContent.charAt(suffixStart);
+            boolean insideStringOrComment = isCommentOrLiteralAt(spans, suffixStart);
+            if (!insideStringOrComment && (ch == '}' || ch == ')' || ch == ']' || ch == ',' || ch == ';')) {
+                suffixStart--;
+                continue;
+            }
+            break;
+        }
+        suffixStart++;
+
+        while (suffixStart <= scanEnd) {
+            char ch = lineContent.charAt(suffixStart);
+            if (Character.isWhitespace(ch) || ch == ';' || ch == ',') {
+                suffixStart++;
+            } else {
+                break;
+            }
+        }
+
+        if (suffixStart > scanEnd) {
+            return new int[]{-1, -1};
+        }
+
+        boolean hasBracket = false;
+        boolean isValid = false;
+        for (int i = suffixStart; i <= scanEnd; i++) {
+            if (isCommentOrLiteralAt(spans, i)) {
+                continue;
+            }
+            char ch = lineContent.charAt(i);
+            if (ch == '}' || ch == ']' || ch == ')') {
+                hasBracket = true;
+                if (expectedCloser == '\0' || ch == expectedCloser) {
+                    isValid = true;
+                    break;
+                }
+            }
+        }
+
+        if (!hasBracket || (expectedCloser != '\0' && !isValid)) {
+            return new int[]{-1, -1};
+        }
+        return new int[]{suffixStart, scanEnd};
+    }
+
+    @Nullable
+    private List<Span> getSpansOnLineSafely(int line) {
+        Styles styles = editor.getStyles();
+        if (styles == null || styles.spans == null) {
+            return null;
+        }
+        try {
+            return styles.spans.read().getSpansOnLine(line);
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private int getColorIdAt(@Nullable List<Span> spans, int column) {
+        if (spans == null || spans.isEmpty()) {
+            return -1;
+        }
+        Span current = spans.get(0);
+        for (int i = 1; i < spans.size(); i++) {
+            Span next = spans.get(i);
+            if (next.getColumn() > column) {
+                break;
+            }
+            current = next;
+        }
+        return TextStyle.getForegroundColorId(current.getStyle());
+    }
+
+    private boolean isCommentOrLiteralAt(@Nullable List<Span> spans, int column) {
+        int colorId = getColorIdAt(spans, column);
+        return colorId == EditorColorScheme.COMMENT || colorId == EditorColorScheme.LITERAL;
     }
 
     private int resolveCharForegroundColor(int line, int column, int fallbackColor) {

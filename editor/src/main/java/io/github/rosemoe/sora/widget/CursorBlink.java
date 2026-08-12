@@ -165,10 +165,12 @@ final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent>
     public void run() {
         if (valid && period > 0) {
             boolean smooth = editor.getCursorBlinkingType() != CursorBlinkingType.BLINK;
+            boolean animating = false;
             if (System.currentTimeMillis() - lastSelectionModificationTime >= period * 2L) {
                 var left = editor.getCursor().left();
                 buffer = editor.getLayout().getCharLayoutOffset(left.line, left.column, buffer);
-                if (!editor.getCursor().isSelected() && isSelectionVisible() && (!smooth || getAlpha() > 0f)) {
+                animating = !editor.getCursor().isSelected() && isSelectionVisible() && (!smooth || getAlpha() > 0f);
+                if (animating) {
                     // Keep refreshing the cursor to drive the continuous animation
                     editor.postInvalidate();
                 }
@@ -178,7 +180,10 @@ final class CursorBlink implements Runnable, EventReceiver<SelectionChangeEvent>
             } else {
                 visibility = true;
             }
-            editor.postDelayedInLifecycle(this, smooth ? SMOOTH_FRAME_INTERVAL : period);
+            // Only poll at the expensive per-frame rate while the smooth animation is actually
+            // visible on screen. Otherwise fall back to the base period so a focused-but-idle or
+            // scrolled-away editor doesn't keep waking up ~60 times a second forever.
+            editor.postDelayedInLifecycle(this, smooth && animating ? SMOOTH_FRAME_INTERVAL : period);
         } else {
             visibility = true;
         }
