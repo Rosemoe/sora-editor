@@ -47,13 +47,14 @@ import org.eclipse.lsp4j.ColorInformation
 import org.eclipse.lsp4j.DocumentColorParams
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(FlowPreview::class)
 @Experimental
 class DocumentColorEvent : AsyncEventListener() {
     override val eventName: String = EventType.documentColor
 
-    var future: CompletableFuture<Void>? = null
+    var future: CompletableFuture<*>? = null
 
     override val isAsync = true
 
@@ -78,7 +79,7 @@ class DocumentColorEvent : AsyncEventListener() {
 
             coroutineScope.launch(Dispatchers.Main) {
                 flow
-                    .debounce(50)
+                    .debounce(50.milliseconds)
                     .collect { request ->
                         processDocumentColorRequest(request, context)
                     }
@@ -109,7 +110,7 @@ class DocumentColorEvent : AsyncEventListener() {
                 requestManager.documentColor(DocumentColorParams(request.uri.createTextDocumentIdentifier()))
                     ?: return@withContext
 
-            this@DocumentColorEvent.future = future.thenAccept { }
+            this@DocumentColorEvent.future = future
 
             val documentColors: List<ColorInformation>?
 

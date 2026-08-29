@@ -43,10 +43,13 @@ import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.DocumentFormattingParams
 import org.eclipse.lsp4j.FormattingOptions
 import org.eclipse.lsp4j.TextEdit
+import java.util.concurrent.CompletableFuture
 
 
 class FullFormattingEvent : AsyncEventListener() {
     override val eventName = EventType.fullFormatting
+
+    var future: CompletableFuture<*>? = null
 
     override suspend fun doHandleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
@@ -63,6 +66,8 @@ class FullFormattingEvent : AsyncEventListener() {
             editor.uri.createTextDocumentIdentifier()
 
         val formattingFuture = requestManager.formatting(formattingParams) ?: return
+
+        future = formattingFuture
 
         val textEditList: List<TextEdit>
 
@@ -84,6 +89,11 @@ class FullFormattingEvent : AsyncEventListener() {
             it.reportEventException(this, exception)
         }
         throw LSPException("Formatting code timeout", exception)
+    }
+
+    override fun dispose() {
+        future?.cancel(true)
+        future = null
     }
 }
 

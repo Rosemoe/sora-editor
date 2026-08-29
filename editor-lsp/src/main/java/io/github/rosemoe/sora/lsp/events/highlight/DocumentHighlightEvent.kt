@@ -32,6 +32,7 @@ import io.github.rosemoe.sora.lsp.events.getByClass
 import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.asLspPosition
+import io.github.rosemoe.sora.lsp.utils.createPosition
 import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
 import io.github.rosemoe.sora.text.CharPosition
 import kotlinx.coroutines.Dispatchers
@@ -40,12 +41,13 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.DocumentHighlight
 import org.eclipse.lsp4j.DocumentHighlightParams
+import org.eclipse.lsp4j.Position
 import java.util.concurrent.CompletableFuture
 
 class DocumentHighlightEvent : AsyncEventListener() {
     override val eventName: String = EventType.documentHighlight
 
-    var future: CompletableFuture<Void>? = null
+    var future: CompletableFuture<*>? = null
 
     override val isAsync = true
 
@@ -55,18 +57,23 @@ class DocumentHighlightEvent : AsyncEventListener() {
 
     override suspend fun doHandleAsync(context: EventContext) = withContext(Dispatchers.IO) {
         val editor = context.get<LspEditor>("lsp-editor")
-        val request = context.getByClass<DocumentHighlightRequest>() ?: return@withContext
+
+        val position = context.getByClass<Position>()
+            ?: context.getByClass<CharPosition>()?.asLspPosition()
+            ?: context.getByClass<DocumentHighlightRequest>()?.selectionStart?.asLspPosition()
+            ?: editor.editor?.let { createPosition(it.cursor.leftLine, it.cursor.leftColumn) }
+            ?: return@withContext
 
         val requestManager = editor.requestManager
 
         val params = DocumentHighlightParams(
             editor.uri.createTextDocumentIdentifier(),
-            request.selectionStart.asLspPosition()
+            position
         )
 
         val future = requestManager.documentHighlight(params) ?: return@withContext
 
-        this@DocumentHighlightEvent.future = future.thenAccept { }
+        this@DocumentHighlightEvent.future = future
 
         val documentHighlights: List<DocumentHighlight>?
 
@@ -75,6 +82,7 @@ class DocumentHighlightEvent : AsyncEventListener() {
         }
 
         editor.showDocumentHighlight(documentHighlights)
+        context.put("result", documentHighlights)
     }
 
     override fun dispose() {

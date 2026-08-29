@@ -1,7 +1,7 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2026  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lsp.events.workspace
+package io.github.rosemoe.sora.lsp.events.rename
 
 import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
@@ -30,34 +30,44 @@ import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
+import io.github.rosemoe.sora.lsp.events.getByClass
+import io.github.rosemoe.sora.lsp.utils.asLspPosition
+import io.github.rosemoe.sora.lsp.utils.createPosition
+import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
+import io.github.rosemoe.sora.text.CharPosition
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withTimeout
-import org.eclipse.lsp4j.ExecuteCommandParams
+import org.eclipse.lsp4j.Position
+import org.eclipse.lsp4j.RenameParams
 import java.util.concurrent.CompletableFuture
 
-class WorkSpaceExecuteCommand : AsyncEventListener() {
-    override val eventName: String = EventType.workSpaceExecuteCommand
-
-    override val isAsync = true
+class RenameEvent : AsyncEventListener() {
+    override val eventName = EventType.rename
 
     var future: CompletableFuture<*>? = null
 
     override suspend fun doHandleAsync(context: EventContext) {
-        val command = context.get<String>("command")
-        val args = context.get<List<Any>>("args")
-
         val editor = context.get<LspEditor>("lsp-editor")
-        val requestManager = editor.requestManager
-        val executeCommandParams = ExecuteCommandParams(command, args)
-        val future = requestManager.executeCommand(executeCommandParams)
 
-        this@WorkSpaceExecuteCommand.future = future
+        val newName = context.get<String>("newName")
 
-        val result: Any?
+        val position = context.getByClass<Position>()
+            ?: context.getByClass<CharPosition>()?.asLspPosition()
+            ?: editor.editor?.let { createPosition(it.cursor.leftLine, it.cursor.leftColumn) }
+            ?: return
 
-        withTimeout(Timeout[Timeouts.EXECUTE_COMMAND, editor].toLong()) {
-            result =
-                future?.await()
+        val params = RenameParams(
+            editor.uri.createTextDocumentIdentifier(),
+            position,
+            newName
+        )
+
+        val requestFuture = editor.requestManager.rename(params) ?: return
+
+        future = requestFuture
+
+        val result = withTimeout(Timeout[Timeouts.RENAME, editor].toLong()) {
+            requestFuture.await()
         }
 
         context.put("result", result)
@@ -69,5 +79,5 @@ class WorkSpaceExecuteCommand : AsyncEventListener() {
     }
 }
 
-val EventType.workSpaceExecuteCommand: String
-    get() = "workspace/executeCommand"
+val EventType.rename: String
+    get() = "textDocument/rename"

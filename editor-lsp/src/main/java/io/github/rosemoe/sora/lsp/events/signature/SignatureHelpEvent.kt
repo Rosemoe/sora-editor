@@ -45,7 +45,7 @@ import java.util.concurrent.CompletableFuture
 class SignatureHelpEvent : AsyncEventListener() {
     override val eventName: String = EventType.signatureHelp
 
-    var future: CompletableFuture<Void>? = null
+    var future: CompletableFuture<*>? = null
 
     override val isAsync = true
 
@@ -62,7 +62,7 @@ class SignatureHelpEvent : AsyncEventListener() {
 
         val future = requestManager.signatureHelp(signatureHelpParams) ?: return@withContext
 
-        this@SignatureHelpEvent.future = future.thenAccept { }
+        this@SignatureHelpEvent.future = future
 
         val signatureHelp: SignatureHelp?
 

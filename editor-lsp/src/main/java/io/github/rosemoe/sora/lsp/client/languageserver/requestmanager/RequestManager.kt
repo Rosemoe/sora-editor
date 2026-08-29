@@ -65,11 +65,13 @@ import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.InitializedParams
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.LocationLink
+import org.eclipse.lsp4j.LogTraceParams
 import org.eclipse.lsp4j.MessageActionItem
 import org.eclipse.lsp4j.MessageParams
 import org.eclipse.lsp4j.PrepareRenameDefaultBehavior
 import org.eclipse.lsp4j.PrepareRenameParams
 import org.eclipse.lsp4j.PrepareRenameResult
+import org.eclipse.lsp4j.ProgressParams
 import org.eclipse.lsp4j.PublishDiagnosticsParams
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.ReferenceParams
@@ -80,6 +82,7 @@ import org.eclipse.lsp4j.SemanticTokensDelta
 import org.eclipse.lsp4j.SemanticTokensDeltaParams
 import org.eclipse.lsp4j.SemanticTokensParams
 import org.eclipse.lsp4j.SemanticTokensRangeParams
+import org.eclipse.lsp4j.SetTraceParams
 import org.eclipse.lsp4j.ShowMessageRequestParams
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.SignatureHelpParams
@@ -91,6 +94,9 @@ import org.eclipse.lsp4j.UnregistrationParams
 import org.eclipse.lsp4j.WillSaveTextDocumentParams
 import org.eclipse.lsp4j.WorkspaceEdit
 import org.eclipse.lsp4j.ServerCapabilities
+import org.eclipse.lsp4j.WorkDoneProgressCancelParams
+import org.eclipse.lsp4j.WorkDoneProgressCreateParams
+import org.eclipse.lsp4j.jsonrpc.Endpoint
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.jsonrpc.messages.Either3
 import org.eclipse.lsp4j.services.LanguageClient
@@ -109,7 +115,7 @@ import java.util.concurrent.CompletableFuture
  *
  */
 abstract class RequestManager : LanguageClient, TextDocumentService, WorkspaceService,
-    LanguageServer {
+    LanguageServer, Endpoint {
 
     abstract val capabilities: ServerCapabilities?
     abstract val serverName: String
@@ -192,5 +198,10 @@ abstract class RequestManager : LanguageClient, TextDocumentService, WorkspaceSe
     override fun semanticTokensRange(params: SemanticTokensRangeParams): CompletableFuture<SemanticTokens> {
         return super.semanticTokensRange(params)
     }
+    abstract override fun logTrace(params: LogTraceParams)
+    abstract override fun setTrace(params: SetTraceParams)
+    abstract override fun notifyProgress(params: ProgressParams)
+    abstract override fun createProgress(params: WorkDoneProgressCreateParams): CompletableFuture<Void>
+    abstract override fun cancelProgress(params: WorkDoneProgressCancelParams)
 }
 

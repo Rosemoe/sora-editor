@@ -44,9 +44,15 @@ import io.github.rosemoe.sora.lsp.events.format.RangeFormattingEvent
 import io.github.rosemoe.sora.lsp.events.highlight.DocumentHighlightEvent
 import io.github.rosemoe.sora.lsp.events.hover.HoverEvent
 import io.github.rosemoe.sora.lsp.events.inlayhint.InlayHintEvent
+import io.github.rosemoe.sora.lsp.events.navigation.DefinitionEvent
+import io.github.rosemoe.sora.lsp.events.navigation.ReferencesEvent
+import io.github.rosemoe.sora.lsp.events.progress.CancelProgressEvent
+import io.github.rosemoe.sora.lsp.events.rename.PrepareRenameEvent
+import io.github.rosemoe.sora.lsp.events.rename.RenameEvent
 import io.github.rosemoe.sora.lsp.events.signature.SignatureHelpEvent
 import io.github.rosemoe.sora.lsp.events.workspace.WorkSpaceApplyEditEvent
 import io.github.rosemoe.sora.lsp.events.workspace.WorkSpaceExecuteCommand
+import io.github.rosemoe.sora.lsp.events.workspace.SetTraceEvent
 import io.github.rosemoe.sora.lsp.utils.FileUri
 import io.github.rosemoe.sora.lsp.utils.toFileUri
 import kotlinx.coroutines.CoroutineScope
@@ -199,7 +205,9 @@ class LspProject(
             ::DocumentOpenEvent, ::HoverEvent, ::CodeActionEvent,
             ::WorkSpaceApplyEditEvent, ::WorkSpaceExecuteCommand,
             ::InlayHintEvent, ::DocumentHighlightEvent,
-            ::DocumentColorEvent
+            ::DocumentColorEvent, ::DefinitionEvent, ::ReferencesEvent,
+            ::PrepareRenameEvent, ::RenameEvent, ::CancelProgressEvent,
+            ::SetTraceEvent
         )
 
         events.forEach {
