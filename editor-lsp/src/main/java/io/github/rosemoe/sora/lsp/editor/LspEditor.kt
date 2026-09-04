@@ -76,6 +76,7 @@ import java.util.concurrent.TimeoutException
 class LspEditor(
     val project: LspProject,
     val uri: FileUri,
+    val languageId: String? = null
 ) {
     private val delegate = LspEditorDelegate(this)
     internal val uiDelegate = LspEditorUIDelegate(this)
@@ -150,7 +151,7 @@ class LspEditor(
 
     val languageServerWrapper: LanguageServerWrapper
         get() = delegate.getPrimaryWrapper()
-            ?: throw IllegalStateException("No language server wrapper for extension $fileExt")
+            ?: throw IllegalStateException("No language server wrapper for language ${languageId ?: fileExt}")
 
     var diagnostics
         get() = project.diagnosticsContainer.getDiagnostics(uri)
