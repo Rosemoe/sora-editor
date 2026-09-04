@@ -38,6 +38,7 @@ import io.github.rosemoe.sora.lang.styling.EmptyReader
 import io.github.rosemoe.sora.lang.styling.Span
 import io.github.rosemoe.sora.util.RendererUtils
 import io.github.rosemoe.sora.widget.CodeEditorDelegate
+import io.github.rosemoe.sora.widget.internal.util.SpansUtils
 import io.github.rosemoe.sora.widget.rendering.RenderingConstants
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.subscribeAlways
@@ -212,7 +213,7 @@ class MinimapRenderer(val editor: CodeEditorDelegate) : AutoCloseable {
             for (rowIndex in startRow until rowCount) {
                 val row = layout.getRowAt(rowIndex)
                 val line = text.getLine(row.lineIndex)
-                val spans = spanReader.getSpansOnLine(row.lineIndex)
+                val spans = SpansUtils.getSpansOnLine(spanReader, row.lineIndex)
                 val rowTop = startTop + (rowIndex - startRow) * CharHeight
                 if (rowTop >= bitmapHeight) {
                     break

@@ -37,15 +37,22 @@ import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.brackets.BracketsProvider;
 import io.github.rosemoe.sora.lang.brackets.PairedBracket;
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticProvider;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
+import io.github.rosemoe.sora.lang.styling.HighlightTextProvider;
+import io.github.rosemoe.sora.lang.styling.HighlightTextContainer;
 import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintProvider;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
 
-public class EditorStyleDelegate implements StyleReceiver {
+public class EditorStyleDelegate implements StyleReceiver, InlayHintProvider, DiagnosticProvider, HighlightTextProvider {
 
     private final WeakReference<CodeEditorDelegate> editorRef;
     private PairedBracket foundPair;
     private BracketsProvider bracketsProvider;
+    private DiagnosticsContainer diagnostics;
+    private InlayHintsContainer inlayHints;
+    private HighlightTextContainer highlightTexts;
 
     EditorStyleDelegate(@NonNull CodeEditorDelegate editor) {
         editorRef = new WeakReference<>(editor);
@@ -82,6 +89,9 @@ public class EditorStyleDelegate implements StyleReceiver {
     public void reset() {
         foundPair = null;
         bracketsProvider = null;
+        diagnostics = null;
+        inlayHints = null;
+        highlightTexts = null;
     }
 
     private void runOnUiThread(Runnable operation) {
@@ -118,7 +128,8 @@ public class EditorStyleDelegate implements StyleReceiver {
     public void setDiagnostics(@NonNull AnalyzeManager sourceManager, @Nullable DiagnosticsContainer diagnostics) {
         var editor = editorRef.get();
         if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager()) {
-            runOnUiThread(() -> editor.setDiagnostics(diagnostics));
+            this.diagnostics = diagnostics;
+            runOnUiThread(editor::invalidateDiagnostics);
         }
     }
 
@@ -126,7 +137,37 @@ public class EditorStyleDelegate implements StyleReceiver {
     public void setInlayHints(@NonNull AnalyzeManager sourceManager, @Nullable InlayHintsContainer inlayHints) {
         var editor = editorRef.get();
         if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager()) {
-            runOnUiThread(() -> editor.setInlayHints(inlayHints));
+            this.inlayHints = inlayHints;
+            runOnUiThread(editor::invalidateInlayHints);
+        }
+    }
+
+    public void setHighlightTexts(@NonNull AnalyzeManager sourceManager, @Nullable HighlightTextContainer highlightTexts) {
+        var editor = editorRef.get();
+        if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager()) {
+            this.highlightTexts = highlightTexts;
+            runOnUiThread(editor::invalidateHighlightTexts);
+        }
+    }
+
+    @Override
+    public void provideInlayHints(@NonNull InlayHintsContainer container) {
+        if (inlayHints != null) {
+            container.addAll(inlayHints);
+        }
+    }
+
+    @Override
+    public void provideDiagnostics(@NonNull DiagnosticsContainer container) {
+        if (diagnostics != null) {
+            container.addDiagnostics(diagnostics.getRegions());
+        }
+    }
+
+    @Override
+    public void provideHighlightTexts(@NonNull HighlightTextContainer container) {
+        if (highlightTexts != null) {
+            container.addAll(highlightTexts.asList());
         }
     }
 

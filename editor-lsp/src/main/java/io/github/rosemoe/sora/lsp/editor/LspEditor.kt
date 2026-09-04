@@ -64,7 +64,7 @@ class LspEditor(
     val uri: FileUri,
 ) {
     private val delegate = LspEditorDelegate(this)
-    private val uiDelegate = LspEditorUIDelegate(this)
+    internal val uiDelegate = LspEditorUIDelegate(this)
 
     private var _currentEditor: WeakReference<CodeEditor?> = WeakReference(null)
 

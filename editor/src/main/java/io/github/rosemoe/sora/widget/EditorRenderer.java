@@ -68,7 +68,6 @@ import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.EmptyReader;
-import io.github.rosemoe.sora.lang.styling.ExtraStylesProvider;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Spans;
 import io.github.rosemoe.sora.lang.styling.Styles;
@@ -90,6 +89,7 @@ import io.github.rosemoe.sora.util.LongArrayList;
 import io.github.rosemoe.sora.util.MutableInt;
 import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.util.TemporaryCharBuffer;
+import io.github.rosemoe.sora.widget.internal.util.SpansUtils;
 import io.github.rosemoe.sora.widget.layout.Row;
 import io.github.rosemoe.sora.widget.layout.RowIterator;
 import io.github.rosemoe.sora.widget.minimap.MinimapRenderer;
@@ -396,7 +396,7 @@ public class EditorRenderer {
         var cache = editor.getRenderContext().getCache().queryMeasureCache(row.lineIndex);
         var widths = cache != null && cache.getUpdateTimestamp() >= displayTimestamp ? cache.getWidths() : null;
         widths = widths != null && widths.getSize() > line.length() ? widths : null;
-        tr.set(line, row.startColumn, row.endColumn, spanReader.getSpansOnLine(row.lineIndex), row.inlayHints, content.getLineDirections(row.lineIndex), paintGeneral, widths, createTextRowParams());
+        tr.set(line, row.startColumn, row.endColumn, SpansUtils.getSpansOnLine(spanReader, row.lineIndex), row.inlayHints, content.getLineDirections(row.lineIndex), paintGeneral, widths, createTextRowParams());
         applySelectedTextRange(tr, row.lineIndex, line);
         return tr;
     }
@@ -425,7 +425,7 @@ public class EditorRenderer {
         var cache = editor.getRenderContext().getCache().queryMeasureCache(line);
         var widths = cache != null && cache.getUpdateTimestamp() >= displayTimestamp ? cache.getWidths() : null;
         widths = widths != null && widths.getSize() > lineBuf.length() ? widths : null;
-        tr.set(lineBuf, 0, columnCount, spans.getSpansOnLine(line), lineInlays, getLineDirections(line), paintGeneral, widths, createTextRowParams());
+        tr.set(lineBuf, 0, columnCount, SpansUtils.getSpansOnLine(spans, line), lineInlays, getLineDirections(line), paintGeneral, widths, createTextRowParams());
         applySelectedTextRange(tr, line, lineBuf);
         if (canvas != null) {
             canvas.save();
@@ -447,10 +447,26 @@ public class EditorRenderer {
         if ((styles = editor.getStyles()) != null) {
             if (styles.styleTypeCount != null) {
                 var count = styles.styleTypeCount.get(LineSideIcon.class);
-                if (count == null) {
-                    return false;
+                if (count != null && count.value > 0) {
+                    return true;
                 }
-                return count.value > 0;
+            }
+        }
+        var providers = editor.getExtraStylesProviders();
+        if (!providers.isEmpty()) {
+            var first = editor.getFirstVisibleLine();
+            var last = editor.getLastVisibleLine();
+            var extra = new ArrayList<LineAnchorStyle>();
+            for (int i = first; i <= last; i++) {
+                extra.clear();
+                for (int j = 0; j < providers.size(); j++) {
+                    providers.get(j).getExtraStyles(i, extra);
+                }
+                for (var s : extra) {
+                    if (s instanceof LineSideIcon) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
@@ -1108,10 +1124,12 @@ public class EditorRenderer {
             }
         }
 
-        ExtraStylesProvider provider = editor.getExtraStylesProvider();
-        if (provider != null) {
+        var providers = editor.getExtraStylesProviders();
+        if (!providers.isEmpty()) {
             List<LineAnchorStyle> extra = new ArrayList<>();
-            provider.getExtraStyles(line, extra);
+            for (int j = 0; j < providers.size(); j++) {
+                providers.get(j).getExtraStyles(line, extra);
+            }
             if (!extra.isEmpty()) {
                 if (result == null) {
                     result = new LineStyles(line);
@@ -1453,7 +1471,7 @@ public class EditorRenderer {
                     || (rowInf.endColumn - rowInf.startColumn > 128 && !editor.getProps().cacheRenderNodeForLongLines) /* Save memory */) {
                 // Draw without hardware acceleration
                 TextRow tr = new TextRow();
-                tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlayHints, getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
+                tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, SpansUtils.getSpansOnLine(reader, line), rowInf.inlayHints, getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
                 applySelectedTextRange(tr, line, lineBuf);
 
                 canvas.save();
@@ -1491,7 +1509,7 @@ public class EditorRenderer {
             // Draw non-printable characters
             if (circleRadius != 0f && (leadingWhitespaceEnd != columnCount || (nonPrintableFlags & CodeEditor.FLAG_DRAW_WHITESPACE_FOR_EMPTY_LINE) != 0)) {
                 TextRow tr = new TextRow();
-                tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlayHints, getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
+                tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, SpansUtils.getSpansOnLine(reader, line), rowInf.inlayHints, getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
                 canvas.save();
                 canvas.translate(paintingOffset, editor.getRowTopOfText(row) - editor.getOffsetY());
                 bufferedDrawPoints.setOffsets(paintingOffset, editor.getRowTopOfText(row) - editor.getOffsetY());
@@ -1550,7 +1568,7 @@ public class EditorRenderer {
 
                 if (paintStart < paintEnd) {
                     TextRow tr = new TextRow();
-                    tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, reader.getSpansOnLine(line), rowInf.inlayHints, content.getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
+                    tr.set(lineBuf, rowInf.startColumn, rowInf.endColumn, SpansUtils.getSpansOnLine(reader, line), rowInf.inlayHints, content.getLineDirections(line), paintGeneral, lineCache, createTextRowParams());
                     tmpRect.top = editor.getRowBottom(row) - editor.getOffsetY();
                     tmpRect.bottom = tmpRect.top + editor.getRowHeight() * 0.06f;
                     var finalOffset = paintingOffset;

@@ -8,8 +8,13 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.event.SubscriptionReceipt
 import io.github.rosemoe.sora.graphics.inlayHint.ColorInlayHintRenderer
 import io.github.rosemoe.sora.graphics.inlayHint.TextInlayHintRenderer
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticProvider
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.lang.styling.HighlightTextContainer
+import io.github.rosemoe.sora.lang.styling.HighlightTextProvider
 import io.github.rosemoe.sora.lang.styling.color.EditorColor
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintProvider
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
 import io.github.rosemoe.sora.lsp.editor.codeaction.CodeActionWindow
 import io.github.rosemoe.sora.lsp.editor.diagnostics.LspDiagnosticTooltipLayout
@@ -40,7 +45,7 @@ import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import java.lang.ref.WeakReference
 
-internal class LspEditorUIDelegate(private val editor: LspEditor) {
+internal class LspEditorUIDelegate(private val editor: LspEditor) : InlayHintProvider, DiagnosticProvider, HighlightTextProvider {
 
     private var currentEditorRef: WeakReference<CodeEditor?> = WeakReference(null as CodeEditor?)
     private var hoverWindowRef: WeakReference<HoverWindow?> = WeakReference(null as HoverWindow?)
@@ -50,6 +55,8 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
     private var codeActionWindowRef: WeakReference<CodeActionWindow?> = WeakReference(null as CodeActionWindow?)
 
     private var cachedInlayHints: List<InlayHint>? = null
+    private var cachedHighlights: List<HighlightTextContainer.HighlightText>? = null
+    private var cachedDiagnostics: List<DiagnosticRegion>? = null
     internal var cachedDocumentColors: List<ColorInformation>? = null
         private set
 
@@ -99,11 +106,17 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
                         TextInlayHintRenderer.DefaultInstance,
                         ColorInlayHintRenderer.DefaultInstance
                     )
+                    it.registerInlayHintProvider(this@LspEditorUIDelegate)
+                    it.registerDiagnosticProvider(this@LspEditorUIDelegate)
+                    it.registerHighlightTextProvider(this@LspEditorUIDelegate)
                     editor.coroutineScope.launch {
                         editor.requestInlayHint(CharPosition(0, 0))
                         editor.requestDocumentColor()
                     }
                 } else {
+                    it.unregisterInlayHintProvider(this@LspEditorUIDelegate)
+                    it.unregisterDiagnosticProvider(this@LspEditorUIDelegate)
+                    it.unregisterHighlightTextProvider(this@LspEditorUIDelegate)
                     resetInlinePresentations()
                 }
             }
@@ -151,6 +164,9 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
                 TextInlayHintRenderer.DefaultInstance,
                 ColorInlayHintRenderer.DefaultInstance
             )
+            codeEditor.registerInlayHintProvider(this)
+            codeEditor.registerDiagnosticProvider(this)
+            codeEditor.registerHighlightTextProvider(this)
             editor.coroutineScope.launch {
                 editor.requestInlayHint(CharPosition(0, 0))
                 editor.requestDocumentColor()
@@ -189,6 +205,12 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
 
     fun detachEditor() {
         clearSubscriptions()
+
+        currentEditorRef.get()?.let {
+            it.unregisterInlayHintProvider(this)
+            it.unregisterDiagnosticProvider(this)
+            it.unregisterHighlightTextProvider(this)
+        }
 
         hoverWindow?.setEnabled(false)
         hoverWindowRef.clear()
@@ -256,11 +278,10 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
         val editorInstance = currentEditorRef.get() ?: return
 
         if (highlights.isNullOrEmpty()) {
-            editorInstance.post { editorInstance.highlightTexts = null }
+            cachedHighlights = null
+            editorInstance.post { editorInstance.invalidateHighlightTexts() }
             return
         }
-
-        val container = HighlightTextContainer()
 
         val colors = mapOf(
             DocumentHighlightKind.Write to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_STRONG_BACKGROUND),
@@ -274,8 +295,9 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
             DocumentHighlightKind.Text to EditorColor(EditorColorScheme.TEXT_HIGHLIGHT_BORDER)
         )
 
+        val newHighlights = mutableListOf<HighlightTextContainer.HighlightText>()
         highlights.forEach {
-            container.add(
+            newHighlights.add(
                 HighlightTextContainer.HighlightText(
                     it.range.start.line,
                     it.range.start.character,
@@ -286,8 +308,9 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
                 )
             )
         }
+        cachedHighlights = newHighlights
 
-        editorInstance.post { editorInstance.highlightTexts = container }
+        editorInstance.post { editorInstance.invalidateHighlightTexts() }
     }
 
     fun showInlayHints(inlayHints: List<InlayHint>?) {
@@ -310,31 +333,41 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) {
 
     private fun updateInlinePresentations() {
         val editorInstance = currentEditorRef.get() ?: return
-
-        val hasInlayHints = !cachedInlayHints.isNullOrEmpty()
-        val hasDocumentColors = !cachedDocumentColors.isNullOrEmpty()
-
-        if (!hasInlayHints && !hasDocumentColors) {
-            editorInstance.post { editorInstance.inlayHints = null }
-            return
+        editorInstance.post {
+            editorInstance.invalidateInlayHints()
         }
+    }
 
-        val container = InlayHintsContainer()
+    override fun provideInlayHints(container: InlayHintsContainer) {
         cachedInlayHints?.inlayHintToDisplay()?.forEach(container::add)
         cachedDocumentColors?.colorInfoToDisplay()?.forEach(container::add)
+    }
 
-        editorInstance.post { editorInstance.inlayHints = container }
+    fun setDiagnostics(diagnostics: List<DiagnosticRegion>?) {
+        cachedDiagnostics = diagnostics
+        currentEditorRef.get()?.let {
+            it.post { it.invalidateDiagnostics() }
+        }
+    }
+
+    override fun provideDiagnostics(container: DiagnosticsContainer) {
+        cachedDiagnostics?.let { container.addDiagnostics(it) }
+    }
+
+    override fun provideHighlightTexts(container: HighlightTextContainer) {
+        cachedHighlights?.let { container.addAll(it) }
     }
 
     private fun resetInlinePresentations() {
         cachedInlayHints = null
         cachedDocumentColors = null
+        cachedHighlights = null
+        cachedDiagnostics = null
         currentEditorRef.get()?.let {
-            if (it.inlayHints != null) {
-                it.post { it.inlayHints = null }
-            }
-            if (it.highlightTexts != null) {
-                it.post { it.highlightTexts = null }
+            it.post {
+                it.invalidateInlayHints()
+                it.invalidateDiagnostics()
+                it.invalidateHighlightTexts()
             }
         }
     }

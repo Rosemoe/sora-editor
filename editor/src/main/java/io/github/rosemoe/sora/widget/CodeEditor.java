@@ -69,6 +69,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.Px;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.UiThread;
+import androidx.collection.MutableIntSet;
 import androidx.collection.MutableLongLongMap;
 
 import org.jetbrains.annotations.NotNull;
@@ -94,12 +95,16 @@ import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRendererProvider;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticProvider;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.HighlightTextContainer;
+import io.github.rosemoe.sora.lang.styling.HighlightTextProvider;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintProvider;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
+import io.github.rosemoe.sora.lang.styling.inlayHint.IntSetUpdateRange;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -117,6 +122,7 @@ import io.github.rosemoe.sora.util.ThemeUtils;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent;
 import io.github.rosemoe.sora.widget.component.EditorContextMenuCreator;
+import io.github.rosemoe.sora.widget.internal.util.SpansUtils;
 import io.github.rosemoe.sora.widget.layout.Layout;
 import io.github.rosemoe.sora.widget.layout.ViewMeasureHelper;
 import io.github.rosemoe.sora.widget.rendering.RenderContext;
@@ -222,10 +228,9 @@ public class CodeEditor extends View implements InlayHintRendererProvider, CodeE
     /**
      * Digits for line number measuring
      */
-    static final String NUMBER_DIGITS = "0 1 2 3 4 5 6 7 8 9";
-    static final String LOG_TAG = "CodeEditor";
-    static final String COPYRIGHT = "sora-editor\nCopyright (C) Rosemoe roses2020@qq.com\nThis project is distributed under the LGPL v2.1 license";
-
+    private final static String NUMBER_DIGITS = "0 1 2 3 4 5 6 7 8 9";
+    private static final String LOG_TAG = "CodeEditor";
+    private final static String COPYRIGHT = "sora-editor\nCopyright (C) Rosemoe roses2020@qq.com\nThis project is distributed under the LGPL v2.1 license";
     private int downX = 0;
     private int completionWndPosMode;
     private long availableFloatArrayRegion;
@@ -432,6 +437,11 @@ public class CodeEditor extends View implements InlayHintRendererProvider, CodeE
 
         // Config scale detector
         scaleDetector.setQuickScaleEnabled(false);
+        snippetController = new SnippetController(this);
+
+        registerInlayHintProvider(styleDelegate);
+        registerDiagnosticProvider(styleDelegate);
+        registerHighlightTextProvider(styleDelegate);
     }
 
     /**
@@ -690,7 +700,62 @@ public class CodeEditor extends View implements InlayHintRendererProvider, CodeE
      * @param lang New EditorLanguage for editor
      */
     public void setEditorLanguage(@Nullable Language lang) {
-        delegate.setEditorLanguage(lang);
+        if (lang == null) {
+            lang = new EmptyLanguage();
+        }
+
+        // Destroy old one
+        var old = editorLanguage;
+        if (old != null) {
+            var formatter = getFormatter();
+            formatter.setReceiver(null);
+            formatter.destroy();
+            old.getAnalyzeManager().setReceiver(null);
+            old.getAnalyzeManager().destroy();
+            old.destroy();
+        }
+
+        styleDelegate.reset();
+        this.editorLanguage = lang;
+        this.textStyles = null;
+
+        if (this.diagnostics != null) {
+            this.diagnostics.detachEditor();
+        }
+
+        this.diagnostics = null;
+
+        // Setup new one
+        var mgr = lang.getAnalyzeManager();
+        mgr.setReceiver(styleDelegate);
+        if (text != null) {
+            mgr.reset(new ContentReference(text), extraArguments);
+        }
+
+        // Symbol pairs
+        if (languageSymbolPairs != null) {
+            languageSymbolPairs.setParent(null);
+        }
+        languageSymbolPairs = editorLanguage.getSymbolPairs();
+        if (languageSymbolPairs == null) {
+            Log.w(LOG_TAG, "Language(" + editorLanguage.toString() + ") returned null for symbol pairs. It is a mistake.");
+            languageSymbolPairs = new SymbolPairMatch();
+        }
+        languageSymbolPairs.setParent(props.overrideSymbolPairs);
+
+        if (snippetController != null) {
+            snippetController.stopSnippet();
+        }
+        renderContext.invalidateRenderNodes();
+        invalidate();
+
+        // reset inlay hints (partially re-layout required)
+        if (this.inlayHints != null) {
+            internalSetInlayHints(null);
+        }
+        if (this.highlightTextContainer != null) {
+            internalSetHighlightTexts(null);
+        }
     }
 
     /**
@@ -1170,7 +1235,12 @@ public class CodeEditor extends View implements InlayHintRendererProvider, CodeE
      */
     @NonNull
     public List<Span> getSpansForLine(int line) {
-        return delegate.getSpansForLine(line);
+        var spanMap = textStyles == null ? null : textStyles.spans;
+        if (spanMap != null) {
+            return SpansUtils.getSpansOnLine(spanMap.read(), line);
+        } else {
+            return SpansUtils.getDefaultLineSpans();
+        }
     }
 
     /**
@@ -2341,7 +2411,90 @@ public class CodeEditor extends View implements InlayHintRendererProvider, CodeE
      */
     public void setSelectionRegion(int lineLeft, int columnLeft, int lineRight,
                                    int columnRight, boolean makeRightVisible, int cause) {
-        delegate.setSelectionRegion(lineLeft, columnLeft, lineRight, columnRight, makeRightVisible, cause);
+        requestFocus();
+        int start = getText().getCharIndex(lineLeft, columnLeft);
+        int end = getText().getCharIndex(lineRight, columnRight);
+        if (start == end) {
+            setSelection(lineLeft, columnLeft, makeRightVisible, cause);
+            return;
+        }
+        if (start > end) {
+            setSelectionRegion(lineRight, columnRight, lineLeft, columnLeft, makeRightVisible, cause);
+            Log.w(LOG_TAG, "setSelectionRegion() error: start > end:start = " + start + " end = " + end + " lineLeft = " + lineLeft + " columnLeft = " + columnLeft + " lineRight = " + lineRight + " columnRight = " + columnRight);
+            return;
+        }
+        cursorAnimator.cancel();
+        boolean lastState = cursor.isSelected();
+        if (columnLeft > 0) {
+            int column = columnLeft - 1;
+            char ch = text.charAt(lineLeft, column);
+            if (Character.isHighSurrogate(ch)) {
+                columnLeft++;
+                if (columnLeft > text.getColumnCount(lineLeft)) {
+                    columnLeft--;
+                }
+            }
+        }
+        if (columnRight > 0) {
+            int column = columnRight - 1;
+            char ch = text.charAt(lineRight, column);
+            if (Character.isHighSurrogate(ch)) {
+                columnRight++;
+                if (columnRight > text.getColumnCount(lineRight)) {
+                    columnRight--;
+                }
+            }
+        }
+        cursor.setLeft(lineLeft, columnLeft);
+        cursor.setRight(lineRight, columnRight);
+        updateCursor();
+        updateSelection();
+        renderContext.invalidateRenderNodes();
+
+        // Update selection anchor
+        if (!cursor.left().equals(selectionAnchor) && !cursor.right().equals(selectionAnchor)) {
+            selectionAnchor = cursor.right();
+        }
+
+        if (makeRightVisible) {
+            if (cause == SelectionChangeEvent.CAUSE_SEARCH) {
+                ensurePositionVisible(lineLeft, columnLeft);
+                lastMakeVisible = 0;
+                ensurePositionVisible(lineRight, columnRight);
+            } else {
+                ensurePositionVisible(lineRight, columnRight);
+            }
+        } else {
+            invalidate();
+        }
+        onSelectionChanged(cause);
+    }
+
+    public void setFormatterProvider(@Nullable FormatterProvider provider) {
+        this.formatterProvider = provider;
+    }
+
+    @Nullable
+    public FormatterProvider getFormatterProvider() {
+        return formatterProvider;
+    }
+
+    public void registerExtraStylesProvider(@NonNull ExtraStylesProvider provider) {
+        if (!extraStylesProviders.contains(provider)) {
+            extraStylesProviders.add(provider);
+            invalidate();
+        }
+    }
+
+    public void unregisterExtraStylesProvider(@NonNull ExtraStylesProvider provider) {
+        if (extraStylesProviders.remove(provider)) {
+            invalidate();
+        }
+    }
+
+    @NonNull
+    public List<ExtraStylesProvider> getExtraStylesProviders() {
+        return extraStylesProviders;
     }
 
     /**
@@ -2743,18 +2896,118 @@ public class CodeEditor extends View implements InlayHintRendererProvider, CodeE
         return delegate.getDiagnostics();
     }
 
-    @UiThread
-    public void setDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
-        delegate.setDiagnostics(diagnostics);
+
+    public void registerDiagnosticProvider(@NonNull DiagnosticProvider provider) {
+        synchronized (diagnosticProviders) {
+            if (!diagnosticProviders.contains(provider)) {
+                diagnosticProviders.add(provider);
+                invalidateDiagnostics();
+            }
+        }
     }
 
-    public void setInlayHints(@Nullable InlayHintsContainer inlayHints) {
-        delegate.setInlayHints(inlayHints);
+    public void unregisterDiagnosticProvider(@NonNull DiagnosticProvider provider) {
+        synchronized (diagnosticProviders) {
+            if (diagnosticProviders.remove(provider)) {
+                invalidateDiagnostics();
+            }
+        }
+    }
+
+    public void invalidateDiagnostics() {
+        synchronized (diagnosticProviders) {
+            var merged = new DiagnosticsContainer(false);
+            for (var provider : diagnosticProviders) {
+                provider.provideDiagnostics(merged);
+            }
+            internalSetDiagnostics(merged.getRegions().isEmpty() ? null : merged);
+        }
+    }
+
+    private void internalSetDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
+        delegate.setDiagnostics(diagnostics);
     }
 
     @Nullable
     public InlayHintsContainer getInlayHints() {
-        return delegate.getInlayHints();
+        return inlayHints;
+    }
+
+    public void registerInlayHintProvider(@NonNull InlayHintProvider provider) {
+        synchronized (inlayHintProviders) {
+            if (!inlayHintProviders.contains(provider)) {
+                inlayHintProviders.add(provider);
+                invalidateInlayHints();
+            }
+        }
+    }
+
+    public void unregisterInlayHintProvider(@NonNull InlayHintProvider provider) {
+        synchronized (inlayHintProviders) {
+            if (inlayHintProviders.remove(provider)) {
+                invalidateInlayHints();
+            }
+        }
+    }
+
+    public void invalidateInlayHints() {
+        synchronized (inlayHintProviders) {
+            var merged = new InlayHintsContainer();
+            for (var provider : inlayHintProviders) {
+                provider.provideInlayHints(merged);
+            }
+            internalSetInlayHints(merged.isEmpty() ? null : merged);
+        }
+    }
+
+    private void internalSetInlayHints(@Nullable InlayHintsContainer inlayHints) {
+        var affectedLines = new MutableIntSet();
+        var oldInlayHints = this.inlayHints;
+        if (oldInlayHints != null) {
+            affectedLines.addAll(oldInlayHints.getLineNumbers());
+        }
+        if (inlayHints != null) {
+            affectedLines.addAll(inlayHints.getLineNumbers());
+        }
+        this.inlayHints = inlayHints;
+        var range = new IntSetUpdateRange(affectedLines);
+        if (!layoutBusy) {
+            layout.invalidateLines(range);
+        } else {
+            createLayout();
+        }
+        renderContext.invalidateRenderNodes();
+    }
+
+    public HighlightTextContainer getHighlightTexts() {
+        return highlightTextContainer;
+    }
+
+    public void registerHighlightTextProvider(@NonNull HighlightTextProvider provider) {
+        synchronized (highlightTextProviders) {
+            if (!highlightTextProviders.contains(provider)) {
+                highlightTextProviders.add(provider);
+                invalidateHighlightTexts();
+            }
+        }
+    }
+
+    public void unregisterHighlightTextProvider(@NonNull HighlightTextProvider provider) {
+        synchronized (highlightTextProviders) {
+            if (highlightTextProviders.remove(provider)) {
+                invalidateHighlightTexts();
+            }
+        }
+    }
+
+    public void invalidateHighlightTexts() {
+        synchronized (highlightTextProviders) {
+            var merged = new HighlightTextContainer();
+            for (var provider : highlightTextProviders) {
+                provider.provideHighlightTexts(merged);
+            }
+            internalSetHighlightTexts(merged.isEmpty() ? null : merged);
+        }
     }
 
     @UiThread

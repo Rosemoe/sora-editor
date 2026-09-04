@@ -155,6 +155,22 @@ open class PointAnchoredContainer<T : PointAnchoredObject> {
         }
     }
 
+    fun isEmpty(): Boolean {
+        return objects.isEmpty()
+    }
+
+    fun clear() {
+        objects.clear()
+    }
+
+    fun addAll(other: PointAnchoredContainer<T>) {
+        other.forEach { add(it) }
+    }
+
+    fun forEach(action: (T) -> Unit) {
+        objects.forEach(action)
+    }
+
     private class Anchor(
         override var line: Int,
         override var column: Int

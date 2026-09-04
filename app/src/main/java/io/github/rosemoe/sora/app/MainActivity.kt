@@ -67,10 +67,9 @@ import io.github.rosemoe.sora.lang.JavaLanguageSpec
 import io.github.rosemoe.sora.lang.TsLanguageJava
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
-import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
 import io.github.rosemoe.sora.lang.styling.color.ConstColor
 import io.github.rosemoe.sora.lang.styling.inlayHint.ColorInlayHint
-import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintProvider
 import io.github.rosemoe.sora.lang.styling.inlayHint.TextInlayHint
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.langs.monarch.MonarchColorScheme
@@ -161,6 +160,7 @@ class MainActivity : AppCompatActivity() {
     private var searchOptions = SearchOptions(false, false)
     private var undo: MenuItem? = null
     private var redo: MenuItem? = null
+    private var demoInlayHintProvider: InlayHintProvider? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -517,18 +517,18 @@ class MainActivity : AppCompatActivity() {
      */
     private fun setupDiagnostics() {
         val editor = binding.editor
-        val container = DiagnosticsContainer()
-        for (i in 0 until editor.text.lineCount) {
-            val index = editor.text.getCharIndex(i, 0)
-            container.addDiagnostic(
-                DiagnosticRegion(
-                    index,
-                    index + editor.text.getColumnCount(i),
-                    DiagnosticRegion.SEVERITY_ERROR
+        editor.registerDiagnosticProvider { container ->
+            for (i in 0 until editor.text.lineCount) {
+                val index = editor.text.getCharIndex(i, 0)
+                container.addDiagnostic(
+                    DiagnosticRegion(
+                        index,
+                        index + editor.text.getColumnCount(i),
+                        DiagnosticRegion.SEVERITY_ERROR
+                    )
                 )
-            )
+            }
         }
-        editor.diagnostics = container
     }
 
     /**
@@ -587,12 +587,16 @@ class MainActivity : AppCompatActivity() {
                 updatePositionText()
                 updateBtnState()
 
+                demoInlayHintProvider?.let { binding.editor.unregisterInlayHintProvider(it) }
                 if ("big_sample" !in name) {
-                    binding.editor.inlayHints = InlayHintsContainer().also {
-                        it.add(ColorInlayHint(10, 30, ConstColor("#f44336")))
-                        it.add(TextInlayHint(29, 7, "^DigitTens"))
-                        it.add(TextInlayHint(100, 1, "^Numbers"))
+                    demoInlayHintProvider = InlayHintProvider { container ->
+                        container.add(ColorInlayHint(10, 30, ConstColor("#f44336")))
+                        container.add(TextInlayHint(29, 7, "^DigitTens"))
+                        container.add(TextInlayHint(100, 1, "^Numbers"))
                     }
+                    binding.editor.registerInlayHintProvider(demoInlayHintProvider!!)
+                } else {
+                    demoInlayHintProvider = null
                 }
             }
         }
