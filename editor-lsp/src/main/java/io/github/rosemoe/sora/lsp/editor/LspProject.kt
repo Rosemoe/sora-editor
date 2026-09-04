@@ -112,9 +112,9 @@ class LspProject(
             .distinctBy { it.name }
     }
 
-    fun createEditor(path: String): LspEditor {
+    fun createEditor(path: String, languageId: String? = null): LspEditor {
         val uri = FileUri(path)
-        val editor = LspEditor(this, uri)
+        val editor = LspEditor(this, uri, languageId)
         editors[uri] = editor
         return editor
     }
@@ -135,8 +135,8 @@ class LspProject(
         return editors[uri]
     }
 
-    fun getOrCreateEditor(path: String): LspEditor {
-        return getEditor(path) ?: createEditor(path)
+    fun getOrCreateEditor(path: String, languageId: String? = null): LspEditor {
+        return getEditor(path) ?: createEditor(path, languageId)
     }
 
     fun closeAllEditors() {
