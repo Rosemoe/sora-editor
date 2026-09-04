@@ -1,7 +1,7 @@
 /*******************************************************************************
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2023  Rosemoe
+ *    Copyright (C) 2020-2026  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -28,46 +28,18 @@ import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventType
-import io.github.rosemoe.sora.lsp.requests.Timeout
-import io.github.rosemoe.sora.lsp.requests.Timeouts
-import kotlinx.coroutines.future.await
-import kotlinx.coroutines.withTimeout
-import org.eclipse.lsp4j.ExecuteCommandParams
-import java.util.concurrent.CompletableFuture
+import org.eclipse.lsp4j.SetTraceParams
 
-class WorkSpaceExecuteCommand : AsyncEventListener() {
-    override val eventName: String = EventType.workSpaceExecuteCommand
-
-    override val isAsync = true
-
-    var future: CompletableFuture<*>? = null
+class SetTraceEvent : AsyncEventListener() {
+    override val eventName = EventType.setTrace
 
     override suspend fun doHandleAsync(context: EventContext) {
-        val command = context.get<String>("command")
-        val args = context.get<List<Any>>("args")
-
         val editor = context.get<LspEditor>("lsp-editor")
-        val requestManager = editor.requestManager
-        val executeCommandParams = ExecuteCommandParams(command, args)
-        val future = requestManager.executeCommand(executeCommandParams)
+        val value = context.get<String>("value")
 
-        this@WorkSpaceExecuteCommand.future = future
-
-        val result: Any?
-
-        withTimeout(Timeout[Timeouts.EXECUTE_COMMAND, editor].toLong()) {
-            result =
-                future?.await()
-        }
-
-        context.put("result", result)
-    }
-
-    override fun dispose() {
-        future?.cancel(true)
-        future = null
+        editor.requestManager.setTrace(SetTraceParams(value))
     }
 }
 
-val EventType.workSpaceExecuteCommand: String
-    get() = "workspace/executeCommand"
+val EventType.setTrace: String
+    get() = "$/setTrace"

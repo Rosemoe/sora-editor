@@ -32,6 +32,7 @@ import io.github.rosemoe.sora.lsp.events.getByClass
 import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.asLspPosition
+import io.github.rosemoe.sora.lsp.utils.createPosition
 import io.github.rosemoe.sora.lsp.utils.createTextDocumentIdentifier
 import io.github.rosemoe.sora.text.CharPosition
 import kotlinx.coroutines.Dispatchers
@@ -40,29 +41,34 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.HoverParams
+import org.eclipse.lsp4j.Position
 import java.util.concurrent.CompletableFuture
 
 class HoverEvent : AsyncEventListener() {
     override val eventName: String = EventType.hover
 
-    var future: CompletableFuture<Void>? = null
+    var future: CompletableFuture<*>? = null
 
     override val isAsync = true
 
     override suspend fun doHandleAsync(context: EventContext) = withContext(Dispatchers.IO) {
         val editor = context.get<LspEditor>("lsp-editor")
-        val position = context.getByClass<CharPosition>() ?: return@withContext
+
+        val position = context.getByClass<Position>()
+            ?: context.getByClass<CharPosition>()?.asLspPosition()
+            ?: editor.editor?.let { createPosition(it.cursor.leftLine, it.cursor.leftColumn) }
+            ?: return@withContext
 
         val requestManager = editor.requestManager
 
         val hoverParams = HoverParams(
             editor.uri.createTextDocumentIdentifier(),
-            position.asLspPosition()
+            position
         )
 
         val future = requestManager.hover(hoverParams) ?: return@withContext
 
-        this@HoverEvent.future = future.thenAccept { }
+        this@HoverEvent.future = future
 
         val hover: Hover?
 
@@ -71,6 +77,7 @@ class HoverEvent : AsyncEventListener() {
         }
 
         editor.showHover(hover)
+        context.put("result", hover)
     }
 
     override fun dispose() {

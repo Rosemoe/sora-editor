@@ -44,9 +44,12 @@ import kotlinx.coroutines.withTimeout
 import org.eclipse.lsp4j.DocumentRangeFormattingParams
 import org.eclipse.lsp4j.FormattingOptions
 import org.eclipse.lsp4j.TextEdit
+import java.util.concurrent.CompletableFuture
 
 class RangeFormattingEvent : AsyncEventListener() {
     override val eventName = EventType.rangeFormatting
+
+    var future: CompletableFuture<*>? = null
 
     override suspend fun doHandleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
@@ -68,6 +71,8 @@ class RangeFormattingEvent : AsyncEventListener() {
 
         val formattingFuture = requestManager.rangeFormatting(formattingParams) ?: return
 
+        future = formattingFuture
+
         val textEditList: List<TextEdit>
 
         withTimeout(Timeout[Timeouts.FORMATTING, editor].toLong()) {
@@ -88,6 +93,11 @@ class RangeFormattingEvent : AsyncEventListener() {
             it.reportEventException(this, exception)
         }
         throw LSPException("Formatting code timeout", exception)
+    }
+
+    override fun dispose() {
+        future?.cancel(true)
+        future = null
     }
 }
 

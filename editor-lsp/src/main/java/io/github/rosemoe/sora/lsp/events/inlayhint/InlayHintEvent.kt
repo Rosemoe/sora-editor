@@ -57,7 +57,7 @@ import kotlin.math.min
 class InlayHintEvent : AsyncEventListener() {
     override val eventName: String = EventType.inlayHint
 
-    var future: CompletableFuture<Void>? = null
+    var future: CompletableFuture<*>? = null
 
     override val isAsync = true
 
@@ -130,7 +130,7 @@ class InlayHintEvent : AsyncEventListener() {
 
             val future = requestManager.inlayHint(inlayHintParams) ?: return@withContext
 
-            this@InlayHintEvent.future = future.thenAccept { }
+            this@InlayHintEvent.future = future
 
             val inlayHints: List<InlayHint>?
 

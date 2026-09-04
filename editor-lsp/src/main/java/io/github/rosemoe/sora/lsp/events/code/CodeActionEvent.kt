@@ -47,7 +47,7 @@ import java.util.concurrent.CompletableFuture
 class CodeActionEvent : AsyncEventListener() {
     override val eventName: String = EventType.codeAction
 
-    var future: CompletableFuture<Void>? = null
+    var future: CompletableFuture<*>? = null
 
     override val isAsync = true
 
@@ -67,7 +67,7 @@ class CodeActionEvent : AsyncEventListener() {
 
         val future = requestManager.codeAction(codeActionParams) ?: return@withContext
 
-        this@CodeActionEvent.future = future.thenAccept { }
+        this@CodeActionEvent.future = future
 
         var codeActions: List<Either<Command, CodeAction>>? = null
 

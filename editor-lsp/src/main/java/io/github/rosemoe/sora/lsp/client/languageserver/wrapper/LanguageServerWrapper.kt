@@ -92,7 +92,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class LanguageServerWrapper(
-    val serverDefinition: LanguageServerDefinition, val project: LspProject
+    val serverDefinition: LanguageServerDefinition,
+    val project: LspProject
 ) {
     private val TAG = "LanguageServerWrapper"
     val serverName = serverDefinition.name
@@ -130,6 +131,10 @@ class LanguageServerWrapper(
 
     fun reportEventException(eventListener: AsyncEventListener, exception: Exception) {
         eventHandler?.listener?.onEventException(eventListener, exception)
+    }
+
+    fun getCachedServerCapabilities(): ServerCapabilities? {
+        return effectiveCapabilities ?: initializeResult?.capabilities
     }
 
     /**
@@ -282,7 +287,7 @@ class LanguageServerWrapper(
         }
     }
 
-    /*
+    /**
      * The shutdown request is sent from the client to the server. It asks the server to shut down, but to not exit \
      * (otherwise the response might not be delivered correctly to the client).
      * Only if the exit flag is true, particular server instance will exit.
