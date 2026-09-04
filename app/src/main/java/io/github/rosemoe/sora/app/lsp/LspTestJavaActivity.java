@@ -163,7 +163,7 @@ public class LspTestJavaActivity extends BaseEditorActivity {
         final Object lock = new Object();
 
         runOnUiThread(() -> {
-            lspEditor = lspProject.createEditor(projectPath + "/sample.lua");
+            lspEditor = lspProject.createEditor(projectPath + "/sample.lua",null);
 
             var wrapperLanguage = createTextMateLanguage();
             lspEditor.setWrapperLanguage(wrapperLanguage);
