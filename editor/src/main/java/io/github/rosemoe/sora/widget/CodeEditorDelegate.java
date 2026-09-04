@@ -82,15 +82,17 @@ import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRendererProvider;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticProvider;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.format.FormatterProvider;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.ExtraStylesProvider;
 import io.github.rosemoe.sora.lang.styling.HighlightTextContainer;
+import io.github.rosemoe.sora.lang.styling.HighlightTextProvider;
 import io.github.rosemoe.sora.lang.styling.Span;
-import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintProvider;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
 import io.github.rosemoe.sora.lang.styling.inlayHint.IntSetUpdateRange;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -120,6 +122,7 @@ import io.github.rosemoe.sora.widget.component.EditorContextMenuCreator;
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow;
 import io.github.rosemoe.sora.widget.component.EditorTextActionWindow;
 import io.github.rosemoe.sora.widget.component.Magnifier;
+import io.github.rosemoe.sora.widget.internal.util.SpansUtils;
 import io.github.rosemoe.sora.widget.layout.Layout;
 import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
 import io.github.rosemoe.sora.widget.layout.WordwrapLayout;
@@ -246,6 +249,12 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
     EditorContextMenuCreator contextMenuCreator;
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public EditorStyleDelegate styleDelegate;
+
+    private final List<ExtraStylesProvider> extraStylesProviders = new ArrayList<>();
+    private final List<InlayHintProvider> inlayHintProviders = new ArrayList<>();
+    private final List<DiagnosticProvider> diagnosticProviders = new ArrayList<>();
+    private final List<HighlightTextProvider> highlightTextProviders = new ArrayList<>();
+
     CharPosition selectionAnchor;
     EventManager eventManager;
     EditorAutoCompletion completionWindow;
@@ -354,6 +363,10 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
         completionWindow = new EditorAutoCompletion(this, host);
         textActionWindow = new EditorTextActionWindow(this, host);
         diagnosticTooltip = new EditorDiagnosticTooltipWindow(this, host);
+
+        registerInlayHintProvider(styleDelegate);
+        registerDiagnosticProvider(styleDelegate);
+        registerHighlightTextProvider(styleDelegate);
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -561,7 +574,7 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
     public float measureTextRegionOffset() {
         return isLineNumberEnabled() ?
                 measureLineNumber() + dividerMarginLeft + dividerMarginRight + dividerWidth +
-                (renderer.hasSideHintIcons() ? getRowHeight() : 0) :
+                        (renderer.hasSideHintIcons() ? getRowHeight() : 0) :
                 dpUnit * 5;
     }
 
@@ -886,10 +899,10 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
 
         // reset inlay hints (partially re-layout required)
         if (this.inlayHints != null) {
-            setInlayHints(null);
+            internalSetInlayHints(null);
         }
         if (this.highlightTextContainer != null) {
-            setHighlightTexts(null);
+            internalSetHighlightTexts(null);
         }
     }
 
@@ -1430,17 +1443,10 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
     @NonNull
     public List<Span> getSpansForLine(int line) {
         var spanMap = textStyles == null ? null : textStyles.spans;
-        if (defaultSpans.isEmpty()) {
-            defaultSpans.add(SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL));
-        }
-        try {
-            if (spanMap != null) {
-                return spanMap.read().getSpansOnLine(line);
-            } else {
-                return defaultSpans;
-            }
-        } catch (Exception e) {
-            return defaultSpans;
+        if (spanMap != null) {
+            return SpansUtils.getSpansOnLine(spanMap.read(), line);
+        } else {
+            return SpansUtils.getDefaultLineSpans();
         }
     }
 
@@ -3263,24 +3269,6 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
         onSelectionChanged(cause);
     }
 
-    public void setFormatterProvider(@Nullable FormatterProvider provider) {
-        this.formatterProvider = provider;
-    }
-
-    @Nullable
-    public FormatterProvider getFormatterProvider() {
-        return formatterProvider;
-    }
-
-    public void setExtraStylesProvider(@Nullable ExtraStylesProvider provider) {
-        this.extraStylesProvider = provider;
-    }
-
-    @Nullable
-    public ExtraStylesProvider getExtraStylesProvider() {
-        return extraStylesProvider;
-    }
-
     /**
      * Select all text
      */
@@ -3348,7 +3336,7 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
         }
         if (start > end) {
             setSelectionRegion(lineRight, columnRight, lineLeft, columnLeft, makeRightVisible, cause);
-            Log.w("CodeEditor", "setSelectionRegion() error: start > end:start = " + start + " end = " + end + " lineLeft = " + lineLeft + " columnLeft = " + columnLeft + " lineRight = " + lineRight + " columnRight = " + columnRight);
+            Log.w(LOG_TAG, "setSelectionRegion() error: start > end:start = " + start + " end = " + end + " lineLeft = " + lineLeft + " columnLeft = " + columnLeft + " lineRight = " + lineRight + " columnRight = " + columnRight);
             return;
         }
         cursorAnimator.cancel();
@@ -3396,6 +3384,33 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
             host.invalidate();
         }
         onSelectionChanged(cause);
+    }
+
+    public void setFormatterProvider(@Nullable FormatterProvider provider) {
+        this.formatterProvider = provider;
+    }
+
+    @Nullable
+    public FormatterProvider getFormatterProvider() {
+        return formatterProvider;
+    }
+
+    public void registerExtraStylesProvider(@NonNull ExtraStylesProvider provider) {
+        if (!extraStylesProviders.contains(provider)) {
+            extraStylesProviders.add(provider);
+            host.invalidate();
+        }
+    }
+
+    public void unregisterExtraStylesProvider(@NonNull ExtraStylesProvider provider) {
+        if (extraStylesProviders.remove(provider)) {
+            host.invalidate();
+        }
+    }
+
+    @NonNull
+    public List<ExtraStylesProvider> getExtraStylesProviders() {
+        return extraStylesProviders;
     }
 
     /**
@@ -3985,6 +4000,46 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
         return diagnostics;
     }
 
+    public void registerDiagnosticProvider(@NonNull DiagnosticProvider provider) {
+        synchronized (diagnosticProviders) {
+            if (!diagnosticProviders.contains(provider)) {
+                diagnosticProviders.add(provider);
+                invalidateDiagnostics();
+            }
+        }
+    }
+
+    public void unregisterDiagnosticProvider(@NonNull DiagnosticProvider provider) {
+        synchronized (diagnosticProviders) {
+            if (diagnosticProviders.remove(provider)) {
+                invalidateDiagnostics();
+            }
+        }
+    }
+
+    public void invalidateDiagnostics() {
+        synchronized (diagnosticProviders) {
+            var merged = new DiagnosticsContainer(false);
+            for (var provider : diagnosticProviders) {
+                provider.provideDiagnostics(merged);
+            }
+            internalSetDiagnostics(merged.getRegions().isEmpty() ? null : merged);
+        }
+    }
+
+    void internalSetDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
+        if (this.diagnostics != null) {
+            this.diagnostics.detachEditor();
+        }
+
+        this.diagnostics = diagnostics;
+
+        if (this.diagnostics != null) {
+            this.diagnostics.attachEditor(this);
+        }
+        host.invalidate();
+    }
+
     @UiThread
     public void setDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
         if (this.diagnostics != null) {
@@ -4023,6 +4078,52 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
         return inlayHints;
     }
 
+    public void registerInlayHintProvider(@NonNull InlayHintProvider provider) {
+        synchronized (inlayHintProviders) {
+            if (!inlayHintProviders.contains(provider)) {
+                inlayHintProviders.add(provider);
+                invalidateInlayHints();
+            }
+        }
+    }
+
+    public void unregisterInlayHintProvider(@NonNull InlayHintProvider provider) {
+        synchronized (inlayHintProviders) {
+            if (inlayHintProviders.remove(provider)) {
+                invalidateInlayHints();
+            }
+        }
+    }
+
+    public void invalidateInlayHints() {
+        synchronized (inlayHintProviders) {
+            var merged = new InlayHintsContainer();
+            for (var provider : inlayHintProviders) {
+                provider.provideInlayHints(merged);
+            }
+            internalSetInlayHints(merged.isEmpty() ? null : merged);
+        }
+    }
+
+    void internalSetInlayHints(@Nullable InlayHintsContainer inlayHints) {
+        var affectedLines = new MutableIntSet();
+        var oldInlayHints = this.inlayHints;
+        if (oldInlayHints != null) {
+            affectedLines.addAll(oldInlayHints.getLineNumbers());
+        }
+        if (inlayHints != null) {
+            affectedLines.addAll(inlayHints.getLineNumbers());
+        }
+        this.inlayHints = inlayHints;
+        var range = new IntSetUpdateRange(affectedLines);
+        if (!layoutBusy) {
+            layout.invalidateLines(range);
+        } else {
+            createLayout();
+        }
+        renderContext.invalidateRenderNodes();
+    }
+
     @UiThread
     public void setHighlightTexts(@Nullable HighlightTextContainer highlightTexts) {
         var affectedLines = new MutableIntSet();
@@ -4040,7 +4141,7 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
                 affectedLines.add(line);
             }
         }
-        if (affectedLines._size == 0) {
+        if (affectedLines.isEmpty()) {
             return;
         }
         if (layout == null || renderContext == null) {
@@ -4060,6 +4161,58 @@ public class CodeEditorDelegate implements InlayHintRendererProvider, ContentLis
     @Nullable
     public HighlightTextContainer getHighlightTexts() {
         return highlightTextContainer;
+    }
+
+    public void registerHighlightTextProvider(@NonNull HighlightTextProvider provider) {
+        synchronized (highlightTextProviders) {
+            if (!highlightTextProviders.contains(provider)) {
+                highlightTextProviders.add(provider);
+                invalidateHighlightTexts();
+            }
+        }
+    }
+
+    public void unregisterHighlightTextProvider(@NonNull HighlightTextProvider provider) {
+        synchronized (highlightTextProviders) {
+            if (highlightTextProviders.remove(provider)) {
+                invalidateHighlightTexts();
+            }
+        }
+    }
+
+    public void invalidateHighlightTexts() {
+        synchronized (highlightTextProviders) {
+            var merged = new HighlightTextContainer();
+            for (var provider : highlightTextProviders) {
+                provider.provideHighlightTexts(merged);
+            }
+            internalSetHighlightTexts(merged.isEmpty() ? null : merged);
+        }
+    }
+
+    void internalSetHighlightTexts(@Nullable HighlightTextContainer highlightTexts) {
+        var affectedLines = new MutableIntSet();
+        var oldHighlights = this.highlightTextContainer;
+        if (oldHighlights != null) {
+            var lines = oldHighlights.getLineNumbers();
+            for (int line : lines) {
+                affectedLines.add(line);
+            }
+        }
+        this.highlightTextContainer = highlightTexts;
+        if (highlightTexts != null) {
+            var lines = highlightTexts.getLineNumbers();
+            for (int line : lines) {
+                affectedLines.add(line);
+            }
+        }
+        var range = new IntSetUpdateRange(affectedLines);
+        if (!layoutBusy) {
+            layout.invalidateLines(range);
+        } else {
+            createLayout();
+        }
+        renderContext.invalidateRenderNodes();
     }
 
     /**
