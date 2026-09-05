@@ -27,7 +27,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.text.CharPosition;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 import io.github.rosemoe.sora.widget.EditorSearcher;
 
 /**
@@ -87,7 +87,7 @@ public class SelectionChangeEvent extends Event {
     private final CharPosition right;
     private final int cause;
 
-    public SelectionChangeEvent(@NonNull CodeEditor editor, @Nullable CharPosition oldLeft, @Nullable CharPosition oldRight, int cause) {
+    public SelectionChangeEvent(@NonNull CodeEditorDelegate editor, @Nullable CharPosition oldLeft, @Nullable CharPosition oldRight, int cause) {
         super(editor);
         this.oldLeft = oldLeft;
         this.oldRight = oldRight;

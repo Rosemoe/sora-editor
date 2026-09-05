@@ -37,9 +37,9 @@ const val REGION_TEXT = 5
 const val IN_BOUND = 0
 const val OUT_BOUND = 1
 
-fun CodeEditor.resolveTouchRegion(event: MotionEvent) = resolveTouchRegion(event, -1)
+fun CodeEditorDelegate.resolveTouchRegion(event: MotionEvent) = resolveTouchRegion(event, -1)
 
-fun CodeEditor.resolveTouchRegion(event: MotionEvent, pointerIndex: Int = -1): Long {
+fun CodeEditorDelegate.resolveTouchRegion(event: MotionEvent, pointerIndex: Int = -1): Long {
     val x = (if (pointerIndex == -1) event.x else event.getX(pointerIndex)) + offsetX
     val y = (if (pointerIndex == -1) event.y else event.getY(pointerIndex)) + offsetY
     val lineNumberWidth = measureLineNumber()
@@ -51,7 +51,7 @@ fun CodeEditor.resolveTouchRegion(event: MotionEvent, pointerIndex: Int = -1): L
         x in lineNumberWidth..lineNumberWidth + iconWidth -> REGION_SIDE_ICON
         x in lineNumberWidth + iconWidth..lineNumberWidth + iconWidth + dividerMarginLeft
                 || x in (lineNumberWidth + iconWidth + dividerMarginLeft + dividerWidth)..(lineNumberWidth + iconWidth + dividerMarginLeft + dividerMarginRight + dividerWidth)
-        -> REGION_DIVIDER_MARGIN
+            -> REGION_DIVIDER_MARGIN
 
         x in lineNumberWidth + iconWidth + dividerMarginLeft..lineNumberWidth + iconWidth + dividerMarginLeft + dividerWidth -> REGION_DIVIDER
         x in textOffset..(scrollMaxX + width).toFloat() -> REGION_TEXT

@@ -66,7 +66,7 @@ import io.github.rosemoe.sora.util.regex.RegexBackrefToken;
  */
 public class EditorSearcher {
 
-    private final CodeEditor editor;
+    private final CodeEditorDelegate editor;
     protected String currentPattern;
     protected SearchOptions searchOptions;
     protected ReplaceOptions replaceOptions;
@@ -79,7 +79,7 @@ public class EditorSearcher {
     private boolean cyclicJumping = true;
     private boolean ensureOccurrenceVisible = false;
 
-    EditorSearcher(@NonNull CodeEditor editor) {
+    EditorSearcher(@NonNull CodeEditorDelegate editor) {
         this.editor = editor;
         this.editor.subscribeEvent(ContentChangeEvent.class, ((event, unsubscribe) -> {
             if (hasQuery()) {
@@ -164,7 +164,7 @@ public class EditorSearcher {
         currentPattern = pattern;
         searchOptions = options;
         executeMatch();
-        editor.postInvalidate();
+        editor.host.postInvalidate();
     }
 
     /**
@@ -613,7 +613,7 @@ public class EditorSearcher {
                 editor.postInLifecycle(() -> {
                     if (currentThread == localThread) {
                         lastResults = results;
-                        editor.invalidate();
+                        editor.host.invalidate();
                         editor.dispatchEvent(new PublishSearchResultEvent(editor));
                         currentThread = null;
                         if (ensureOccurrenceVisible && results.size() > 0) {

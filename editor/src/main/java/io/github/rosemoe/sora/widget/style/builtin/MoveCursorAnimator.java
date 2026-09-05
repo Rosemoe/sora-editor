@@ -25,7 +25,7 @@ package io.github.rosemoe.sora.widget.style.builtin;
 
 import android.animation.ValueAnimator;
 
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 import io.github.rosemoe.sora.widget.style.CursorAnimator;
 
 /**
@@ -35,7 +35,7 @@ import io.github.rosemoe.sora.widget.style.CursorAnimator;
  */
 public class MoveCursorAnimator implements CursorAnimator, ValueAnimator.AnimatorUpdateListener {
 
-    private final CodeEditor editor;
+    private final CodeEditorDelegate editor;
     private final long duration;
     private ValueAnimator animatorX;
     private ValueAnimator animatorY;
@@ -44,7 +44,7 @@ public class MoveCursorAnimator implements CursorAnimator, ValueAnimator.Animato
     private float startX, startY, startSize, startBottom;
     private long lastAnimateTime;
 
-    public MoveCursorAnimator(CodeEditor editor) {
+    public MoveCursorAnimator(CodeEditorDelegate editor) {
         this.editor = editor;
         animatorX = new ValueAnimator();
         animatorY = new ValueAnimator();
@@ -153,6 +153,6 @@ public class MoveCursorAnimator implements CursorAnimator, ValueAnimator.Animato
 
     @Override
     public void onAnimationUpdate(ValueAnimator animation) {
-        editor.postInvalidateOnAnimation();
+        editor.host.postInvalidateOnAnimation();
     }
 }

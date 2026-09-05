@@ -95,4 +95,5 @@
     <string name="choice_yes">Yes</string>
     <string name="choice_no">No</string>
     <string name="restart_server">Restart server</string>
+    <string name="open_compose_activity">Open Compose activity</string>
 </resources>

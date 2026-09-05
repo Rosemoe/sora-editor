@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * Provider for custom formatters.
@@ -46,6 +47,6 @@ public interface FormatterProvider {
      * @return A custom formatter, or {@code null} to use the default formatter
      */
     @Nullable
-    Formatter getFormatter(@NonNull CodeEditor editor);
+    Formatter getFormatter(@NonNull CodeEditorDelegate editor);
 
 }

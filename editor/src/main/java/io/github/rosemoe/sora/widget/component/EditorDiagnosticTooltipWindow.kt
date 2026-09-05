@@ -29,7 +29,6 @@ import android.view.MotionEvent
 import android.view.View
 import io.github.rosemoe.sora.R
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
-import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorFocusChangeEvent
 import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.HoverEvent
@@ -43,13 +42,17 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.util.IntPair
 import io.github.rosemoe.sora.util.ViewUtils
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
+import io.github.rosemoe.sora.widget.CodeEditorHost
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import io.github.rosemoe.sora.widget.getComponent
-import kotlin.math.PI
 import kotlin.math.abs
 
-open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow(editor, FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED), EditorBuiltinComponent {
+open class EditorDiagnosticTooltipWindow(
+    editor: CodeEditorDelegate,
+    host: CodeEditorHost
+) : EditorPopupWindow(editor, host, FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED),
+    EditorBuiltinComponent {
 
     protected val eventManager = editor.createSubEventManager()
     private lateinit var rootView: View
@@ -142,8 +145,8 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
         }
 
         fun postUpdate(delay: Long = ViewUtils.HOVER_TOOLTIP_SHOW_TIMEOUT) {
-            editor.removeCallbacks(callback)
-            editor.postDelayedInLifecycle(callback, delay)
+            host.removeCallbacks(callback)
+            host.postDelayedInLifecycle(callback, delay)
         }
         eventManager.subscribeAlways<HoverEvent> { e ->
             if (editor.isInMouseMode) {
@@ -152,7 +155,7 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
                 }
                 when (e.causingEvent.action) {
                     MotionEvent.ACTION_HOVER_ENTER -> {
-                        editor.removeCallbacks(callback)
+                        host.removeCallbacks(callback)
                         updateDiagnostic(null, null, null)
                         updateLastHover()
                     }
@@ -260,7 +263,11 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
         return buffer[0] >= editor.offsetY && buffer[0] - editor.rowHeight <= editor.offsetY + editor.height && buffer[1] >= editor.offsetX && buffer[1] - 100f /* larger than a single character */ <= editor.offsetX + editor.width
     }
 
-    protected open fun updateDiagnostic(diagnostic: DiagnosticDetail?, region: DiagnosticRegion?, position: CharPosition?) {
+    protected open fun updateDiagnostic(
+        diagnostic: DiagnosticDetail?,
+        region: DiagnosticRegion?,
+        position: CharPosition?
+    ) {
         if (!isEnabled) {
             return
         }
@@ -279,9 +286,9 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
             region === previousRegion -> true
             region == null || previousRegion == null -> false
             else -> region.id == previousRegion.id &&
-                region.startIndex == previousRegion.startIndex &&
-                region.endIndex == previousRegion.endIndex &&
-                region.severity == previousRegion.severity
+                    region.startIndex == previousRegion.startIndex &&
+                    region.endIndex == previousRegion.endIndex &&
+                    region.severity == previousRegion.severity
         }
         if (diagnostic == currentDiagnostic && sameRegion) {
             if (diagnostic != null && !editor.isInMouseMode) {
@@ -311,7 +318,7 @@ open class EditorDiagnosticTooltipWindow(editor: CodeEditor) : EditorPopupWindow
         val selection = memorizedPosition ?: return
         val charX = editor.getCharOffsetX(selection.line, selection.column)
         val charY = editor.getCharOffsetY(selection.line, selection.column) - editor.rowHeight
-        editor.getLocationInWindow(locationBuffer)
+        host.getLocationInWindow(locationBuffer)
         val restAbove = charY + locationBuffer[1]
         val restBottom = editor.height - charY - editor.rowHeight
         val completionShowing = editor.getComponent<EditorAutoCompletion>().isShowing
