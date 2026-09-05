@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/tab_row"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp">
+
+        <!-- <ImageView -->
+            <!-- android:id="@+id/drag_indicator" -->
+            <!-- android:layout_width="24dp" -->
+            <!-- android:layout_height="24dp" -->
+            <!-- android:layout_marginEnd="8dp" -->
+            <!-- android:src="@android:drawable/ic_menu_sort_by_size" -->
+            <!-- android:tint="?android:attr/textColorSecondary" -->
+            <!-- android:contentDescription="Drag to expand" /> -->
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/symbol_tab_layout"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            app:tabGravity="fill"
+            app:tabIndicatorAnimationMode="elastic"
+            app:tabIndicatorFullWidth="false"
+            app:tabMode="scrollable" />
+    </LinearLayout>
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/symbol_view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:overScrollMode="never" />
+
+</LinearLayout>
