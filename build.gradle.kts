@@ -75,7 +75,7 @@ fun Project.configureAndroidAndKotlin() {
 
     extensions.findByType<KotlinAndroidExtension>()?.apply {
         compilerOptions {
-            languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3
+            languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_4
             jvmTarget = JvmTarget.JVM_17
         }
     }
