@@ -1295,6 +1295,7 @@ public class EditorRenderer {
         rowIterator.reset();
 
         // Other system line background are drawn last
+        lastPreparedLine = -1;
         for (int row = firstVis; row <= editor.getLastVisibleRow() && rowIterator.hasNext(); row++) {
             Row rowInf = rowIterator.next();
             canvas.save();
