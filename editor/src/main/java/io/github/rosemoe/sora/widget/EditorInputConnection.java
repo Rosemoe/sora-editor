@@ -31,6 +31,7 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.ExtractedText;
@@ -42,6 +43,7 @@ import android.view.inputmethod.TextSnapshot;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
 
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.ImePrivateCommandEvent;
@@ -57,7 +59,8 @@ import io.github.rosemoe.sora.util.Logger;
  *
  * @author Rosemoe
  */
-class EditorInputConnection extends BaseInputConnection {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class EditorInputConnection extends BaseInputConnection {
 
     private final static Logger logger = Logger.instance("EditorInputConnection");
     /**
@@ -66,7 +69,7 @@ class EditorInputConnection extends BaseInputConnection {
     private final static int MEMORY_EFFICIENT_TEXT_LENGTH = 2048;
 
     static boolean DEBUG = false;
-    private final CodeEditor editor;
+    private final CodeEditorDelegate editor;
     protected ComposingText composingText = new ComposingText();
     protected boolean imeConsumingInput = false;
     private boolean connectionInvalid;
@@ -76,11 +79,12 @@ class EditorInputConnection extends BaseInputConnection {
      *
      * @param targetView Host editor
      */
-    public EditorInputConnection(CodeEditor targetView) {
+    public EditorInputConnection(View targetView, @NonNull CodeEditorDelegate editor) {
         super(targetView, true);
-        editor = targetView;
+        this.editor = editor;
+        editor.setInputConnection(this);
         connectionInvalid = false;
-        targetView.subscribeEvent(ContentChangeEvent.class, (event, __) -> {
+        editor.subscribeEvent(ContentChangeEvent.class, (event, __) -> {
             if (event.getAction() == ContentChangeEvent.ACTION_INSERT) {
                 composingText.shiftOnInsert(event.getChangeStart().index, event.getChangeEnd().index);
             } else if (event.getAction() == ContentChangeEvent.ACTION_DELETE) {
@@ -93,13 +97,14 @@ class EditorInputConnection extends BaseInputConnection {
         connectionInvalid = true;
         composingText.reset();
         resetBatchEdit();
-        editor.invalidate();
+        editor.host.invalidate();
     }
 
     /**
      * Reset the state of this connection
      */
-    protected void reset() {
+    @RestrictTo({RestrictTo.Scope.SUBCLASSES, RestrictTo.Scope.LIBRARY_GROUP})
+    public void reset() {
         resetBatchEdit();
         composingText.reset();
         connectionInvalid = false;
@@ -489,7 +494,7 @@ class EditorInputConnection extends BaseInputConnection {
         composingText.reset();
         endBatchEdit();
         editor.updateCursor();
-        editor.invalidate();
+        editor.host.invalidate();
         return true;
     }
 
@@ -555,7 +560,7 @@ class EditorInputConnection extends BaseInputConnection {
                 return false;
             }
             composingText.set(start, end);
-            editor.invalidate();
+            editor.host.invalidate();
         } catch (IndexOutOfBoundsException e) {
             logger.w("set composing region for IME failed", e);
             return false;
@@ -628,7 +633,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     @Override
     public Handler getHandler() {
-        return editor.getHandler();
+        return editor.host.getHandler();
     }
 
     @Nullable
@@ -656,7 +661,7 @@ class EditorInputConnection extends BaseInputConnection {
             return false;
         }
         imeConsumingInput = imeConsumesInput;
-        editor.invalidate();
+        editor.host.invalidate();
         return true;
     }
 

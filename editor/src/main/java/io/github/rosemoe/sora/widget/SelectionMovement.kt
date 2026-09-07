@@ -31,7 +31,7 @@ import io.github.rosemoe.sora.util.IntPair
 import io.github.rosemoe.sora.util.Numbers
 import kotlin.math.ceil
 
-private typealias SelectionMovementComputeFunc = ((CodeEditor, CharPosition) -> CharPosition)
+private typealias SelectionMovementComputeFunc = ((CodeEditorDelegate, CharPosition) -> CharPosition)
 
 /**
  * Defines selection movement types for editor.
@@ -245,7 +245,7 @@ enum class SelectionMovement(
     }
 
     @UnsupportedUserUsage
-    fun getPositionAfterMovement(editor: CodeEditor, pos: CharPosition): CharPosition {
+    fun getPositionAfterMovement(editor: CodeEditorDelegate, pos: CharPosition): CharPosition {
         return this.computeFunc(editor, pos)
     }
 }

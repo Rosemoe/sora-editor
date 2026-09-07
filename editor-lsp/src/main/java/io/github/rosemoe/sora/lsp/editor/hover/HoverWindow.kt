@@ -9,7 +9,8 @@ import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.TextSizeChangeEvent
 import io.github.rosemoe.sora.event.subscribeEvent
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
+import io.github.rosemoe.sora.widget.CodeEditorHost
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
@@ -23,10 +24,12 @@ import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.Hover
 
 open class HoverWindow(
-    editor: CodeEditor,
+    editor: CodeEditorDelegate,
+    host: CodeEditorHost,
     internal val coroutineScope: CoroutineScope
 ) : EditorPopupWindow(
     editor,
+    host,
     FEATURE_HIDE_WHEN_FAST_SCROLL or FEATURE_SCROLL_AS_CONTENT
 ) {
     private lateinit var rootView: View
@@ -112,15 +115,15 @@ open class HoverWindow(
     }
 
     open fun show(hover: Hover) {
-        editor.removeCallbacks(showRunnable)
+        host.removeCallbacks(showRunnable)
         pendingHover = null
         dismiss()
         pendingHover = hover
-        editor.postDelayedInLifecycle(showRunnable, HOVER_TOOLTIP_SHOW_TIMEOUT)
+        host.postDelayedInLifecycle(showRunnable, HOVER_TOOLTIP_SHOW_TIMEOUT)
     }
 
     override fun dismiss() {
-        editor.removeCallbacks(showRunnable)
+        host.removeCallbacks(showRunnable)
         pendingHover = null
         cancelRenderJobs()
         super.dismiss()

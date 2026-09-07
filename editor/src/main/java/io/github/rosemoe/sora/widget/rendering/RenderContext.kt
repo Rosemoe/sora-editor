@@ -26,14 +26,14 @@ package io.github.rosemoe.sora.widget.rendering
 
 import android.os.Build
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
 
 /**
  * Context for editor rendering process. It stores rendering attributes and caches.
  *
  * @author Rosemoe
  */
-class RenderContext(val editor: CodeEditor) {
+class RenderContext(val editor: CodeEditorDelegate) {
 
     val cache = RenderCache()
 

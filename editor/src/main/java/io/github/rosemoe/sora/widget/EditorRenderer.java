@@ -47,6 +47,7 @@ import android.util.SparseArray;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
 import androidx.collection.MutableIntList;
 import androidx.collection.MutableLongLongMap;
 
@@ -108,7 +109,8 @@ public class EditorRenderer {
     private static final String LOG_TAG = "EditorRenderer";
     private final static int[] sDiagnosticsColorMapping = {0, EditorColorScheme.PROBLEM_TYPO, EditorColorScheme.PROBLEM_WARNING, EditorColorScheme.PROBLEM_ERROR};
     protected final BufferedDrawPoints bufferedDrawPoints;
-    protected final Paint paintGeneral;
+    @RestrictTo({RestrictTo.Scope.SUBCLASSES, RestrictTo.Scope.LIBRARY_GROUP})
+    public final Paint paintGeneral;
     protected final Paint paintOther;
     protected final Rect viewRect;
     private final RectF tmpRect;
@@ -122,7 +124,7 @@ public class EditorRenderer {
     private final MutableLongLongMap highlightPositions = new MutableLongLongMap();
     private final SparseArray<ContentLine> preloadedLines = new SparseArray<>();
     private final SparseArray<Directions> preloadedDirections = new SparseArray<>();
-    private final CodeEditor editor;
+    private final CodeEditorDelegate editor;
     private final List<DiagnosticRegion> collectedDiagnostics = new ArrayList<>();
     protected List<CodeBlock> lastStuckLines;
     Paint.FontMetricsInt metricsText;
@@ -148,7 +150,7 @@ public class EditorRenderer {
     protected boolean forcedRecreateLayout;
     private final MinimapRenderer minimapRenderer;
 
-    public EditorRenderer(@NonNull CodeEditor editor) {
+    public EditorRenderer(@NonNull CodeEditorDelegate editor) {
         this.editor = editor;
         verticalScrollBarRect = new RectF();
         horizontalScrollBarRect = new RectF();
@@ -290,7 +292,7 @@ public class EditorRenderer {
         editor.getRenderContext().invalidateRenderNodes();
         updateTimestamp();
         editor.createLayout();
-        editor.invalidate();
+        editor.host.invalidate();
     }
 
     public void setTypefaceLineNumber(Typeface typefaceLineNumber) {
@@ -299,7 +301,7 @@ public class EditorRenderer {
         }
         paintOther.setTypeface(typefaceLineNumber);
         metricsLineNumber = paintOther.getFontMetricsInt();
-        editor.invalidate();
+        editor.host.invalidate();
     }
 
     public void setTextScaleX(float textScaleX) {
@@ -322,7 +324,7 @@ public class EditorRenderer {
         editor.getRenderContext().invalidateRenderNodes();
         updateTimestamp();
         editor.createLayout();
-        editor.invalidate();
+        editor.host.invalidate();
     }
 
     /**
@@ -650,7 +652,10 @@ public class EditorRenderer {
 
         drawStuckLineNumbers(canvas, stuckLines, offsetX, lineNumberWidth, editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER));
         drawScrollBarsAndMinimap(canvas);
-        drawEdgeEffect(canvas);
+
+        if (DelegateKt.isViewMode(editor)) {
+            drawEdgeEffect(canvas);
+        }
 
         releasePreloadedData();
         lastStuckLines = stuckLines;
@@ -1061,7 +1066,7 @@ public class EditorRenderer {
             if (block == null) {
                 continue;
             }
-            if (CodeEditor.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
+            if (CodeEditorDelegate.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
                 visibleBlocks.add(block);
                 mark = true;
             } else if (mark) {
@@ -1976,8 +1981,8 @@ public class EditorRenderer {
             boolean bottom = editor.getEventHandler().glowTopOrBottom;
             if (bottom) {
                 canvas.save();
-                canvas.translate(-editor.getMeasuredWidth(), editor.getMeasuredHeight());
-                canvas.rotate(180, editor.getMeasuredWidth(), 0);
+                canvas.translate(-editor.host.getMeasuredWidth(), editor.host.getMeasuredHeight());
+                canvas.rotate(180, editor.host.getMeasuredWidth(), 0);
             }
             postDraw = verticalEdgeEffect.draw(canvas);
             if (bottom) {
@@ -1992,9 +1997,9 @@ public class EditorRenderer {
             boolean right = editor.getEventHandler().glowLeftOrRight;
             if (right) {
                 canvas.rotate(90);
-                canvas.translate(0, -editor.getMeasuredWidth());
+                canvas.translate(0, -editor.host.getMeasuredWidth());
             } else {
-                canvas.translate(0, editor.getMeasuredHeight());
+                canvas.translate(0, editor.host.getMeasuredHeight());
                 canvas.rotate(-90);
             }
             postDraw = horizontalEdgeEffect.draw(canvas) || postDraw;
@@ -2014,7 +2019,7 @@ public class EditorRenderer {
             }
         }
         if (postDraw) {
-            editor.postInvalidate();
+            editor.host.postInvalidate();
         }
     }
 
@@ -2046,7 +2051,7 @@ public class EditorRenderer {
             if (block == null) {
                 continue;
             }
-            if (CodeEditor.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
+            if (CodeEditorDelegate.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
                 try {
                     var lineContent = getLine(block.endLine);
                     float offsetEnd = indentMode ? paintGeneral.getSpaceWidth() * block.endColumn : createTextRow(block.endLine).getCursorOffsetForIndex(Math.min(block.endColumn, lineContent.length()));
@@ -2113,7 +2118,7 @@ public class EditorRenderer {
             percentage = 0f;
         }
         var size = editor.getDpUnit() * RenderingConstants.SCROLLBAR_WIDTH_DIP;
-        if (shouldShowScrollbars && editor.isHorizontalScrollBarEnabled() && !editor.isWordwrap() && editor.getScrollMaxX() > editor.getWidth() * 3 / 4) {
+        if (shouldShowScrollbars && editor.horizontalScrollBarEnabled && !editor.isWordwrap() && editor.getScrollMaxX() > editor.getWidth() * 3 / 4) {
             canvas.save();
             canvas.translate(0f, size * percentage);
 
@@ -2123,7 +2128,7 @@ public class EditorRenderer {
             canvas.restore();
         }
         boolean shouldShowVerticalScrollbar = shouldShowScrollbars && !editor.getProps().showMinimap;
-        if (shouldShowVerticalScrollbar && editor.isVerticalScrollBarEnabled() && editor.getScrollMaxY() > editor.getHeight() / 2) {
+        if (shouldShowVerticalScrollbar && editor.verticalScrollBarEnabled && editor.getScrollMaxY() > editor.getHeight() / 2) {
             canvas.save();
             canvas.translate(size * percentage, 0f);
 
@@ -2643,7 +2648,7 @@ public class EditorRenderer {
         protected void execute(Canvas canvas) {
             // Hide cursors (API level 31)
             if (handleType != SelectionHandleStyle.HANDLE_TYPE_UNDEFINED) {
-                if (editor.inputConnection.imeConsumingInput || !editor.isFocused()) {
+                if (editor.inputConnection.imeConsumingInput || !editor.host.isFocused()) {
                     return;
                 }
             }

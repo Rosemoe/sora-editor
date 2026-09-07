@@ -38,6 +38,7 @@ import io.github.rosemoe.sora.lang.styling.span.SpanInteractionInfo
 import io.github.rosemoe.sora.text.TextRange
 import io.github.rosemoe.sora.util.IntPair
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
 import io.github.rosemoe.sora.widget.IN_BOUND
 import io.github.rosemoe.sora.widget.REGION_TEXT
 import io.github.rosemoe.sora.widget.resolveTouchRegion
@@ -53,7 +54,7 @@ import io.github.rosemoe.sora.widget.resolveTouchRegion
  *
  * @author Rosemoe
  */
-open class EditorSpanInteractionHandler(val editor: CodeEditor) {
+open class EditorSpanInteractionHandler(val editor: CodeEditorDelegate) {
 
     val eventManager = editor.createSubEventManager()
 
@@ -155,3 +156,5 @@ open class EditorSpanInteractionHandler(val editor: CodeEditor) {
 
 
 }
+
+fun EditorSpanInteractionHandler(editor: CodeEditor) = EditorSpanInteractionHandler(editor.delegate)
