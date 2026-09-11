@@ -111,10 +111,11 @@ class LspProject(
         return definitions[ServerKey(ext, name ?: ext)]
     }
 
-    fun getServerDefinitions(ext: String): Collection<LanguageServerDefinition> {
-        return definitions.entries
-            .filter { it.key.ext == ext }
-            .map { it.value }
+    fun getServerDefinitions(ext: String, languageId: String? = null): Collection<LanguageServerDefinition> {
+        return definitions.values
+            .filter { definition ->
+                definition.ext == ext || (languageId != null && definition.languageId == languageId)
+            }
             .distinctBy { it.name }
     }
 
