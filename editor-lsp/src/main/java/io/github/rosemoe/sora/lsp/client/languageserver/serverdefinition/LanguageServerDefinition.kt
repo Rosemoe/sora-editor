@@ -48,6 +48,8 @@ abstract class LanguageServerDefinition {
     open val exts: List<String>
         get() = listOf(ext)
 
+    open val languageId: String? = null
+
     open val name: String
         get() = ext
 

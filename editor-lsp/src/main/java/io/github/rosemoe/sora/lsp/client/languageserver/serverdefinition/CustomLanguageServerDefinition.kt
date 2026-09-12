@@ -39,7 +39,8 @@ open class CustomLanguageServerDefinition @JvmOverloads constructor(
     serverConnectProvider: ServerConnectProvider,
     override val name: String = ext,
     private val expectedCapabilitiesOverride: ServerCapabilities? = null,
-    private val extensionsOverride: List<String>? = null
+    private val extensionsOverride: List<String>? = null,
+    override val languageId: String? = null
 ) : LanguageServerDefinition() {
 
     protected var serverConnectProvider: ServerConnectProvider

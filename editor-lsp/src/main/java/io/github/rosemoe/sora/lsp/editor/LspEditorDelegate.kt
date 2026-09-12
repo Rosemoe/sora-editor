@@ -19,10 +19,11 @@ internal class LspEditorDelegate(private val editor: LspEditor) {
     val aggregatedRequestManager = AggregatedRequestManager(emptySet())
 
     private fun refreshSessions() {
-        val language = editor.languageId ?: editor.fileExt
-        val definitions = editor.project.getServerDefinitions(language).ifEmpty {
-            editor.project.getServerDefinition(language)?.let { listOf(it) } ?: emptyList()
-        }
+        val definitions =
+            editor.project.getServerDefinitions(
+                ext = editor.fileExt,
+                languageId = editor.languageId,
+            )
 
         sessionInfos.removeAll { session ->
             definitions.none { it.name == session.definition.name && it.ext == session.definition.ext }

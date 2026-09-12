@@ -64,6 +64,7 @@ inline fun languageServerDefinition(
 class LanguageServerDefinitionDsl {
     private var extension: String? = null
     private var extensions: MutableList<String>? = null
+    private var languageId: String? = null
     private var serverName: String? = null
     private var expectedCapabilities: ServerCapabilities? = null
     private var connectProvider: CustomLanguageServerDefinition.ServerConnectProvider? = null
@@ -97,6 +98,10 @@ class LanguageServerDefinitionDsl {
      * Alias for [extensions].
      */
     fun exts(vararg values: String) = extensions(*values)
+
+    fun languageId(value: String) {
+        languageId = value
+    }
 
     /**
      * Overrides the user-facing name of the server definition.
@@ -153,7 +158,8 @@ class LanguageServerDefinitionDsl {
             connection,
             name = serverName ?: actualExtension,
             expectedCapabilitiesOverride = expectedCapabilities,
-            extensionsOverride = allExtensions
+            extensionsOverride = allExtensions,
+            languageId = languageId,
         ) {
             override val disabledFeatures: Set<LspFeature>
                 get() = this@LanguageServerDefinitionDsl.disabledFeatures
