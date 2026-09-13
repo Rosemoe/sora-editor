@@ -135,31 +135,22 @@
         android:id="@+id/main_bottom_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="?attr/colorSurface"
+        android:elevation="8dp">
 
-        <HorizontalScrollView
+        <android.zero.studio.widget.editor.symbolinput.AdvancedSymbolInputView
+            android:id="@+id/advanced_symbol_input"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:overScrollMode="never"
-            android:scrollbars="none">
-
-            <io.github.rosemoe.sora.widget.SymbolInputView
-                android:id="@+id/symbol_input"
-                android:background="@android:color/transparent"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-        </HorizontalScrollView>
+            android:layout_height="wrap_content" />
 
         <TextView
             android:id="@+id/position_display"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="24dp"
             android:gravity="center"
             android:textSize="14sp" />
-
     </LinearLayout>
 
 </RelativeLayout>
