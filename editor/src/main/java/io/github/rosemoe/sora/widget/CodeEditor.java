@@ -116,6 +116,9 @@ import io.github.rosemoe.sora.lang.format.FormatterProvider;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
 import io.github.rosemoe.sora.lang.styling.ExtraStylesProvider;
 import io.github.rosemoe.sora.lang.styling.HighlightTextContainer;
+import io.github.rosemoe.sora.lang.styling.patching.SparseStylePatches;
+import io.github.rosemoe.sora.lang.styling.patching.StylePatchManager;
+import io.github.rosemoe.sora.lang.styling.patching.StylePatchProvider;
 import io.github.rosemoe.sora.lang.styling.HighlightTextProvider;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
@@ -275,6 +278,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private final List<InlayHintProvider> inlayHintProviders = new ArrayList<>();
     private final List<DiagnosticProvider> diagnosticProviders = new ArrayList<>();
     private final List<HighlightTextProvider> highlightTextProviders = new ArrayList<>();
+    private StylePatchManager stylePatchManager;
     int startedActionMode;
     protected CharPosition selectionAnchor;
     EditorInputConnection inputConnection;
@@ -590,6 +594,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         renderFunctionCharacters = true;
         renderContext = new RenderContext(this);
         renderer = onCreateRenderer();
+        stylePatchManager = new StylePatchManager(this);
 
         styleDelegate = new EditorStyleDelegate(this);
 
@@ -1679,11 +1684,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @NonNull
     public List<Span> getSpansForLine(int line) {
         var spanMap = textStyles == null ? null : textStyles.spans;
+        List<Span> spans;
         if (spanMap != null) {
-            return SpansUtils.getSpansOnLine(spanMap.read(), line);
+            spans = SpansUtils.getSpansOnLine(spanMap.read(), line);
         } else {
-            return SpansUtils.getDefaultLineSpans();
+            spans = SpansUtils.getDefaultLineSpans();
         }
+        return stylePatchManager.applyToSpans(line, text.getColumnCount(line), spans);
+    }
+
+    @NonNull
+    public List<Span> applyStylePatches(int line, @NonNull List<Span> spans) {
+        return stylePatchManager.applyToSpans(line, text.getColumnCount(line), spans);
     }
 
     /**
@@ -4308,6 +4320,44 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         invalidate();
     }
 
+    /**
+     * Set text decorations that are rendered on top of language styles.
+     * Passing {@code null} clears all decorations.
+     */
+    @UiThread
+    public void setStylePatches(@Nullable SparseStylePatches patches) {
+        stylePatchManager.setPatches(patches);
+        renderer.updateTimestamp();
+        invalidate();
+    }
+
+    @Nullable
+    public SparseStylePatches getStylePatches() {
+        return stylePatchManager.getPatches();
+    }
+
+    public void registerStylePatchProvider(@NonNull StylePatchProvider provider) {
+        stylePatchManager.register(provider);
+    }
+
+    public void unregisterStylePatchProvider(@NonNull StylePatchProvider provider) {
+        stylePatchManager.unregister(provider);
+    }
+
+    public void invalidateStylePatches(@NonNull StylePatchProvider provider) {
+        stylePatchManager.invalidate(provider);
+    }
+
+    @NonNull
+    public List<StylePatchProvider> getStylePatchProviders() {
+        return stylePatchManager.getProviders();
+    }
+
+    public void invalidateStylePatchesFromManager() {
+        renderer.updateTimestamp();
+        invalidate();
+    }
+
     @UiThread
     public void updateStyles(@NonNull Styles styles, @Nullable StyleUpdateRange range) {
         if (textStyles != styles || range == null) {
@@ -5391,6 +5441,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (highlightTextContainer != null) {
                 highlightTextContainer.updateOnInsertion(startLine, startColumn, endLine, endColumn);
             }
+            stylePatchManager.updateForInsertion(startLine, startColumn, endLine, endColumn);
         } catch (Exception e) {
             Log.w(LOG_TAG, "Update failure", e);
         }
@@ -5441,6 +5492,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             if (highlightTextContainer != null) {
                 highlightTextContainer.updateOnDeletion(startLine, startColumn, endLine, endColumn);
             }
+            stylePatchManager.updateForDeletion(startLine, startColumn, endLine, endColumn);
         } catch (Exception e) {
             Log.w(LOG_TAG, "Update failure", e);
         }

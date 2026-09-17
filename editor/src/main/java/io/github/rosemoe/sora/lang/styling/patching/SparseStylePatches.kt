@@ -26,7 +26,6 @@ package io.github.rosemoe.sora.lang.styling.patching
 
 import java.lang.IllegalStateException
 import java.lang.UnsupportedOperationException
-import java.util.Arrays
 import java.util.Collections
 
 /*******************************************************************************
@@ -70,8 +69,24 @@ class SparseStylePatches {
 
     fun addPatch(patch: StylePatch) {
         if (immutable) throw IllegalStateException("the patch list is already set immutable")
-        if (patch.startLine != patch.endLine) throw UnsupportedOperationException("crossline patch is not supported now")
         patches.add(getInsertionPoint(patch), patch)
+    }
+
+    fun removePatch(patch: StylePatch): Boolean {
+        if (immutable) throw IllegalStateException("the patch list is already set immutable")
+        return patches.remove(patch)
+    }
+
+    fun clear() {
+        if (immutable) throw IllegalStateException("the patch list is already set immutable")
+        patches.clear()
+    }
+
+    fun getPatches(): List<StylePatch> = Collections.unmodifiableList(patches)
+
+    fun getPatchesOnLine(line: Int): List<StylePatch> {
+        if (patches.isEmpty()) return emptyList()
+        return patches.filter { it.startLine <= line && line <= it.endLine }
     }
 
     fun setImmutable() {
@@ -79,37 +94,47 @@ class SparseStylePatches {
     }
 
     fun updateForInsertion(startLine: Int, startColumn: Int, endLine: Int, endColumn: Int) {
-        val coordinator = StylePatch(startLine, 0, startLine, 0)
-        var index = getInsertionPoint(coordinator)
-        val delta = endLine - startLine
-        while (index < patches.size) {
-            val e = patches[index++]
-            if (e.startLine == startLine && e.startColumn >= startColumn) {
-                val length = e.endColumn - e.startColumn
-                e.startLine = endLine
-                e.endLine = endLine
-                e.startColumn = endColumn + (e.startColumn - startColumn)
-                e.endColumn = e.startColumn + length
-            } else if (e.startLine > startLine) {
-                if (delta == 0) break
-                e.startLine += delta
-                e.endLine += delta
-            }
+        patches.forEach { patch ->
+            val start = mapInsertion(patch.startLine, patch.startColumn, startLine, startColumn, endLine, endColumn)
+            val end = mapInsertion(patch.endLine, patch.endColumn, startLine, startColumn, endLine, endColumn)
+            patch.startLine = start.first
+            patch.startColumn = start.second
+            patch.endLine = end.first
+            patch.endColumn = end.second
         }
     }
 
     fun updateForDeletion(startLine: Int, startColumn: Int, endLine: Int, endColumn: Int) {
-        val coordinator = StylePatch(startLine, 0, startLine, 0)
-        var index = getInsertionPoint(coordinator)
-        val delta = endLine - startLine
-        while (index < patches.size) {
-            val e = patches[index]
-            // TODO
-            if (e.startLine < endLine || (e.startLine == endLine && e.endColumn < endColumn)) {
-
-            }
-            index++
+        patches.forEach { patch ->
+            val start = mapDeletion(patch.startLine, patch.startColumn, startLine, startColumn, endLine, endColumn)
+            val end = mapDeletion(patch.endLine, patch.endColumn, startLine, startColumn, endLine, endColumn)
+            patch.startLine = start.first
+            patch.startColumn = start.second
+            patch.endLine = maxOf(start.first, end.first)
+            patch.endColumn = if (patch.endLine == start.first) maxOf(start.second, end.second) else end.second
         }
+    }
+
+    private fun compare(line1: Int, column1: Int, line2: Int, column2: Int): Int =
+        if (line1 != line2) line1.compareTo(line2) else column1.compareTo(column2)
+
+    private fun mapInsertion(line: Int, column: Int, startLine: Int, startColumn: Int, endLine: Int, endColumn: Int): Pair<Int, Int> {
+        if (compare(line, column, startLine, startColumn) < 0) return line to column
+        return if (startLine == endLine && line == startLine) {
+            line to (column + endColumn - startColumn)
+        } else {
+            val delta = endLine - startLine
+            if (line == startLine) endLine to (endColumn + column - startColumn)
+            else line + delta to column
+        }
+    }
+
+    private fun mapDeletion(line: Int, column: Int, startLine: Int, startColumn: Int, endLine: Int, endColumn: Int): Pair<Int, Int> {
+        if (compare(line, column, startLine, startColumn) <= 0) return line to column
+        if (compare(line, column, endLine, endColumn) <= 0) return startLine to startColumn
+        val delta = endLine - startLine
+        return if (line == endLine) startLine to (startColumn + column - endColumn)
+        else line - delta to column
     }
 
 }
