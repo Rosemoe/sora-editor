@@ -31,6 +31,7 @@ import androidx.annotation.Nullable;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * The class used to save auto complete result items.
@@ -150,7 +151,7 @@ public abstract class CompletionItem {
      * @param text     The text in editor. You can make modifications to it.
      * @param position The requested completion position (the one passed to completion thread)
      */
-    public void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, @NonNull CharPosition position) {
+    public void performCompletion(@NonNull CodeEditorDelegate editor, @NonNull Content text, @NonNull CharPosition position) {
         performCompletion(editor, text, position.line, position.column);
     }
 
@@ -165,9 +166,9 @@ public abstract class CompletionItem {
      * @param text   The text in editor. You can make modifications to it.
      * @param line   The auto-completion line
      * @param column The auto-completion column
-     * @see #performCompletion(CodeEditor, Content, CharPosition) Editor calls this method to do completion
+     * @see #performCompletion(CodeEditorDelegate, Content, CharPosition) Editor calls this method to do completion
      */
-    public abstract void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, int line, int column);
+    public abstract void performCompletion(@NonNull CodeEditorDelegate editor, @NonNull Content text, int line, int column);
 
 }
 

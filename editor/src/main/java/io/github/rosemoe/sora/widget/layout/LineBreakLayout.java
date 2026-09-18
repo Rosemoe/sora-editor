@@ -42,6 +42,7 @@ import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.util.BlockIntList;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * Layout implementation of editor
@@ -56,7 +57,7 @@ public class LineBreakLayout extends AbstractLayout {
     private BlockIntList inlineElementsWidths;
     private SingleCharacterWidths measurer;
 
-    public LineBreakLayout(CodeEditor editor, Content text) {
+    public LineBreakLayout(CodeEditorDelegate editor, Content text) {
         super(editor, text);
         measurer = new SingleCharacterWidths(editor.getTabWidth());
         measurer.setHandleFunctionCharacters(editor.isRenderFunctionCharacters());

@@ -1,0 +1,351 @@
+/*******************************************************************************
+ *    sora-editor - the awesome code editor for Android
+ *    https://github.com/Rosemoe/sora-editor
+ *    Copyright (C) 2020-2026  Rosemoe
+ *
+ *     This library is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU Lesser General Public
+ *     License as published by the Free Software Foundation; either
+ *     version 2.1 of the License, or (at your option) any later version.
+ *
+ *     This library is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *     Lesser General Public License for more details.
+ *
+ *     You should have received a copy of the GNU Lesser General Public
+ *     License along with this library; if not, write to the Free Software
+ *     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *     USA
+ *
+ *     Please contact Rosemoe by email 2073412493@qq.com if you need
+ *     additional information or have any questions
+ ******************************************************************************/
+
+package io.github.rosemoe.sora.compose
+
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.UiComposable
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFontFamilyResolver
+import androidx.compose.ui.semantics.ScrollAxisRange
+import androidx.compose.ui.semantics.accessibilityClassName
+import androidx.compose.ui.semantics.copyText
+import androidx.compose.ui.semantics.cutText
+import androidx.compose.ui.semantics.editableText
+import androidx.compose.ui.semantics.horizontalScrollAxisRange
+import androidx.compose.ui.semantics.insertTextAtCursor
+import androidx.compose.ui.semantics.isEditable
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.pageDown
+import androidx.compose.ui.semantics.pageUp
+import androidx.compose.ui.semantics.pasteText
+import androidx.compose.ui.semantics.requestFocus
+import androidx.compose.ui.semantics.scrollByOffset
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setText
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.textSelectionRange
+import androidx.compose.ui.semantics.verticalScrollAxisRange
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.resolveAsTypeface
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
+import androidx.compose.ui.unit.sp
+import io.github.rosemoe.sora.compose.component.AutoCompletionWindowContent
+import io.github.rosemoe.sora.compose.component.DiagnosticTooltipContent
+import io.github.rosemoe.sora.compose.component.TextActionWindowContent
+import io.github.rosemoe.sora.compose.component.createAutoCompletionWindow
+import io.github.rosemoe.sora.compose.component.createDiagnosticTooltipWindow
+import io.github.rosemoe.sora.compose.component.createTextActionWindow
+import io.github.rosemoe.sora.compose.internal.CodeEditorImpl
+import io.github.rosemoe.sora.event.SelectionChangeEvent
+import io.github.rosemoe.sora.text.TextUtils
+import io.github.rosemoe.sora.widget.SelectionMovement
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
+import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow
+import io.github.rosemoe.sora.widget.component.EditorTextActionWindow
+import io.github.rosemoe.sora.widget.getComponent
+import io.github.rosemoe.sora.widget.replaceComponent
+
+/**
+ * A simplified version of [CodeEditor] for basic use cases.
+ *
+ * Use this version when you only need to provide initial text and basic configuration
+ * without needing to programmatically control the editor's behavior (like scrolling,
+ * selection, or diagnostic markers) after it's initialized.
+ *
+ * If you need to observe text changes or control the editor state, use the version
+ * that accepts a [CodeEditorState].
+ *
+ * @param text The initial text to be displayed in the editor.
+ * @param modifier The [Modifier] to be applied to the editor container.
+ * @param readOnly Whether the editor is in read-only mode.
+ * @param enabled Whether the editor is enabled and can receive focus.
+ * @param fontFamily The font family to be used. Defaults to [FontFamily.Monospace].
+ * @param fontSize The font size for the editor text. **Must be in `sp`**.
+ * @param wordWrap Whether to enable word wrap. Defaults to `false`.
+ */
+@Composable
+@UiComposable
+@ExperimentalEditorApi
+fun CodeEditor(
+    text: String,
+    modifier: Modifier = Modifier,
+    readOnly: Boolean = false,
+    enabled: Boolean = true,
+    fontFamily: FontFamily = FontFamily.Monospace,
+    fontSize: TextUnit = 14.sp,
+    wordWrap: Boolean = false
+) {
+    val state = rememberCodeEditorState(initialText = text)
+
+    CodeEditor(
+        modifier = modifier,
+        state = state,
+        editable = !readOnly,
+        enabled = enabled,
+        fontSize = fontSize,
+        fontFamily = fontFamily,
+        wordWrap = wordWrap
+    )
+}
+
+/**
+ * Composable for displaying and editing code.
+ *
+ * @param modifier The [Modifier] to be applied to the editor container.
+ * @param state The state object to be used to control or observe the editor's state.
+ * @param editable Controls if the text in the editor can be modified by the user.
+ * @param enabled Controls the enabled state of the editor. When `false`, the editor will not respond to user input.
+ * @param fontFamily The font family to be used for the editor text and line numbers. Defaults to [FontFamily.Monospace].
+ * @param fontSize The font size for the editor text. **Must be in `sp`**. Defaults to `14.sp`.
+ * @param autoCompletionWindow A composable function to render the auto-completion window.
+ * Pass `null` to disable the auto-completion feature. Defaults to [CodeEditorDefaults.AutoCompletionWindow].
+ * @param diagnosticTooltipWindow A composable function to render the diagnostic tooltip window.
+ * Pass `null` to disable the diagnostic tooltip. Defaults to [CodeEditorDefaults.DiagnosticTooltipWindow].
+ * @param textActionWindow A composable function to render the text action window (selection menu/toolbar).
+ * Pass `null` to disable the text action window. Defaults to [CodeEditorDefaults.TextActionWindow].
+ * @param wordWrap Whether to enable word wrap. When `true`, long lines will wrap to the next visual row.
+ * Defaults to `false`.
+ */
+@Composable
+@UiComposable
+@ExperimentalEditorApi
+fun CodeEditor(
+    modifier: Modifier = Modifier,
+    state: CodeEditorState = rememberCodeEditorState(),
+    editable: Boolean = true,
+    enabled: Boolean = true,
+    fontFamily: FontFamily = FontFamily.Monospace,
+    fontSize: TextUnit = 14.sp,
+    autoCompletionWindow: AutoCompletionWindowContent? = CodeEditorDefaults::AutoCompletionWindow,
+    diagnosticTooltipWindow: DiagnosticTooltipContent? = CodeEditorDefaults::DiagnosticTooltipWindow,
+    textActionWindow: TextActionWindowContent? = { state ->
+        CodeEditorDefaults.TextActionWindow(
+            state = state,
+            modifier = Modifier.fillMaxHeight()
+        )
+    },
+    wordWrap: Boolean = false
+) {
+    LaunchedEffect(enabled, editable) {
+        state.host._isEnabled = enabled
+        state.editable = editable
+    }
+
+    val resolver = LocalFontFamilyResolver.current
+    val typeface by remember(fontFamily) { resolver.resolveAsTypeface(fontFamily) }
+
+    LaunchedEffect(typeface) {
+        state.apply {
+            typefaceText = typeface
+            typefaceLineNumber = typeface
+        }
+    }
+
+    val density = LocalDensity.current
+    LaunchedEffect(fontSize, density) {
+        check(fontSize.type == TextUnitType.Sp) {
+            "Only Sp is allowed for font size. Received: ${fontSize.type}"
+        }
+        state.textSizePx = with(density) { fontSize.toPx() }
+    }
+
+    LaunchedEffect(wordWrap) {
+        state.delegate.isWordwrap = wordWrap
+    }
+
+    val autoCompletion by rememberUpdatedState(autoCompletionWindow)
+    val textAction by rememberUpdatedState(textActionWindow)
+    val diagnosticTooltip by rememberUpdatedState(diagnosticTooltipWindow)
+
+    LaunchedEffect(autoCompletion) {
+        val delegate = state.delegate
+        if (autoCompletion == null) {
+            delegate.getComponent<EditorAutoCompletion>().isEnabled = false
+        } else {
+            val component = delegate.createAutoCompletionWindow(autoCompletion!!)
+            delegate.replaceComponent<EditorAutoCompletion>(component)
+            component.isEnabled = true
+        }
+    }
+
+    LaunchedEffect(textAction) {
+        val delegate = state.delegate
+        if (textAction == null) {
+            delegate.getComponent<EditorTextActionWindow>().isEnabled = false
+            state.textActionWindow?.isEnabled = false
+        } else {
+            delegate.getComponent<EditorTextActionWindow>().isEnabled = false
+            state.textActionWindow = state.createTextActionWindow(textAction!!)
+            state.textActionWindow?.isEnabled = true
+        }
+    }
+
+    LaunchedEffect(diagnosticTooltip) {
+        val delegate = state.delegate
+        if (diagnosticTooltip == null) {
+            delegate.getComponent<EditorDiagnosticTooltipWindow>().isEnabled = false
+            state.diagnosticTooltipWindow?.isEnabled = false
+        } else {
+            delegate.getComponent<EditorDiagnosticTooltipWindow>().isEnabled = false
+            state.diagnosticTooltipWindow = state.createDiagnosticTooltipWindow(diagnosticTooltip!!)
+            state.diagnosticTooltipWindow?.isEnabled = true
+        }
+    }
+
+//    DisposableEffect(Unit) {
+//        onDispose {
+//            state.release()
+//        }
+//    }
+
+    CodeEditorImpl(
+        state = state,
+        modifier = modifier
+            .clipToBounds()
+            .pointerHoverIcon(PointerIcon.Text, overrideDescendants = true)
+            .semantics(mergeDescendants = true) {
+                stateDescription = if (enabled && editable) "editable" else if (enabled) "enabled" else "disabled"
+
+                if (enabled) {
+                    val maxLength = state.props.maxAccessibilityTextLength
+                    if (maxLength > 0) {
+                        isEditable = state.isEditable
+                        textSelectionRange = TextRange(state.cursor.left, state.cursor.right)
+                        accessibilityClassName = "CodeEditor"
+                        //text = AnnotatedString(TextUtils.trimToSize(state.text, maxLength).toString())
+                        //inputText = AnnotatedString(TextUtils.trimToSize(state.text, maxLength).toString())
+                        editableText = AnnotatedString(TextUtils.trimToSize(state.text, maxLength).toString())
+
+                        copyText {
+                            state.copyText()
+                            true
+                        }
+
+                        cutText {
+                            state.cutText()
+                            true
+                        }
+
+                        pasteText {
+                            state.pasteText()
+                            true
+                        }
+
+                        setText { text ->
+                            state.setText(text)
+                            true
+                        }
+
+                        insertTextAtCursor { text ->
+                            if (state.isEditable) {
+                                state.insertText(text.toString(), state.cursor.left)
+                            }
+                            state.isEditable
+                        }
+                    }
+
+                    requestFocus { state.host.requestFocus() }
+
+                    onLongClick { true }
+
+                    verticalScrollAxisRange = ScrollAxisRange(
+                        value = { state.scrollY.toFloat() },
+                        maxValue = { state.maxScrollY.toFloat() },
+                        reverseScrolling = false
+                    )
+
+                    horizontalScrollAxisRange = ScrollAxisRange(
+                        value = { state.scrollX.toFloat() },
+                        maxValue = { state.maxScrollX.toFloat() },
+                        reverseScrolling = false
+                    )
+
+//                            scrollBy { x, y ->
+//                                val (line, column) = state.getPointPosition(
+//                                    state.scrollX + x,
+//                                    state.scrollY + y
+//                                )
+//                                state.delegate.touchHandler.scrollBy(x, y, true)
+//                                state.setSelection(line, column, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE)
+//                                true
+//                            }
+
+                    scrollByOffset { offset ->
+                        val (line, column) = state.getPointPosition(
+                            state.scrollX + offset.x,
+                            state.scrollY + offset.y
+                        )
+                        state.delegate.touchHandler.scrollBy(offset.x, offset.y, true)
+                        state.setSelection(line, column, SelectionChangeEvent.CAUSE_KEYBOARD_OR_CODE)
+                        offset
+                    }
+
+                    pageUp {
+                        state.moveSelection(SelectionMovement.PAGE_UP)
+                        true
+                    }
+
+                    pageDown {
+                        state.moveSelection(SelectionMovement.PAGE_DOWN)
+                        true
+                    }
+
+//                            pageLeft {
+//                                state.moveSelection(SelectionMovement.LEFT)
+//                                true
+//                            }
+//
+//                            pageRight {
+//                                state.moveSelection(SelectionMovement.RIGHT)
+//                                true
+//                            }
+                }
+            }
+    )
+}
+
+@Preview
+@Composable
+@OptIn(ExperimentalEditorApi::class)
+private fun PreviewCodeEditor() {
+    CodeEditor(
+        text = "fun main() {\n    println(\"Hello Sora-Editor!\")\n}",
+        modifier = Modifier.fillMaxHeight()
+    )
+}

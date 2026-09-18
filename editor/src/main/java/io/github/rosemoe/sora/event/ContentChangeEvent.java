@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 /**
  * This event happens when {@link CodeEditor#setText(CharSequence)} is called or
@@ -61,7 +62,7 @@ public class ContentChangeEvent extends Event {
     private final CharSequence textChanged;
     private final boolean causedByUndoManager;
 
-    public ContentChangeEvent(@NonNull CodeEditor editor, int action, @NonNull CharPosition changeStart, @NonNull CharPosition changeEnd, @NonNull CharSequence textChanged, boolean causeByUndoManager) {
+    public ContentChangeEvent(@NonNull CodeEditorDelegate editor, int action, @NonNull CharPosition changeStart, @NonNull CharPosition changeEnd, @NonNull CharSequence textChanged, boolean causeByUndoManager) {
         super(editor);
         this.action = action;
         start = changeStart;

@@ -46,7 +46,8 @@ import io.github.rosemoe.sora.event.InterceptTarget;
 import io.github.rosemoe.sora.event.LongPressEvent;
 import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
+import io.github.rosemoe.sora.widget.CodeEditorHost;
 import io.github.rosemoe.sora.widget.EditorTouchEventHandler;
 import io.github.rosemoe.sora.widget.base.EditorPopupWindow;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
@@ -59,7 +60,8 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 public class EditorTextActionWindow extends EditorPopupWindow implements View.OnClickListener, EditorBuiltinComponent {
     private final static long DELAY = 200;
     private final static long CHECK_FOR_DISMISS_INTERVAL = 100;
-    private final CodeEditor editor;
+    private final CodeEditorDelegate editor;
+    private final CodeEditorHost host;
     private final ImageButton selectAllBtn;
     private final ImageButton pasteBtn;
     private final ImageButton copyBtn;
@@ -78,9 +80,10 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
      *
      * @param editor Target editor
      */
-    public EditorTextActionWindow(CodeEditor editor) {
-        super(editor, FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED);
+    public EditorTextActionWindow(CodeEditorDelegate editor, CodeEditorHost host) {
+        super(editor, host, FEATURE_SHOW_OUTSIDE_VIEW_ALLOWED);
         this.editor = editor;
+        this.host = host;
         handler = editor.getEventHandler();
         eventManager = editor.createSubEventManager();
 
@@ -185,14 +188,14 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
                 && !event.isHeld()) {
             displayWindow();
             // Also, post to hide the window on handle disappearance
-            editor.postDelayedInLifecycle(new Runnable() {
+            host.postDelayedInLifecycle(new Runnable() {
                 @Override
                 public void run() {
                     if (!editor.getEventHandler().shouldDrawInsertHandle()
                             && !editor.getCursor().isSelected()) {
                         dismiss();
                     } else if (!editor.getCursor().isSelected()) {
-                        editor.postDelayedInLifecycle(this, CHECK_FOR_DISMISS_INTERVAL);
+                        host.postDelayedInLifecycle(this, CHECK_FOR_DISMISS_INTERVAL);
                     }
                 }
             }, CHECK_FOR_DISMISS_INTERVAL);
@@ -271,14 +274,14 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
         if (!editor.getCursor().isSelected()) {
             return;
         }
-        editor.postDelayedInLifecycle(new Runnable() {
+        host.postDelayedInLifecycle(new Runnable() {
             @Override
             public void run() {
                 if (!handler.hasAnyHeldHandle() && !editor.getSnippetController().isInSnippet() && System.currentTimeMillis() - lastScroll > DELAY
                         && editor.getScroller().isFinished()) {
                     displayWindow();
                 } else {
-                    editor.postDelayedInLifecycle(this, DELAY);
+                    host.postDelayedInLifecycle(this, DELAY);
                 }
             }
         }, DELAY);
@@ -329,7 +332,7 @@ public class EditorTextActionWindow extends EditorPopupWindow implements View.On
 
     @Override
     public void show() {
-        if (!enabled || editor.getSnippetController().isInSnippet() || !editor.hasFocus() || editor.isInMouseMode()) {
+        if (!enabled || editor.getSnippetController().isInSnippet() || !host.isFocused() || editor.isInMouseMode()) {
             return;
         }
         super.show();

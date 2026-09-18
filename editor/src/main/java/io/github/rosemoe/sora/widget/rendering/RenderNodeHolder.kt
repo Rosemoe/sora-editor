@@ -30,7 +30,7 @@ import androidx.annotation.RequiresApi
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange
 import io.github.rosemoe.sora.lang.styling.CodeBlock
 import io.github.rosemoe.sora.lang.styling.EmptyReader
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
 import java.util.Collections
 import java.util.Stack
 
@@ -41,7 +41,7 @@ import java.util.Stack
  * @author Rosemoe
  */
 @RequiresApi(Build.VERSION_CODES.Q)
-class RenderNodeHolder(private val editor: CodeEditor) {
+class RenderNodeHolder(private val editor: CodeEditorDelegate) {
     private val cache: ArrayList<TextRenderNode> = ArrayList(64)
     private val pool = Stack<TextRenderNode>()
 

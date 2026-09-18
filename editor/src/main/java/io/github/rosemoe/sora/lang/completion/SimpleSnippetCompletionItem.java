@@ -29,7 +29,7 @@ import androidx.annotation.NonNull;
 
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
-import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.CodeEditorDelegate;
 
 public class SimpleSnippetCompletionItem extends CompletionItem {
 
@@ -50,9 +50,8 @@ public class SimpleSnippetCompletionItem extends CompletionItem {
     }
 
 
-
     @Override
-    public void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, @NonNull CharPosition position) {
+    public void performCompletion(@NonNull CodeEditorDelegate editor, @NonNull Content text, @NonNull CharPosition position) {
         int prefixLength = snippet.getSelectedLength();
         var selectedText = text.subSequence(position.index - prefixLength, position.index).toString();
         int actionIndex = position.index;
@@ -64,7 +63,7 @@ public class SimpleSnippetCompletionItem extends CompletionItem {
     }
 
     @Override
-    public void performCompletion(@NonNull CodeEditor editor, @NonNull Content text, int line, int column) {
+    public void performCompletion(@NonNull CodeEditorDelegate editor, @NonNull Content text, int line, int column) {
         // do nothing
     }
 }

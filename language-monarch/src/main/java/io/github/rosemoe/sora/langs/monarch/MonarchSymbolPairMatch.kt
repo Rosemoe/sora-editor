@@ -31,7 +31,7 @@ import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.BaseAuto
 import io.github.rosemoe.sora.langs.monarch.languageconfiguration.model.LanguageConfiguration
 import io.github.rosemoe.sora.text.Content
 import io.github.rosemoe.sora.text.ContentLine
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
 import io.github.rosemoe.sora.widget.SymbolPairMatch
 import java.util.Arrays
 import java.util.Locale
@@ -167,7 +167,7 @@ class MonarchSymbolPairMatch(
         }
 
         override fun shouldReplace(
-            editor: CodeEditor,
+            editor: CodeEditorDelegate,
             contentLine: ContentLine?,
             leftColumn: Int
         ): Boolean {

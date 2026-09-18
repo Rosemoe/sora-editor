@@ -37,6 +37,7 @@ import android.view.ViewConfiguration;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 import io.github.rosemoe.sora.event.ClickEvent;
@@ -62,7 +63,6 @@ import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.layout.RowElementTypes;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
-import kotlin.jvm.functions.Function5;
 import kotlin.jvm.functions.Function7;
 
 /**
@@ -84,16 +84,17 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     private final static int TOP_EDGE = 1 << 2;
     private final static int BOTTOM_EDGE = 1 << 3;
 
-    private final CodeEditor editor;
+    private final CodeEditorDelegate editor;
+    private final CodeEditorHost host;
     private final EditorScroller scroller;
     private final SelectionHandle insertHandle;
-    Magnifier magnifier;
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @UnsupportedUserUsage
+    public Magnifier magnifier;
     int selHandleType = -1;
     boolean selHandleMoving;
     float motionX;
     float motionY;
-    boolean glowTopOrBottom; //true for bottom
-    boolean glowLeftOrRight; //true for right
     public boolean isScaling = false;
     float scaleMaxSize;
     float scaleMinSize;
@@ -118,7 +119,14 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
     private PointF lastContextClickPosition;
     boolean mouseClick;
     boolean mouseCanMoveText;
-    CharPosition draggingSelection;
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public CharPosition draggingSelection;
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public boolean glowTopOrBottom; //true for bottom
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public boolean glowLeftOrRight; //true for right
 
     /* dragging selection fields */
     private boolean dragSelectActive;
@@ -133,13 +141,14 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
      *
      * @param editor Host editor
      */
-    public EditorTouchEventHandler(@NonNull CodeEditor editor) {
+    public EditorTouchEventHandler(@NonNull CodeEditorDelegate editor, @NonNull CodeEditorHost host) {
         this.editor = editor;
+        this.host = host;
         edgeFieldSize = editor.getDpUnit() * 18;
-        scroller = new EditorScroller(editor);
+        scroller = new EditorScroller(editor, host);
         scaleMaxSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 26, Resources.getSystem().getDisplayMetrics());
         scaleMinSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 8, Resources.getSystem().getDisplayMetrics());
-        magnifier = new Magnifier(editor);
+        magnifier = new Magnifier(editor, host);
         leftHandle = new SelectionHandle(SelectionHandle.LEFT);
         rightHandle = new SelectionHandle(SelectionHandle.RIGHT);
         insertHandle = new SelectionHandle(SelectionHandle.BOTH);
@@ -169,7 +178,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if (System.currentTimeMillis() - timeLastScroll < HIDE_DELAY || holdingScrollbarVertical || holdingScrollbarHorizontal) {
             return 0f;
         } else if (System.currentTimeMillis() - timeLastScroll >= HIDE_DELAY && System.currentTimeMillis() - timeLastScroll < HIDE_DELAY + SCROLLBAR_FADE_ANIMATION_TIME) {
-            editor.postInvalidateOnAnimation();
+            host.postInvalidateOnAnimation();
             return (System.currentTimeMillis() - timeLastScroll - HIDE_DELAY) * 1f / SCROLLBAR_FADE_ANIMATION_TIME;
         }
         return 1f;
@@ -183,7 +192,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             return;
         }
         timeLastSetSelection = 0;
-        editor.invalidate();
+        host.invalidate();
     }
 
     /**
@@ -232,12 +241,12 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             @Override
             public void run() {
                 if (System.currentTimeMillis() - timeLastScroll >= HIDE_DELAY) {
-                    editor.invalidate();
+                    host.invalidate();
                 }
             }
 
         }
-        editor.postDelayedInLifecycle(new ScrollNotifier(), HIDE_DELAY);
+        host.postDelayedInLifecycle(new ScrollNotifier(), HIDE_DELAY);
     }
 
     /**
@@ -250,12 +259,12 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             @Override
             public void run() {
                 if (System.currentTimeMillis() - timeLastSetSelection >= HIDE_DELAY_HANDLE) {
-                    editor.invalidate();
+                    host.invalidate();
                 }
             }
 
         }
-        editor.postDelayedInLifecycle(new InvalidateNotifier(), HIDE_DELAY_HANDLE);
+        host.postDelayedInLifecycle(new InvalidateNotifier(), HIDE_DELAY_HANDLE);
     }
 
     /**
@@ -450,7 +459,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     if (holdingScrollbarVertical && holdingScrollbarHorizontal) {
                         holdingScrollbarHorizontal = false;
                     }
-                    editor.invalidate();
+                    host.invalidate();
                 } else {
                     final var allowedDistance = editor.getDpUnit() * 7;
                     if (shouldDrawInsertHandle() && RectUtils.almostContains(editor.getInsertHandleDescriptor().position, e.getX(), e.getY(), allowedDistance)) {
@@ -503,7 +512,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                             (e.getY() - thumbDownY) * (e.getY() - thumbDownY)) >= MAGNIFIER_TOUCH_SLOP) {
                         updateMagnifier(e);
                     }
-                    editor.invalidate();
+                    host.invalidate();
                     return true;
                 }
                 return false;
@@ -522,7 +531,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                         notifyLater();
                     selHandleType = -1;
                 }
-                editor.invalidate();
+                host.invalidate();
                 stopEdgeScroll();
                 dismissMagnifier();
                 break;
@@ -569,10 +578,10 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     } else {
                         mouseCanMoveText = false;
                         editor.setSelection(line, column, SelectionChangeEvent.CAUSE_MOUSE_INPUT);
-                        editor.requestFocus();
+                        host.requestFocus();
                     }
                     draggingSelection = charPos;
-                    editor.postInvalidate();
+                    host.postInvalidate();
                 }
             }
             case MotionEvent.ACTION_MOVE -> {
@@ -591,7 +600,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                         editor.setSelectionRegion(anchor.line, anchor.column, line, column, SelectionChangeEvent.CAUSE_MOUSE_INPUT);
                     }
                     draggingSelection = charPos;
-                    editor.postInvalidate();
+                    host.postInvalidate();
                     scrollIfThumbReachesEdge(event);
                 }
             }
@@ -669,16 +678,16 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            editor.performContextClick(event.getX(), event.getY());
+            host.getAttachedView().performContextClick(event.getX(), event.getY());
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            editor.performContextClick();
+            host.getAttachedView().performContextClick();
         }
 
         if (editor.getProps().mouseContextMenu) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                editor.showContextMenu(event.getX(), event.getY());
+                host.showContextMenu(event.getX(), event.getY());
             } else {
-                editor.showContextMenu();
+                host.showContextMenu();
             }
         }
     }
@@ -692,15 +701,16 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         editor.dispatchEvent(new HandleStateChangeEvent(editor, type, held));
     }
 
-    int dispatchEditorMotionEvent
-            (Function7<CodeEditor, CharPosition, MotionEvent, Span, TextRange, Integer, Integer, EditorMotionEvent> constructor,
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public int dispatchEditorMotionEvent
+            (Function7<CodeEditorDelegate, CharPosition, MotionEvent, Span, TextRange, Integer, Integer, EditorMotionEvent> constructor,
              @Nullable CharPosition pos, @NonNull MotionEvent event) {
         final var region = RegionResolverKt.resolveTouchRegion(editor, event);
         return dispatchEditorMotionEvent(constructor, pos, event, IntPair.getFirst(region), IntPair.getSecond(region));
     }
 
     int dispatchEditorMotionEvent
-            (Function7<CodeEditor, CharPosition, MotionEvent, Span, TextRange, Integer, Integer, EditorMotionEvent> constructor,
+            (Function7<CodeEditorDelegate, CharPosition, MotionEvent, Span, TextRange, Integer, Integer, EditorMotionEvent> constructor,
              @Nullable CharPosition pos, @NonNull MotionEvent event, int motionRegion, int motionBound) {
         if (pos == null) {
             var pt = editor.getPointPositionOnScreen(event.getX(), event.getY());
@@ -831,7 +841,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                     endY - scroller.getCurrY(), 0);
             scroller.abortAnimation();
         }
-        editor.invalidate();
+        host.invalidate();
     }
 
     public int getTouchedHandleType() {
@@ -850,7 +860,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         var visualPosition = editor.getPointVisualPositionOnScreen(e.getX(), e.getY());
         int line = visualPosition.line;
         int column = visualPosition.column;
-        editor.performClick();
+        host.getAttachedView().performClick();
         if (region == RegionResolverKt.REGION_SIDE_ICON) {
             int row = (int) (e.getY() + editor.getOffsetX()) / editor.getRowHeight();
             row = Math.max(0, Math.min(row, editor.getLayout().getRowCount() - 1));
@@ -917,7 +927,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         if ((!editor.getProps().reselectOnLongPress && editor.getCursor().isSelected()) || e.getPointerCount() != 1) {
             return;
         }
-        editor.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+        host.getAttachedView().performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
         editor.selectWord(line, column);
         if (editor.getCursor().isSelected()) {
             beginDragSelect(line, column);
@@ -933,6 +943,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 distanceX = 0;
             }
         }
+        int prevX = scroller.getCurrX();
+        int prevY = scroller.getCurrY();
         int endX = scroller.getCurrX() + (int) distanceX;
         int endY = scroller.getCurrY() + (int) distanceY;
         endX = Math.max(endX, 0);
@@ -941,64 +953,74 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         endX = Math.min(endX, editor.getScrollMaxX());
         boolean notifyY = true;
         boolean notifyX = true;
-        if (!editor.getVerticalEdgeEffect().isFinished()) {
-            float displacement = Math.max(0, Math.min(1, e2.getX() / editor.getWidth()));
-            float distance = (glowTopOrBottom ? distanceY : -distanceY) / editor.getMeasuredHeight();
-            if (distance > 0) {
-                endY = scroller.getCurrY();
-                editor.getVerticalEdgeEffect().onPull(distance, !glowTopOrBottom ? displacement : 1 - displacement);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                var edgeEffect = editor.getVerticalEdgeEffect();
-                edgeEffect.onPullDistance(distance, !glowTopOrBottom ? displacement : 1 - displacement);
-                if (edgeEffect.getDistance() != 0) {
+        if (DelegateKt.isViewMode(editor)) {
+            if (!editor.getVerticalEdgeEffect().isFinished()) {
+                float displacement = Math.max(0, Math.min(1, e2.getX() / host.getWidth()));
+                float distance = (glowTopOrBottom ? distanceY : -distanceY) / host.getMeasuredHeight();
+                if (distance > 0) {
                     endY = scroller.getCurrY();
+                    editor.getVerticalEdgeEffect().onPull(distance, !glowTopOrBottom ? displacement : 1 - displacement);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    var edgeEffect = editor.getVerticalEdgeEffect();
+                    edgeEffect.onPullDistance(distance, !glowTopOrBottom ? displacement : 1 - displacement);
+                    if (edgeEffect.getDistance() != 0) {
+                        endY = scroller.getCurrY();
+                    }
+                } else {
+                    editor.getVerticalEdgeEffect().finish();
                 }
-            } else {
-                editor.getVerticalEdgeEffect().finish();
+                notifyY = false;
             }
-            notifyY = false;
-        }
-        if (!editor.getHorizontalEdgeEffect().isFinished()) {
-            float displacement = Math.max(0, Math.min(1, e2.getY() / editor.getHeight()));
-            float distance = (glowLeftOrRight ? distanceX : -distanceX) / editor.getMeasuredWidth();
-            if (distance > 0) {
-                endX = scroller.getCurrX();
-                editor.getHorizontalEdgeEffect().onPull(distance, !glowLeftOrRight ? 1 - displacement : displacement);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                var edgeEffect = editor.getHorizontalEdgeEffect();
-                edgeEffect.onPullDistance(distance, !glowLeftOrRight ? 1 - displacement : displacement);
-                if (edgeEffect.getDistance() != 0) {
+            if (!editor.getHorizontalEdgeEffect().isFinished()) {
+                float displacement = Math.max(0, Math.min(1, e2.getY() / host.getHeight()));
+                float distance = (glowLeftOrRight ? distanceX : -distanceX) / host.getMeasuredWidth();
+                if (distance > 0) {
                     endX = scroller.getCurrX();
+                    editor.getHorizontalEdgeEffect().onPull(distance, !glowLeftOrRight ? 1 - displacement : displacement);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    var edgeEffect = editor.getHorizontalEdgeEffect();
+                    edgeEffect.onPullDistance(distance, !glowLeftOrRight ? 1 - displacement : displacement);
+                    if (edgeEffect.getDistance() != 0) {
+                        endX = scroller.getCurrX();
+                    }
+                } else {
+                    editor.getHorizontalEdgeEffect().finish();
                 }
-            } else {
-                editor.getHorizontalEdgeEffect().finish();
+                notifyX = false;
             }
-            notifyX = false;
         }
         scroller.startScroll(scroller.getCurrX(),
                 scroller.getCurrY(),
                 endX - scroller.getCurrX(),
                 endY - scroller.getCurrY(), 0);
-        final float minOverPull = 2f;
-        if (notifyY && scroller.getCurrY() + distanceY < -minOverPull) {
-            editor.getVerticalEdgeEffect().onPull(-distanceY / editor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / editor.getWidth())));
-            glowTopOrBottom = false;
+        if (DelegateKt.isViewMode(editor)) {
+            final float minOverPull = 2f;
+            if (notifyY && scroller.getCurrY() + distanceY < -minOverPull) {
+                editor.getVerticalEdgeEffect().onPull(-distanceY / host.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / editor.getWidth())));
+                glowTopOrBottom = false;
+            }
+            if (notifyY && scroller.getCurrY() + distanceY > editor.getScrollMaxY() + minOverPull) {
+                editor.getVerticalEdgeEffect().onPull(distanceY / host.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / editor.getWidth())));
+                glowTopOrBottom = true;
+            }
+            if (notifyX && scroller.getCurrX() + distanceX < -minOverPull) {
+                editor.getHorizontalEdgeEffect().onPull(-distanceX / host.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / host.getHeight())));
+                glowLeftOrRight = false;
+            }
+            if (notifyX && scroller.getCurrX() + distanceX > editor.getScrollMaxX() + minOverPull) {
+                editor.getHorizontalEdgeEffect().onPull(distanceX / host.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / host.getHeight())));
+                glowLeftOrRight = true;
+            }
         }
-        if (notifyY && scroller.getCurrY() + distanceY > editor.getScrollMaxY() + minOverPull) {
-            editor.getVerticalEdgeEffect().onPull(distanceY / editor.getMeasuredHeight(), Math.max(0, Math.min(1, e2.getX() / editor.getWidth())));
-            glowTopOrBottom = true;
-        }
-        if (notifyX && scroller.getCurrX() + distanceX < -minOverPull) {
-            editor.getHorizontalEdgeEffect().onPull(-distanceX / editor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / editor.getHeight())));
-            glowLeftOrRight = false;
-        }
-        if (notifyX && scroller.getCurrX() + distanceX > editor.getScrollMaxX() + minOverPull) {
-            editor.getHorizontalEdgeEffect().onPull(distanceX / editor.getMeasuredWidth(), Math.max(0, Math.min(1, e2.getY() / editor.getHeight())));
-            glowLeftOrRight = true;
-        }
-        editor.invalidate();
+        host.invalidate();
         editor.dispatchEvent(new ScrollEvent(editor, scroller.getCurrX(),
                 scroller.getCurrY(), endX, endY, ScrollEvent.CAUSE_USER_DRAG));
+
+        if (editor.overscrollCallback != null) {
+            float consumedX = endX - prevX; // how much scroller actually moved
+            float consumedY = endY - prevY;
+            editor.overscrollCallback.onScroll(distanceX, distanceY, consumedX, consumedY);
+        }
         return true;
     }
 
@@ -1031,9 +1053,14 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             notifyScrolled();
         }
         editor.releaseEdgeEffects();
+
+        if (editor.overscrollCallback != null) {
+            editor.overscrollCallback.onFling(velocityX, velocityY);
+        }
+
         editor.dispatchEvent(new ScrollEvent(editor, scroller.getCurrX(),
                 scroller.getCurrY(), scroller.getFinalX(), scroller.getFinalY(), ScrollEvent.CAUSE_USER_FLING));
-        editor.postInvalidateOnAnimation();
+        host.postInvalidateOnAnimation();
         return false;
     }
 
@@ -1061,7 +1088,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             scroller.startScroll((int) afterScrollX, (int) afterScrollY, 0, 0, 0);
             scroller.abortAnimation();
             isScaling = true;
-            editor.invalidate();
+            host.invalidate();
             return true;
         }
         return false;
@@ -1094,12 +1121,12 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         }
         editor.getRenderContext().invalidateRenderNodes();
         editor.getRenderer().updateTimestamp();
-        editor.invalidate();
+        host.invalidate();
     }
 
     @Override
     public boolean onDown(@NonNull MotionEvent e) {
-        return editor.isEnabled();
+        return host.isEnabled();
     }
 
     @Override
@@ -1263,7 +1290,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 }
                 int column = editor.getText().getColumnCount(line);
                 // Do not scroll too far from text region of this line
-                float maxOffset = editor.measureTextRegionOffset() + editor.layout.getCharLayoutOffset(line, column)[1] - editor.getWidth() * 0.85f;
+                float maxOffset = editor.measureTextRegionOffset() + editor.getLayout().getCharLayoutOffset(line, column)[1] - editor.getWidth() * 0.85f;
                 if (scroller.getCurrX() > maxOffset) {
                     dx = 0;
                 }
@@ -1306,7 +1333,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             postTimes++;
             // Post for animation
             if (edgeFlags != 0) {
-                editor.postDelayedInLifecycle(this, 10);
+                host.postDelayedInLifecycle(this, 10);
             }
         }
     }

@@ -37,7 +37,7 @@ import io.github.rosemoe.sora.lang.completion.snippet.PlainPlaceholderElement
 import io.github.rosemoe.sora.lang.completion.snippet.PlainTextItem
 import io.github.rosemoe.sora.lang.completion.snippet.SnippetItem
 import io.github.rosemoe.sora.lang.completion.snippet.VariableItem
-import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.CodeEditorDelegate
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.getComponent
 import io.github.rosemoe.sora.widget.snippet.variable.ClipboardBasedSnippetVariableResolver
@@ -55,7 +55,7 @@ import io.github.rosemoe.sora.widget.subscribeEvent
  *
  * @author Rosemoe
  */
-class SnippetController(private val editor: CodeEditor) {
+class SnippetController(private val editor: CodeEditorDelegate) {
 
     /**
      * Language based variable resolver. User should set valid values when change language.
@@ -550,7 +550,7 @@ class SnippetController(private val editor: CodeEditor) {
         tabStops = null
         currentTabStopIndex = -1
         editor.dispatchEvent(SnippetEvent(editor, SnippetEvent.ACTION_STOP, currentTabStopIndex, 0))
-        editor.invalidate()
+        editor.host.invalidate()
     }
 
     companion object {

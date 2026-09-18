@@ -26,8 +26,6 @@ package io.github.rosemoe.sora.text.method;
 import android.text.Editable;
 import android.view.KeyEvent;
 
-import io.github.rosemoe.sora.widget.CodeEditor;
-
 /**
  * Handles key events such as SHIFT
  *
@@ -35,25 +33,21 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  */
 public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
 
-    private final CodeEditor editor;
-
     /**
      * Dummy text used for Android original APIs
      */
     private final Editable dest = Editable.Factory.getInstance().newEditable("");
     private boolean isCtrlPressed = false;
 
-    public KeyMetaStates(CodeEditor editor) {
-        this.editor = editor;
-    }
-
     public void onKeyDown(KeyEvent event) {
-        super.onKeyDown(editor, dest, event.getKeyCode(), event);
+        // view parameter is not used by superclass. so pass it as null
+        super.onKeyDown(null, dest, event.getKeyCode(), event);
         isCtrlPressed = event.isCtrlPressed();
     }
 
     public void onKeyUp(KeyEvent event) {
-        super.onKeyUp(editor, dest, event.getKeyCode(), event);
+        // view parameter is not used by superclass. so pass it as null
+        super.onKeyUp(null, dest, event.getKeyCode(), event);
         isCtrlPressed = event.isCtrlPressed();
     }
 
@@ -86,7 +80,7 @@ public class KeyMetaStates extends android.text.method.MetaKeyKeyListener {
     }
 
     public void clearMetaStates(int states) {
-        clearMetaKeyState(editor, dest, states);
+        clearMetaKeyState(dest, states);
     }
 
 }
