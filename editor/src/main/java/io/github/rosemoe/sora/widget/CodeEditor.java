@@ -1695,11 +1695,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return stylePatchManager.applyToSpans(line, text.getColumnCount(line), spans);
     }
 
-    @NonNull
-    public List<Span> applyStylePatches(int line, @NonNull List<Span> spans) {
-        return stylePatchManager.applyToSpans(line, text.getColumnCount(line), spans);
-    }
-
     /**
      * Get the width of line number region (include line number margin)
      *
@@ -4336,6 +4331,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @NonNull
     public SparseStylePatches getStylePatches() {
         return stylePatchManager.getPatches();
+    }
+
+    // Renderer-only access keeps patch application out of the public editor API.
+    final StylePatchManager getStylePatchManager() {
+        return stylePatchManager;
     }
 
     public void registerStylePatchProvider(@NonNull StylePatchProvider provider) {
