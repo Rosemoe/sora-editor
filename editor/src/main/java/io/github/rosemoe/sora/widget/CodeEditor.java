@@ -594,7 +594,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         renderFunctionCharacters = true;
         renderContext = new RenderContext(this);
         renderer = onCreateRenderer();
-        stylePatchManager = new StylePatchManager(this);
+        stylePatchManager = new StylePatchManager(this, this::updateStylePatches);
 
         styleDelegate = new EditorStyleDelegate(this);
 
@@ -4344,8 +4344,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         stylePatchManager.unregister(provider);
     }
 
-    public void invalidateStylePatches(@NonNull StylePatchProvider provider) {
-        stylePatchManager.invalidate(provider);
+    public void refreshStylePatches(@NonNull StylePatchProvider provider) {
+        stylePatchManager.refresh(provider);
     }
 
     @NonNull
@@ -4353,11 +4353,16 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return stylePatchManager.getProviders();
     }
 
-    public void invalidateStylePatchesFromManager() {
-        renderer.updateTimestamp();
+    private void updateStylePatches(@Nullable SparseStylePatches patches, @Nullable StyleUpdateRange range) {
+        if (range == null) {
+            renderer.updateTimestamp();
+            renderContext.invalidateRenderNodes();
+        } else {
+            renderContext.updateForRange(range);
+            renderer.updateTimestamp();
+        }
         invalidate();
     }
-
     @UiThread
     public void updateStyles(@NonNull Styles styles, @Nullable StyleUpdateRange range) {
         if (textStyles != styles || range == null) {

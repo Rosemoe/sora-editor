@@ -16,47 +16,78 @@ import java.util.Map;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.span.SpanColorResolver;
 import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs;
+import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.widget.CodeEditor;
 
 /** Coordinates asynchronous style patch providers and their latest snapshots. */
 public final class StylePatchManager {
 
     private final CodeEditor editor;
+    private final java.util.function.BiConsumer<SparseStylePatches, StyleUpdateRange> onUpdate;
     private final List<StylePatchProvider> providers = new ArrayList<>();
     private final Map<StylePatchProvider, SparseStylePatches> snapshots = new HashMap<>();
     private final Map<StylePatchProvider, Long> versions = new HashMap<>();
     private SparseStylePatches merged;
 
-    public StylePatchManager(@NonNull CodeEditor editor) {
+    public StylePatchManager(@NonNull CodeEditor editor,
+                             @NonNull java.util.function.BiConsumer<SparseStylePatches, StyleUpdateRange> onUpdate) {
         this.editor = editor;
+        this.onUpdate = onUpdate;
     }
 
     public synchronized void register(@NonNull StylePatchProvider provider) {
         if (providers.contains(provider)) return;
         providers.add(provider);
         versions.put(provider, 0L);
-        invalidate(provider);
+        refresh(provider);
     }
 
     public synchronized void unregister(@NonNull StylePatchProvider provider) {
         providers.remove(provider);
-        snapshots.remove(provider);
         versions.remove(provider);
-        rebuild();
+        var old = snapshots.remove(provider);
+        if (merged != null && old != null) for (var patch : old.getPatches()) merged.removePatch(patch);
+        if (merged != null && merged.getPatches().isEmpty()) merged = null;
+        onUpdate.accept(merged, null);
     }
 
-    public synchronized void invalidate(@NonNull StylePatchProvider provider) {
+    public synchronized void refresh(@NonNull StylePatchProvider provider) {
         if (!providers.contains(provider)) return;
         long version = versions.get(provider) + 1;
         versions.put(provider, version);
-        provider.provideStylePatches(editor, patches -> editor.postInLifecycle(() -> {
-            synchronized (StylePatchManager.this) {
-                if (!providers.contains(provider) || versions.get(provider) != version) return;
-                if (patches == null) snapshots.remove(provider);
-                else snapshots.put(provider, patches);
-                rebuild();
+        provider.provideStylePatches(editor, new StylePatchProvider.Receiver() {
+            @Override
+            public void setStylePatches(SparseStylePatches patches) {
+                editor.postInLifecycle(() -> {
+                    synchronized (StylePatchManager.this) {
+                        if (!providers.contains(provider) || versions.get(provider) != version) return;
+                        replace(provider, patches);
+                        onUpdate.accept(merged, null);
+                    }
+                });
             }
-        }));
+
+            @Override
+            public void updateStylePatches(@NonNull StylePatchUpdate update) {
+                editor.postInLifecycle(() -> {
+                    synchronized (StylePatchManager.this) {
+                        if (!providers.contains(provider) || versions.get(provider) != version) return;
+                        var patches = snapshots.computeIfAbsent(provider, ignored -> new SparseStylePatches());
+                        if (merged == null) merged = new SparseStylePatches();
+                        for (var patch : update.getRemoved()) {
+                            patches.removePatch(patch);
+                            merged.removePatch(patch);
+                        }
+                        for (var patch : update.getAdded()) {
+                            patches.addPatch(patch);
+                            merged.addPatch(patch);
+                        }
+                        if (merged.getPatches().isEmpty()) merged = null;
+                        onUpdate.accept(merged, update.getRange());
+                    }
+                });
+            }
+        });
     }
 
     @NonNull
@@ -71,17 +102,17 @@ public final class StylePatchManager {
 
     public synchronized void setPatches(@Nullable SparseStylePatches patches) {
         merged = patches;
-        editor.invalidateStylePatchesFromManager();
+        onUpdate.accept(merged, null);
     }
 
     public synchronized void updateForInsertion(int startLine, int startColumn, int endLine, int endColumn) {
         snapshots.values().forEach(it -> it.updateForInsertion(startLine, startColumn, endLine, endColumn));
-        rebuild();
+        onUpdate.accept(merged, null);
     }
 
     public synchronized void updateForDeletion(int startLine, int startColumn, int endLine, int endColumn) {
         snapshots.values().forEach(it -> it.updateForDeletion(startLine, startColumn, endLine, endColumn));
-        rebuild();
+        onUpdate.accept(merged, null);
     }
 
     /** Merge decorations into the token spans used by the renderer. */
@@ -136,12 +167,15 @@ public final class StylePatchManager {
         @Override public io.github.rosemoe.sora.lang.styling.color.ResolvableColor getBackgroundColor(Span span) { return patch.getOverrideBackground(); }
     }
 
-    private void rebuild() {
-        var result = new SparseStylePatches();
-        for (var snapshot : snapshots.values()) {
-            for (var patch : snapshot.getPatches()) result.addPatch(patch);
+    private void replace(@NonNull StylePatchProvider provider, @Nullable SparseStylePatches patches) {
+        if (merged == null) merged = new SparseStylePatches();
+        var old = snapshots.get(provider);
+        if (old != null) for (var patch : old.getPatches()) merged.removePatch(patch);
+        if (patches == null || patches.getPatches().isEmpty()) snapshots.remove(provider);
+        else {
+            snapshots.put(provider, patches);
+            for (var patch : patches.getPatches()) merged.addPatch(patch);
         }
-        merged = result.getPatches().isEmpty() ? null : result;
-        editor.invalidateStylePatchesFromManager();
+        if (merged.getPatches().isEmpty()) merged = null;
     }
 }

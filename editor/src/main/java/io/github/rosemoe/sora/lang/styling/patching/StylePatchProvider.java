@@ -20,13 +20,14 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  * <p>The provider may call the receiver from any thread. A new result replaces the previous
  * result from this provider, like VS Code's {@code setDecorations} API.</p>
  */
-@FunctionalInterface
 public interface StylePatchProvider {
 
     void provideStylePatches(@NonNull CodeEditor editor, @NonNull Receiver receiver);
 
-    @FunctionalInterface
     interface Receiver {
         void setStylePatches(SparseStylePatches patches);
+
+        /** Apply only the added/removed patches in this update. */
+        void updateStylePatches(@NonNull StylePatchUpdate update);
     }
 }
