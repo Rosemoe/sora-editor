@@ -20,7 +20,6 @@ class StylePatchManager(
 
     private val fullUpdateRange = SequenceUpdateRange(0, Int.MAX_VALUE)
 
-    /** Provider order is stable; callbacks update only the affected provider snapshot. */
     private val providers = mutableListOf<StylePatchProvider>()
     private val snapshots = mutableMapOf<StylePatchProvider, SparseStylePatches>()
     private val versions = mutableMapOf<StylePatchProvider, Long>()
@@ -53,7 +52,7 @@ class StylePatchManager(
         versions.remove(provider)
         if (merged !== SparseStylePatches.EMPTY) {
             snapshots.remove(provider)?.let { merged.removePatches(it.getPatches()) }
-            clearMergedIfEmpty()
+            clearMerged()
         } else {
             snapshots.remove(provider)
         }
@@ -67,17 +66,15 @@ class StylePatchManager(
 
     @Synchronized
     fun updateVisibleRange(startLine: Int, endLine: Int) {
-        val normalizedStart = startLine.coerceAtLeast(0)
-        val normalizedEnd = endLine.coerceAtLeast(normalizedStart)
-        if (hasVisibleRange && visibleStartLine == normalizedStart && visibleEndLine == normalizedEnd) return
-        visibleStartLine = normalizedStart
-        visibleEndLine = normalizedEnd
+        val start = startLine.coerceAtLeast(0)
+        val end = endLine.coerceAtLeast(start)
+        if (hasVisibleRange && visibleStartLine == start && visibleEndLine == end) return
+        visibleStartLine = start
+        visibleEndLine = end
         hasVisibleRange = true
-        // The provider is external code and may register/unregister providers synchronously.
-        // Iterate over a shallow snapshot to avoid concurrent modification and skipped entries;
-        // this copies only O(P) provider references, never the patch collections.
-        providers.toList().forEach {
-            request(it, StylePatchRequest.Reason.VISIBLE_RANGE_CHANGED, -1, -1)
+        // Providers may register or unregister from inside the callback.
+        for (provider in providers.toList()) {
+            request(provider, StylePatchRequest.Reason.VISIBLE_RANGE_CHANGED, -1, -1)
         }
     }
 
@@ -110,16 +107,10 @@ class StylePatchManager(
                         if (versions[provider] != version) return@synchronized
                         val snapshot = snapshots.getOrPut(provider) { SparseStylePatches() }
                         val currentMerged = mutableMerged()
-                        // Replace only this range. The rest of the provider snapshot and merged
-                        // collection remain in place, so an async partial result is proportional
-                        // to the changed range rather than to the whole document.
+                        // A provider may hand back its own snapshot object, in which case only its
+                        // entries inside the range are replacements.
                         val incoming = if (patches === snapshot) {
-                            // A provider may reuse its snapshot object. In that case only its
-                            // entries in the requested range are replacements; re-adding the
-                            // whole object would duplicate every entry outside the range.
-                            patches.getPatches().filter {
-                                range.intersects(it.startLine, it.endLine)
-                            }
+                            patches.getPatches().filter { range.intersects(it.startLine, it.endLine) }
                         } else {
                             patches.getPatches()
                         }
@@ -127,7 +118,7 @@ class StylePatchManager(
                         snapshot.addPatches(incoming)
                         currentMerged.removePatches(removed)
                         currentMerged.addPatches(incoming)
-                        clearMergedIfEmpty()
+                        clearMerged()
                         onUpdate.accept(merged, range)
                     }
                 }
@@ -136,7 +127,6 @@ class StylePatchManager(
     }
 
     @Synchronized
-    /** Return a stable public snapshot; callers cannot mutate the manager's provider list. */
     fun getProviders(): List<StylePatchProvider> = providers.toList()
 
     @Synchronized
@@ -150,23 +140,17 @@ class StylePatchManager(
 
     @Synchronized
     fun updateForInsertion(startLine: Int, startColumn: Int, endLine: Int, endColumn: Int) {
-        snapshots.values.forEach {
-            it.updateForInsertion(
-                startLine, startColumn, endLine, endColumn
-            )
+        for (snapshot in snapshots.values) {
+            snapshot.updateForInsertion(startLine, startColumn, endLine, endColumn)
         }
-        // Snapshots and merged share patch objects. Their coordinates are already remapped above;
-        // refresh the merged search index without applying the edit a second time.
         merged.rebuildSearchIndex()
         refreshAfterTextChange(startLine, endLine)
     }
 
     @Synchronized
     fun updateForDeletion(startLine: Int, startColumn: Int, endLine: Int, endColumn: Int) {
-        snapshots.values.forEach {
-            it.updateForDeletion(
-                startLine, startColumn, endLine, endColumn
-            )
+        for (snapshot in snapshots.values) {
+            snapshot.updateForDeletion(startLine, startColumn, endLine, endColumn)
         }
         merged.rebuildSearchIndex()
         refreshAfterTextChange(startLine, endLine)
@@ -174,45 +158,43 @@ class StylePatchManager(
 
     private fun refreshAfterTextChange(startLine: Int, endLine: Int) {
         onUpdate.accept(merged, SequenceUpdateRange(startLine, maxOf(endLine, visibleEndLine)))
-        // See updateVisibleRange: provider callbacks are allowed to mutate registration state.
-        providers.toList().forEach {
-            request(it, StylePatchRequest.Reason.TEXT_CHANGED, startLine, endLine)
+        for (provider in providers.toList()) {
+            request(provider, StylePatchRequest.Reason.TEXT_CHANGED, startLine, endLine)
         }
     }
 
     /** Merge decorations into the token spans used by the renderer. */
     @Synchronized
     fun applyToSpans(line: Int, lineLength: Int, base: List<Span>): List<Span> {
-        val linePatches = merged.getPatchesOnLine(line)
-        if (linePatches.isEmpty() || base.isEmpty()) return base
-        return if (hasOverlappingPatches(linePatches, line, lineLength)) {
-            applyOverlappingPatches(line, lineLength, base, linePatches)
-        } else {
-            applyNonOverlappingPatches(line, lineLength, base, linePatches)
+        val patches = merged.getPatchesOnLine(line)
+        if (patches.isEmpty() || base.isEmpty()) return base
+        var previousEnd = -1
+        for (patch in patches) {
+            val start = if (patch.startLine < line) 0 else patch.startColumn
+            val end = if (patch.endLine > line) lineLength else patch.endColumn
+            if (start >= end) continue
+            if (start < previousEnd) return overlayPatches(line, lineLength, base, patches)
+            previousEnd = end
         }
+        return sweepPatches(line, lineLength, base, patches)
     }
 
-    /**
-     * The common case is sparse, non-overlapping decorations. Sweep spans and patches together in
-     * O(span count + patch count + output count), instead of rescanning every span for every patch.
-     */
-    private fun applyNonOverlappingPatches(
-        line: Int,
-        lineLength: Int,
-        base: List<Span>,
-        patches: List<StylePatch>
+    /** Sweep spans and patches together; patches are disjoint here. */
+    private fun sweepPatches(
+        line: Int, lineLength: Int, base: List<Span>, patches: List<StylePatch>
     ): List<Span> {
         val result = mutableListOf<Span>()
         var patchIndex = 0
-        base.forEachIndexed { spanIndex, span ->
+        for (spanIndex in base.indices) {
+            val span = base[spanIndex]
             val spanStart = span.column
-            val spanEnd = base.getOrNull(spanIndex + 1)?.column ?: lineLength
+            val spanEnd = if (spanIndex + 1 < base.size) base[spanIndex + 1].column else lineLength
             var cursor = spanStart
             var changed = false
             while (patchIndex < patches.size) {
                 val patch = patches[patchIndex]
-                val patchStart = patchStart(patch, line)
-                val patchEnd = patchEnd(patch, line, lineLength)
+                val patchStart = if (patch.startLine < line) 0 else patch.startColumn
+                val patchEnd = if (patch.endLine > line) lineLength else patch.endColumn
                 if (patchEnd <= spanStart) {
                     patchIndex++
                     continue
@@ -237,18 +219,15 @@ class StylePatchManager(
         return result
     }
 
-    /** Preserve the old ordered-overlay semantics only for the uncommon overlapping case. */
-    private fun applyOverlappingPatches(
-        line: Int,
-        lineLength: Int,
-        base: List<Span>,
-        patches: List<StylePatch>
+    /** Ordered overlay for overlapping patches: later patches win on shared columns. */
+    private fun overlayPatches(
+        line: Int, lineLength: Int, base: List<Span>, patches: List<StylePatch>
     ): List<Span> {
         var result = base.toMutableList()
-        patches.forEach { patch ->
+        for (patch in patches) {
             val start = if (patch.startLine < line) 0 else patch.startColumn
             val end = if (patch.endLine > line) lineLength else patch.endColumn
-            if (start >= end) return@forEach
+            if (start >= end) continue
             val next = mutableListOf<Span>()
             result.forEachIndexed { index, span ->
                 val spanStart = span.column
@@ -268,25 +247,6 @@ class StylePatchManager(
         return result
     }
 
-    private fun hasOverlappingPatches(patches: List<StylePatch>, line: Int, lineLength: Int): Boolean {
-        var previousEnd = -1
-        patches.forEach { patch ->
-            val start = patchStart(patch, line)
-            val end = patchEnd(patch, line, lineLength)
-            if (start < end) {
-                if (start < previousEnd) return true
-                previousEnd = end
-            }
-        }
-        return false
-    }
-
-    private fun patchStart(patch: StylePatch, line: Int): Int =
-        if (patch.startLine < line) 0 else patch.startColumn
-
-    private fun patchEnd(patch: StylePatch, line: Int, lineLength: Int): Int =
-        if (patch.endLine > line) lineLength else patch.endColumn
-
     private fun copyAt(span: Span, column: Int): Span = span.copy().also { it.column = column }
 
     private fun applyPatch(span: Span, patch: StylePatch): Span {
@@ -295,8 +255,7 @@ class StylePatchManager(
             style = if (it) style or TextStyle.BOLD_BIT else style and TextStyle.BOLD_BIT.inv()
         }
         patch.overrideItalics?.let {
-            style =
-                if (it) style or TextStyle.ITALICS_BIT else style and TextStyle.ITALICS_BIT.inv()
+            style = if (it) style or TextStyle.ITALICS_BIT else style and TextStyle.ITALICS_BIT.inv()
         }
         span.style = style
         if (patch.overrideForeground != null || patch.overrideBackground != null) {
@@ -313,8 +272,6 @@ class StylePatchManager(
     private fun replace(provider: StylePatchProvider, patches: SparseStylePatches) {
         val currentMerged = mutableMerged()
         snapshots.remove(provider)?.let { currentMerged.removePatches(it.getPatches()) }
-        // VS Code-like set semantics replace one provider's snapshot. Removing the old snapshot
-        // and linearly merging the ordered incoming list avoids rebuilding every provider.
         val incoming = patches.getPatches()
         if (incoming.isEmpty()) {
             snapshots.remove(provider)
@@ -322,7 +279,7 @@ class StylePatchManager(
             snapshots[provider] = patches
             currentMerged.addPatches(incoming)
         }
-        clearMergedIfEmpty()
+        clearMerged()
     }
 
     private fun mutableMerged(): SparseStylePatches {
@@ -330,7 +287,7 @@ class StylePatchManager(
         return merged
     }
 
-    private fun clearMergedIfEmpty() {
+    private fun clearMerged() {
         if (merged.getPatches().isEmpty()) merged = SparseStylePatches.EMPTY
     }
 }

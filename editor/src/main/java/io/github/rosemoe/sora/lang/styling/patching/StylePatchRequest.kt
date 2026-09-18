@@ -9,9 +9,7 @@ package io.github.rosemoe.sora.lang.styling.patching
 class StylePatchRequest(
     val visibleStartLine: Int,
     val visibleEndLine: Int,
-    /** First changed line, or -1 when no text range was supplied. */
     val changedStartLine: Int,
-    /** Last changed line, or -1 when no text range was supplied. */
     val changedEndLine: Int,
     val reason: Reason
 ) {

@@ -73,7 +73,6 @@ internal value class Position private constructor(private val packed: Long) : Co
     constructor(line: Int, column: Int) : this(IntPair.pack(line, column))
 
     val line: Int get() = IntPair.getFirst(packed)
-
     val column: Int get() = IntPair.getSecond(packed)
 
     override fun compareTo(other: Position) = packed.compareTo(other.packed)
