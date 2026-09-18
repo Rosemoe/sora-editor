@@ -10,8 +10,10 @@ import io.github.rosemoe.sora.widget.CodeEditor
 
 /**
  * Asynchronously provides decorations for an editor. [StylePatchRequest] carries the current
- * visible line range; results replace the whole snapshot with [Receiver.set] or only the patches
- * intersecting a range with [Receiver.update].
+ * visible line range and is a query notification. Providers should keep their own cache and
+ * avoid recomputing unchanged decorations when the viewport moves. [StylePatchRequest.changedRange]
+ * is an empty range unless the reason is [StylePatchRequest.Reason.TEXT_CHANGED]. Results replace
+ * the provider snapshot with [Receiver.set], or update only a changed range with [Receiver.update].
  */
 fun interface StylePatchProvider {
 

@@ -43,7 +43,7 @@ class StylePatchManager(
             }
             hasVisibleRange = true
         }
-        request(provider, StylePatchRequest.Reason.INITIAL, -1, -1)
+        request(provider, StylePatchRequest.Reason.INITIAL, EmptyStyleUpdateRange)
     }
 
     @Synchronized
@@ -61,7 +61,7 @@ class StylePatchManager(
 
     @Synchronized
     fun refresh(provider: StylePatchProvider) {
-        request(provider, StylePatchRequest.Reason.MANUAL, -1, -1)
+        request(provider, StylePatchRequest.Reason.MANUAL, EmptyStyleUpdateRange)
     }
 
     @Synchronized
@@ -72,23 +72,25 @@ class StylePatchManager(
         visibleStartLine = start
         visibleEndLine = end
         hasVisibleRange = true
+        // This is a query notification, not an instruction to discard or recompute a provider's
+        // cache. Providers own their cache and may answer from it immediately, or start an async
+        // computation for the newly visible range. This mirrors VS Code's provider/event split.
         // Providers may register or unregister from inside the callback.
         for (provider in providers.toList()) {
-            request(provider, StylePatchRequest.Reason.VISIBLE_RANGE_CHANGED, -1, -1)
+            request(provider, StylePatchRequest.Reason.VISIBLE_RANGE_CHANGED, EmptyStyleUpdateRange)
         }
     }
 
     private fun request(
         provider: StylePatchProvider,
         reason: StylePatchRequest.Reason,
-        changedStartLine: Int,
-        changedEndLine: Int
+        changedRange: StyleUpdateRange
     ) {
         if (!providers.contains(provider)) return
         val version = ++versionCounter
         versions[provider] = version
         val request = StylePatchRequest(
-            visibleStartLine, visibleEndLine, changedStartLine, changedEndLine, reason
+            visibleStartLine, visibleEndLine, changedRange, reason
         )
         provider.provideStylePatches(editor, request, object : StylePatchProvider.Receiver {
             override fun set(patches: SparseStylePatches) {
@@ -159,7 +161,11 @@ class StylePatchManager(
     private fun refreshAfterTextChange(startLine: Int, endLine: Int) {
         onUpdate.accept(merged, SequenceUpdateRange(startLine, maxOf(endLine, visibleEndLine)))
         for (provider in providers.toList()) {
-            request(provider, StylePatchRequest.Reason.TEXT_CHANGED, startLine, endLine)
+            request(
+                provider,
+                StylePatchRequest.Reason.TEXT_CHANGED,
+                SequenceUpdateRange(startLine, endLine)
+            )
         }
     }
 
