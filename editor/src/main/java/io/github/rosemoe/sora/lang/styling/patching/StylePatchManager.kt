@@ -8,6 +8,7 @@ package io.github.rosemoe.sora.lang.styling.patching
 import io.github.rosemoe.sora.lang.analysis.SequenceUpdateRange
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange
 import io.github.rosemoe.sora.lang.styling.Span
+import io.github.rosemoe.sora.lang.styling.SpanFactory
 import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.lang.styling.span.SpanColorResolver
 import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs
@@ -265,7 +266,18 @@ class StylePatchManager(
         }
         span.style = style
         if (patch.overrideForeground != null || patch.overrideBackground != null) {
-            span.setSpanExt(SpanExtAttrs.EXT_COLOR_RESOLVER, PatchColorResolver(patch))
+            val resolver = PatchColorResolver(patch)
+            try {
+                span.setSpanExt(SpanExtAttrs.EXT_COLOR_RESOLVER, resolver)
+            } catch (_: UnsupportedOperationException) {
+                // Some language spans are deliberately compact and do not implement SpanExt.
+                // Replace them with a full span before applying a style patch instead of letting
+                // rendering crash in NoExtSpanImpl.setSpanExt.
+                val replacement = SpanFactory.obtain(span.column, span.style)
+                replacement.extra = span.extra
+                replacement.setSpanExt(SpanExtAttrs.EXT_COLOR_RESOLVER, resolver)
+                return replacement
+            }
         }
         return span
     }
