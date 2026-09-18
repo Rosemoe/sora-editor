@@ -595,6 +595,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         renderContext = new RenderContext(this);
         renderer = onCreateRenderer();
         stylePatchManager = new StylePatchManager(this, this::updateStylePatches);
+        subscribeAlways(ScrollEvent.class, event -> postInLifecycle(
+                () -> stylePatchManager.updateVisibleRange(getFirstVisibleLine(), getLastVisibleLine())));
 
         styleDelegate = new EditorStyleDelegate(this);
 
@@ -4326,12 +4328,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     @UiThread
     public void setStylePatches(@Nullable SparseStylePatches patches) {
-        stylePatchManager.setPatches(patches);
+        stylePatchManager.setPatches(patches == null ? SparseStylePatches.EMPTY : patches);
         renderer.updateTimestamp();
         invalidate();
     }
 
-    @Nullable
+    @NonNull
     public SparseStylePatches getStylePatches() {
         return stylePatchManager.getPatches();
     }
@@ -4353,14 +4355,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return stylePatchManager.getProviders();
     }
 
-    private void updateStylePatches(@Nullable SparseStylePatches patches, @Nullable StyleUpdateRange range) {
-        if (range == null) {
-            renderer.updateTimestamp();
-            renderContext.invalidateRenderNodes();
-        } else {
-            renderContext.updateForRange(range);
-            renderer.updateTimestamp();
-        }
+    private void updateStylePatches(@NonNull SparseStylePatches patches, @NonNull StyleUpdateRange range) {
+        renderContext.updateForRange(range);
+        renderer.updateTimestamp();
         invalidate();
     }
     @UiThread
@@ -5263,6 +5260,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     protected void onSizeChanged(int w, int h, int oldWidth, int oldHeight) {
         super.onSizeChanged(w, h, oldWidth, oldHeight);
         renderer.onSizeChanged(w, h);
+        if (stylePatchManager != null) {
+            stylePatchManager.updateVisibleRange(getFirstVisibleLine(), getLastVisibleLine());
+        }
         getVerticalEdgeEffect().setSize(w, h);
         getHorizontalEdgeEffect().setSize(h, w);
         getVerticalEdgeEffect().finish();

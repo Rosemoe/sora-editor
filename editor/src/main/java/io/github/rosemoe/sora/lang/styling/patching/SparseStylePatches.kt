@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.lang.styling.patching
 
+import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange
 import java.lang.IllegalStateException
 import java.lang.UnsupportedOperationException
 import java.util.Collections
@@ -51,11 +52,18 @@ import java.util.Collections
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
  ******************************************************************************/
-class SparseStylePatches {
+class SparseStylePatches private constructor(initiallyImmutable: Boolean) {
+
+    constructor() : this(false)
+
+    companion object {
+        @JvmField
+        val EMPTY = SparseStylePatches(true)
+    }
 
     private val patches = mutableListOf<StylePatch>()
 
-    private var immutable = false
+    private var immutable = initiallyImmutable
 
     private fun getInsertionPoint(patch: StylePatch): Int {
         val result = patches.binarySearch(patch)
@@ -86,7 +94,38 @@ class SparseStylePatches {
 
     fun getPatchesOnLine(line: Int): List<StylePatch> {
         if (patches.isEmpty()) return emptyList()
-        return patches.filter { it.startLine <= line && line <= it.endLine }
+        val result = mutableListOf<StylePatch>()
+        var index = 0
+        while (index < patches.size) {
+            val patch = patches[index]
+            if (patch.startLine > line) break
+            if (patch.endLine >= line) result.add(patch)
+            index++
+        }
+        return result
+    }
+
+    /** Remove patches intersecting [range], preserving the ordered storage. */
+    fun removeInRange(range: StyleUpdateRange): List<StylePatch> {
+        if (immutable) throw IllegalStateException("the patch list is already set immutable")
+        val removed = mutableListOf<StylePatch>()
+        val iterator = patches.iterator()
+        while (iterator.hasNext()) {
+            val patch = iterator.next()
+            val lines = range.lineIndexIterator(patch.endLine)
+            var intersects = false
+            while (lines.hasNext()) {
+                if (lines.nextInt() >= patch.startLine) {
+                    intersects = true
+                    break
+                }
+            }
+            if (intersects) {
+                iterator.remove()
+                removed.add(patch)
+            }
+        }
+        return removed
     }
 
     fun setImmutable() {
