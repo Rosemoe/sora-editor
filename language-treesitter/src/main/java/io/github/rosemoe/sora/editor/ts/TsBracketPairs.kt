@@ -36,10 +36,21 @@ import io.github.rosemoe.sora.text.Content
  *
  * @author Rosemoe
  */
-class TsBracketPairs(
+class TsBracketPairs @JvmOverloads constructor(
     private val safeTree: SafeTsTree,
-    private val languageSpec: TsLanguageSpec
+    private val languageSpec: TsLanguageSpec,
+    private val documentVersion: Long = -1
 ) : CachedBracketsProvider() {
+
+    override fun isReadyFor(text: Content): Boolean =
+        (documentVersion == -1L || documentVersion == text.documentVersion) &&
+            safeTree.accessTree { !it.closed }
+
+    override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? =
+        if (isReadyFor(text)) super.getPairedBracketAt(text, index) else null
+
+    override fun queryPairedBracketsForRange(text: Content, leftRange: Long, rightRange: Long): List<PairedBracket>? =
+        if (isReadyFor(text)) super.queryPairedBracketsForRange(text, leftRange, rightRange) else null
 
     companion object {
         const val OPEN_NAME = "editor.brackets.open"
