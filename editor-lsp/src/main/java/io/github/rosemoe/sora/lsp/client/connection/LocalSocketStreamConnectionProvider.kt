@@ -38,28 +38,27 @@ import java.io.OutputStream
 class LocalSocketStreamConnectionProvider(
     private val name: String
 ) : StreamConnectionProvider {
-    private lateinit var socket: LocalSocket
+    private var socket: LocalSocket? = null
 
     @Throws(IOException::class)
     override fun start() {
-        socket = LocalSocket()
-        socket.connect(LocalSocketAddress(name,LocalSocketAddress.Namespace.ABSTRACT))
+        socket?.let { runCatching { it.close() } }
+        socket = LocalSocket().also {
+            it.connect(LocalSocketAddress(name, LocalSocketAddress.Namespace.ABSTRACT))
+        }
     }
 
     override val inputStream: InputStream
-        get() = socket.getInputStream()
+        get() = requireNotNull(socket).inputStream
 
     override val outputStream: OutputStream
-        get() = socket.getOutputStream()
+        get() = requireNotNull(socket).outputStream
 
     override val isClosed: Boolean
-        get() = !::socket.isInitialized || socket.isClosed
+        get() = socket?.isClosed != false
 
     override fun close() {
-        try {
-            socket.shutdownOutput()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        socket?.let { runCatching { it.close() } }
+        socket = null
     }
 }

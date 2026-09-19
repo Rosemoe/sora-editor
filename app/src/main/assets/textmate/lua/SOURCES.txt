@@ -1,0 +1,9 @@
+Lua TextMate grammar:
+https://github.com/LuaLS/lua.tmbundle/blob/b295d83bf0e91b5d3a69eb097f9ed351623b95be/lua.tmLanguage.json
+License: LICENSE (MIT)
+
+Lua language configuration:
+https://github.com/microsoft/vscode/blob/d3c24c3c4d7efab36b37acb1e91d9502c0c35b28/extensions/lua/language-configuration.json
+License: LICENSE.vscode.txt (MIT)
+
+Files downloaded unchanged from the revisions above.
