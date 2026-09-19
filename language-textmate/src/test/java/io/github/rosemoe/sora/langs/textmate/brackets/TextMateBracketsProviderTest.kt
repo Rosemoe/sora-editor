@@ -23,549 +23,228 @@
  */
 package io.github.rosemoe.sora.langs.textmate.brackets
 
-import android.os.Bundle
-import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
-import io.github.rosemoe.sora.lang.analysis.StyleReceiver
-import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange
-import io.github.rosemoe.sora.lang.brackets.BracketsProvider
-import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
-import io.github.rosemoe.sora.lang.styling.Styles
-import io.github.rosemoe.sora.langs.textmate.TextMateLanguage
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.ASTNode
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.BracketAST
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.BracketPairAST
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.InvalidBracketAST
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.ListAST
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.TextAST
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.TwoThreeListAST
-import io.github.rosemoe.sora.langs.textmate.registry.FileProviderRegistry
-import io.github.rosemoe.sora.langs.textmate.registry.GrammarRegistry
-import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry
-import io.github.rosemoe.sora.langs.textmate.registry.dsl.languages
-import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
-import io.github.rosemoe.sora.langs.textmate.registry.provider.FileResolver
-import io.github.rosemoe.sora.text.CharPosition
+import io.github.rosemoe.sora.lang.styling.MappedSpans
+import io.github.rosemoe.sora.lang.styling.SpanFactory
+import io.github.rosemoe.sora.lang.styling.Spans
 import io.github.rosemoe.sora.text.Content
-import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.util.IntPair
-import org.eclipse.tm4e.core.registry.IThemeSource
-import org.junit.Before
+import org.eclipse.tm4e.core.internal.grammar.tokenattrs.StandardTokenType
+import org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.io.InputStream
-import java.io.Reader
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
-/**
- * Test for TextMateBracketsProvider using real TextMate style parsing.
- * Uses proper AnalyzeManager/StyleReceiver mechanism.
- */
 @RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE)
 class TextMateBracketsProviderTest {
-
-    private lateinit var content: Content
-    private lateinit var language: TextMateLanguage
-    private lateinit var analyzer: AnalyzeManager
-    private lateinit var bracketsProvider: TextMateBracketsProvider
-    private lateinit var testReceiver: TestStyleReceiver
-
-    @Before
-    fun setup() {
-        // Initialize FileProviderRegistry with test file resolver
-        FileProviderRegistry.getInstance().addFileProvider(TestFileResolver())
-
-        // Initialize registries
-        val grammarRegistry = GrammarRegistry.getInstance()
-        val themeRegistry = ThemeRegistry.getInstance()
-
-        // Register Java language
-        grammarRegistry.loadGrammars(
-            languages {
-                language("java") {
-                    grammar = "java.tmLanguage.json"
-                    defaultScopeName()
-                    languageConfiguration = "java-language-configuration.json"
-                }
-            }
-        )
-
-
-        // Load Darcula theme
-        val themeSource = object : IThemeSource {
-            private fun getInputStream() = getResourceStream("darcula.json")
-            override fun getFilePath() = "darcula.json"
-            override fun getReader(): Reader = getInputStream().bufferedReader()
+    private val config = configuration("""{"brackets":[["(",")"],["[","]"],["{","}"]]}""")
+    private fun configuration(json: String) = LanguageConfiguration.load(json.reader())!!
+    private fun spans(text: Content): Spans = MappedSpans.Builder().apply {
+        for (line in 0 until text.lineCount) add(line, SpanFactory.obtainNoExt(0, 0))
+    }.build()
+    private fun parse(text: Content, old: BracketNode? = null, edit: BracketEdit? = null,
+        configuration: LanguageConfiguration = config, styles: Spans = spans(text)): BracketNode =
+        BracketTokenizer(text, styles, BracketTokens(configuration)).use { BracketParser(it, old, edit).parse() }
+    private fun BracketNode.all() = query(TextOffset.ZERO, TextOffset.MAX)
+    private fun TextOffset.toPacked() = IntPair.pack(line, column)
+    private fun end(text: Content) = TextOffset.of(text.lineCount - 1, text.getColumnCount(text.lineCount - 1))
+    private fun at(text: Content, offset: Int): TextOffset {
+        val pos = text.indexer.getCharPosition(offset)
+        return TextOffset.of(pos.line, pos.column.coerceAtMost(text.getColumnCount(pos.line)))
+    }
+    private fun assertTree(node: BracketNode) {
+        if (node is ListNode) {
+            assertTrue(node.children.size in 2..3)
+            assertTrue(node.children.all { it.height == node.height - 1 })
         }
-        themeRegistry.setTheme(ThemeModel(themeSource, "darcula"))
-
-        // Load sample code from file
-        val sampleCode =
-            javaClass.classLoader!!.getResourceAsStream("sample.txt").bufferedReader()
-                .use { it.readText() }
-
-        // Create content
-        content = Content(sampleCode)
-
-        // Create language
-        language =
-            TextMateLanguage.create("source.java", grammarRegistry, themeRegistry, false)
-
-        // Get analyzer
-        analyzer = language.analyzeManager
-
-        // Create test receiver
-        testReceiver = TestStyleReceiver()
+        if (node.children.isNotEmpty()) {
+            assertEquals(node.length, node.children.fold(TextOffset.ZERO) { offset, child -> offset + child.length })
+            node.children.forEach(::assertTree)
+        }
     }
 
-    /**
-     * Test 1: Full parse and cache bracket pairs as complete result
-     */
-    @Test
-    fun testFullParse() {
-        println("=== Test 1: Full Parse ===")
-
-        // Set receiver and trigger initial analysis
-        analyzer.setReceiver(testReceiver)
-        analyzer.reset(ContentReference(content), Bundle())
-
-        // Wait for analysis to complete
-        val completed = testReceiver.waitForStyles(30, TimeUnit.SECONDS)
-        if (!completed) {
-            throw AssertionError("Analysis timeout")
-        }
-
-        println("Analysis completed, styles received")
-
-        println("3 ${testReceiver.currentBracketsProvider}")
-        // Get bracket provider
-        bracketsProvider = testReceiver.currentBracketsProvider as TextMateBracketsProvider
-
-        // Print AST structure
-        println("\nComplete AST Tree:")
-        val ast = getActiveAST(bracketsProvider)
-        println(ASTDebugHelper.summarizeFull(ast))
-
-        // Query all bracket pairs
-        val allPairs =
-            bracketsProvider.queryPairedBracketsForRange(
-                content,
-                IntPair.pack(0, 0),
-                content.indexer.getCharPosition(content.lastIndex).toIntPair()
-            )
-        println("\nTotal bracket pairs found: ${allPairs?.size ?: 0}")
-
-        allPairs?.forEachIndexed { index, pair ->
-            println("Pair $index: left=${pair.leftIndex}:${pair.leftLength} right=${pair.rightIndex}:${pair.rightLength} level=${pair.level}")
-        }
-
-        println("\n=== Test 1 Complete ===\n")
-    }
-
-    /**
-     * Test 2: Repeatedly delete and insert '}' at line 95, test 10 times
-     */
-    @Test
-    fun testRepeatedEditLine95() {
-        println("=== Test 2: Repeated Edit at Line 95 ===")
-
-        // Initial analysis
-        analyzer.setReceiver(testReceiver)
-        analyzer.reset(ContentReference(content), Bundle())
-        testReceiver.waitForStyles(30, TimeUnit.SECONDS)
-
-        bracketsProvider = testReceiver.currentBracketsProvider as TextMateBracketsProvider
-
-        // Get initial bracket pairs as baseline
-        val initialPairs =
-            bracketsProvider.queryPairedBracketsForRange(
-                content,
-                IntPair.pack(0, 0),
-                content.indexer.getCharPosition(content.lastIndex).toIntPair()
-            )
-        println("Initial bracket pairs: ${initialPairs?.size ?: 0}")
-
-        // Repeat 10 times
-        repeat(10) { iteration ->
-            println("\n--- Iteration ${iteration + 1} ---")
-
-            // Find '}' at line 95 (line index 94)
-            val line95 = content.getLine(94)
-            val line95Text = line95.toString()
-            val braceIndex = line95Text.lastIndexOf('}')
-            if (braceIndex < 0) {
-                throw AssertionError("Cannot find '}' at line 95")
-            }
-
-            // Delete '}'
-            val deleteStart = CharPosition(94, braceIndex)
-            val deleteEnd = CharPosition(94, braceIndex + 1)
-            content.delete(
-                deleteStart.line,
-                deleteStart.column,
-                deleteEnd.line,
-                deleteEnd.column
-            )
-
-            // Notify analyzer
-            testReceiver.resetLatch()
-            analyzer.delete(deleteStart, deleteEnd, "}")
-
-            // Wait for analysis
-            testReceiver.waitForStyles(10, TimeUnit.SECONDS)
-            println("After delete: content length = ${content.length}")
-
-            // Re-insert '}'
-            val insertPos = CharPosition(94, braceIndex)
-            content.insert(insertPos.line, insertPos.column, "}")
-
-            // Notify analyzer
-            testReceiver.resetLatch()
-            analyzer.insert(insertPos, CharPosition(94, braceIndex + 1), "}")
-
-            // Wait for analysis
-            testReceiver.waitForStyles(10, TimeUnit.SECONDS)
-            println("After insert: content length = ${content.length}")
-
-            // Verify bracket pairs match initial state
-            val currentPairs =
-                bracketsProvider.queryPairedBracketsForRange(
-                    content,
-                    IntPair.pack(0, 0),
-                    content.indexer.getCharPosition(content.lastIndex).toIntPair()
+    @Test fun resultsMatchActualVSCodeParser() {
+        val json = javaClass.classLoader!!.getResourceAsStream("vscode-bracket-oracle.json")!!
+            .bufferedReader().use { com.google.gson.JsonParser.parseReader(it).asJsonArray }
+        for (case in json) {
+            val source = case.asJsonObject.get("text").asString
+            val expected = case.asJsonObject.getAsJsonArray("pairs").map { row ->
+                val values = row.asJsonArray
+                BracketPair(position(values[0].asInt, values[1].asInt), values[2].asInt,
+                    position(values[3].asInt, values[4].asInt), values[5].asInt,
+                    values[6].asInt, values[7].asInt, values[8].asBoolean,
+                    // Invalid closers are not colorized; incomplete openers retain their pair flag.
+                    !values[8].asBoolean || source.lineSequence().elementAt(values[0].asInt)[values[1].asInt] in "([{"
                 )
-            val matches = (currentPairs?.size == initialPairs?.size)
-            assert(currentPairs != initialPairs) {
-                buildString {
-                    appendLine("Bracket pairs match initial: $matches (current=${currentPairs?.size}, initial=${initialPairs?.size})")
-
-                    appendLine("WARNING: Bracket pair count mismatch!")
-                    appendLine("Current AST:")
-                    appendLine(ASTDebugHelper.summarizeFull(getActiveAST(bracketsProvider)))
-                }
             }
+            assertEquals(source, expected, parse(Content(source)).all())
         }
-
-        println("\n=== Test 2 Complete ===\n")
     }
 
-    /**
-     * Test 3: Delete '}' at line 95, insert newlines/spaces, then re-insert '}'
-     * Tests error recovery and bracket level correctness
-     */
-    @Test
-    fun testErrorRecoveryLine95() {
-        println("=== Test 3: Error Recovery at Line 95 ===")
+    @Test fun nestingAndSameTypeDepthAreIndependent() {
+        val pairs = parse(Content("{[({})]} trailing")).all()
+        assertEquals(listOf(0, 1, 2, 3), pairs.map { it.level })
+        assertEquals(listOf(0, 0, 0, 1), pairs.map { it.levelOfEqualBracketType })
+        assertTrue(pairs.none { it.invalid })
+        assertEquals(TextOffset.of(0, 17), parse(Content("{[({})]} trailing")).length)
+    }
 
-        // Initial analysis
-        analyzer.setReceiver(testReceiver)
-        analyzer.reset(ContentReference(content), Bundle())
-        testReceiver.waitForStyles(30, TimeUnit.SECONDS)
+    @Test fun malformedPairsRecoverAtAncestorCloser() {
+        val pairs = parse(Content("{(}{}")).all()
+        assertEquals(listOf(0, 1, 3), pairs.map { it.start.column })
+        assertEquals(listOf(false, true, false), pairs.map { it.invalid })
+        assertEquals(listOf(0, 1, 0), pairs.map { it.level })
+        val old = parse(Content("(})"))
+        val updated = parse(Content("{(})"), old, BracketEdit(TextOffset.ZERO, TextOffset.ZERO, TextOffset.of(0, 1)))
+        assertEquals(parse(Content("{(})")).all(), updated.all())
+        assertEquals(listOf(false, true, true), updated.all().map { it.invalid })
+    }
 
-        bracketsProvider = testReceiver.currentBracketsProvider as TextMateBracketsProvider
-
-        val initialPairs =
-            bracketsProvider.queryPairedBracketsForRange(
-                content,
-                0,
-                content.length.toLong()
-            )
-        println("Initial bracket pairs: ${initialPairs?.size ?: 0}")
-        println("Initial AST:")
-        println(ASTDebugHelper.summarizeDetailed(getActiveAST(bracketsProvider)))
-
-        // Find and delete '}' at line 95
-        val line95 = content.getLine(94)
-        val line95Text = line95.toString()
-        val braceIndex = line95Text.lastIndexOf('}')
-
-        val deleteStart = CharPosition(94, braceIndex)
-        val deleteEnd = CharPosition(94, braceIndex + 1)
-        content.delete(
-            deleteStart.line,
-            deleteStart.column,
-            deleteEnd.line,
-            deleteEnd.column
-        )
-
-        testReceiver.resetLatch()
-        analyzer.delete(deleteStart, deleteEnd, "}")
-        testReceiver.waitForStyles(10, TimeUnit.SECONDS)
-
-        println("\nAfter deleting '}' at line 95:")
-        val afterDeletePairs =
-            bracketsProvider.queryPairedBracketsForRange(
-                content,
-                IntPair.pack(0, 0),
-                content.indexer.getCharPosition(content.lastIndex).toIntPair()
-            )
-        println("Bracket pairs: ${afterDeletePairs?.size ?: 0}")
-        println("AST after delete:")
-        println(ASTDebugHelper.summarizeDetailed(getActiveAST(bracketsProvider)))
-
-        // Insert newlines and spaces, one at a time (each insertion is a newline + spaces)
-        val insertions = listOf("\n    ", "\n    ", "\n    ", "\n    ")
-        var currentLine = 94
-        var currentCol = braceIndex
-
-        insertions.forEachIndexed { index, text ->
-            println("\n--- Insertion ${index + 1}: \"${text.replace("\n", "\\n")}\" ---")
-
-            val insertStart = CharPosition(currentLine, currentCol)
-            content.insert(currentLine, currentCol, text)
-
-            // Calculate end position after insertion
-            val newlineCount = text.count { it == '\n' }
-            val insertEnd = if (newlineCount > 0) {
-                val lastLineLength = text.length - text.lastIndexOf('\n') - 1
-                CharPosition(currentLine + newlineCount, lastLineLength)
+    @Test fun randomizedEditsMatchFullParseAndLeaveOldSnapshotsUntouched() {
+        val random = Random(748891)
+        val text = Content("{\n[()] text\r\n}\n".repeat(40))
+        var root = parse(text)
+        repeat(500) { iteration ->
+            val previous = root.all()
+            val previousRoot = root
+            val offset = random.nextInt(text.length + 1)
+            val start = at(text, offset)
+            // Content positions normalize CRLF's internal offset, so edit by line/column.
+            val oldEnd: TextOffset
+            val newEnd: TextOffset
+            if (random.nextBoolean() && offset < text.length) {
+                oldEnd = at(text, minOf(text.length, offset + random.nextInt(1, 15)))
+                text.delete(start.line, start.column, oldEnd.line, oldEnd.column)
+                newEnd = start
             } else {
-                CharPosition(currentLine, currentCol + text.length)
+                oldEnd = start
+                val inserted = listOf("(", ")", "[", "]", "{", "}", "abc", "\n", "\r\n", "([)]")[random.nextInt(10)]
+                val startIndex = text.getCharIndex(start.line, start.column)
+                text.insert(start.line, start.column, inserted)
+                newEnd = at(text, startIndex + inserted.length)
             }
-
-            testReceiver.resetLatch()
-            analyzer.insert(insertStart, insertEnd, text)
-            testReceiver.waitForStyles(10, TimeUnit.SECONDS)
-
-            // Update position for next insertion
-            currentLine = insertEnd.line
-            currentCol = insertEnd.column
-
-            val pairs =
-                bracketsProvider.queryPairedBracketsForRange(
-                    content,
-                    IntPair.pack(0, 0),
-                    content.indexer.getCharPosition(content.lastIndex).toIntPair()
-                )
-            println("Bracket pairs: ${pairs?.size ?: 0}")
-            println("Bracket levels are ${if (checkBracketLevelsValid(pairs)) "valid" else "INVALID"}")
+            root = parse(text, root, BracketEdit(start, oldEnd, newEnd))
+            assertEquals("edit $iteration", parse(text).all(), root.all())
+            assertEquals(end(text), root.length)
+            assertEquals(previous, previousRoot.all())
+            assertTree(root)
         }
+    }
 
-        // Re-insert '}' at current position
-        println("\n--- Re-inserting '}' ---")
-        val reinsertStart = CharPosition(currentLine, currentCol)
-        content.insert(currentLine, currentCol, "}")
-
-        testReceiver.resetLatch()
-        analyzer.insert(reinsertStart, CharPosition(currentLine, currentCol + 1), "}")
-        testReceiver.waitForStyles(10, TimeUnit.SECONDS)
-
-        println("After re-inserting '}':")
-        val finalPairs =
-            bracketsProvider.queryPairedBracketsForRange(
-                content,
-                IntPair.pack(0, 0),
-                content.indexer.getCharPosition(content.lastIndex).toIntPair()
-            )
-        println("Bracket pairs: ${finalPairs?.size ?: 0}")
-
-        assert(checkBracketLevelsValid(finalPairs)) {
-            buildString {
-                appendLine("Bracket levels are ${if (checkBracketLevelsValid(finalPairs)) "valid" else "INVALID"}")
-                appendLine("Final AST:")
-                appendLine(ASTDebugHelper.summarizeDetailed(getActiveAST(bracketsProvider)))
+    @Test fun localEditSkipsLargeUnchangedSubtreesAndTrailingText() {
+        for (source in listOf("{} ".repeat(100_000), "x".repeat(300_000))) {
+            val text = Content(source)
+            val old = parse(text)
+            val start = TextOffset.of(0, 150_001)
+            text.insert(0, start.column, "x")
+            BracketTokenizer(text, spans(text), BracketTokens(config)).use { tokenizer ->
+                val parser = BracketParser(tokenizer, old, BracketEdit(start, start, TextOffset.of(0, start.column + 1)))
+                val updated = parser.parse()
+                assertEquals(parse(text).all(), updated.all())
+                assertTrue("scanned ${tokenizer.scannedCharacters}", tokenizer.scannedCharacters < 2048)
+                assertTrue(parser.reusedNodes in 1..100)
+                assertTree(updated)
             }
         }
-
-        println("Bracket levels are ${if (checkBracketLevelsValid(finalPairs)) "valid" else "INVALID"}")
-        println("Final AST:")
-        println(ASTDebugHelper.summarizeDetailed(getActiveAST(bracketsProvider)))
-
-        println("\n=== Test 3 Complete ===\n")
     }
 
-    /**
-     * Check if bracket levels are valid
-     */
-    private fun checkBracketLevelsValid(pairs: List<io.github.rosemoe.sora.lang.brackets.PairedBracket>?): Boolean {
-        if (pairs.isNullOrEmpty()) return true
-        val levelGroups = pairs.groupBy { it.level }
-        return levelGroups.all { (level, brackets) ->
-            brackets.all { it.level == level }
-        }
+    @Test fun movingSubtreeAcrossNestingLimitMatchesFreshParse() {
+        val text = Content("(".repeat(151) + ")".repeat(151))
+        val root = parse(text)
+        text.insert(0, 0, "(")
+        val updated = parse(text, root, BracketEdit(TextOffset.ZERO, TextOffset.ZERO, TextOffset.of(0, 1)))
+        assertEquals(parse(text).all(), updated.all())
+        assertTree(updated)
     }
 
-    /**
-     * Get active AST using reflection
-     */
-    private fun getActiveAST(provider: TextMateBracketsProvider): ASTNode? {
-        return try {
-            val field = provider.javaClass.getDeclaredField("astManager")
-            field.isAccessible = true
-            val astManager = field.get(provider)
-            val getActiveASTMethod = astManager.javaClass.getDeclaredMethod("getActiveAST")
-            getActiveASTMethod.invoke(astManager) as? ASTNode
-        } catch (e: Exception) {
-            println("Failed to get active AST: ${e.message}")
-            null
-        }
+    @Test fun wordBracketsRespectBoundariesAndTokenSegments() {
+        val configuration = configuration("""{"brackets":[["begin","end"],["if","end"]]}""")
+        val text = Content("BEGIN if end END ending beginner")
+        assertEquals(2, parse(text, configuration = configuration).all().count { !it.invalid })
+        val old = parse(Content("begin end"), configuration = configuration)
+        assertEquals(parse(Content("begin ending"), configuration = configuration).all(),
+            parse(Content("begin ending"), old, BracketEdit(TextOffset.of(0, 9), TextOffset.of(0, 9), TextOffset.of(0, 12)), configuration).all())
+        val styles = MappedSpans.Builder().apply {
+            add(0, SpanFactory.obtainNoExt(0, 0))
+            add(0, SpanFactory.obtainNoExt(3, 0).apply { extra = StandardTokenType.Comment })
+        }.build()
+        assertTrue(parse(Content("begin end"), configuration = configuration, styles = styles).all().isEmpty())
     }
 
-    /**
-     * Get resource stream from test resources
-     */
-    private fun getResourceStream(name: String): InputStream {
-        return javaClass.classLoader!!.getResourceAsStream(name)
-            ?: throw IllegalStateException("Resource $name not found")
+    @Test fun explicitEmptyColorsKeepMatchingButDisableColorization() {
+        val configuration = configuration("""{"brackets":[["(",")"]],"colorizedBracketPairs":[]}""")
+        val text = Content("()")
+        val provider = TextMateBracketsProvider(text, spans(text), configuration)
+        provider.initialize(text.documentVersion)
+        assertNotNull(provider.getPairedBracketAt(text, 0))
+        assertTrue(provider.queryPairedBracketsForRange(text, 0, end(text).toPacked()).isEmpty())
     }
 
-    /**
-     * Test StyleReceiver implementation
-     */
-    private class TestStyleReceiver : StyleReceiver {
-        private var latch = CountDownLatch(1)
-        var currentStyles: Styles? = null
-        var currentBracketsProvider: BracketsProvider? = null
-
-        override fun setStyles(sourceManager: AnalyzeManager, styles: Styles?) {
-            currentStyles = styles
-            if (currentBracketsProvider != null) {
-                latch.countDown()
-            }
-        }
-
-        override fun setStyles(
-            sourceManager: AnalyzeManager,
-            styles: Styles?,
-            action: Runnable?
-        ) {
-            action?.run()
-            setStyles(sourceManager, styles)
-        }
-
-        override fun updateStyles(
-            sourceManager: AnalyzeManager,
-            styles: Styles,
-            range: StyleUpdateRange
-        ) {
-            currentStyles = styles
-            if (currentBracketsProvider != null) {
-                latch.countDown()
-            }
-        }
-
-        override fun setDiagnostics(
-            sourceManager: AnalyzeManager,
-            diagnostics: DiagnosticsContainer?
-        ) {
-            // Not used in this test
-        }
-
-        override fun updateBracketProvider(
-            sourceManager: AnalyzeManager,
-            provider: BracketsProvider?
-        ) {
-            val last = currentBracketsProvider
-            currentBracketsProvider = provider
-            println("2 $provider")
-            if (last == null && provider != null) {
-                latch.countDown()
-            }
-        }
-
-        fun waitForStyles(timeout: Long, unit: TimeUnit): Boolean {
-            return latch.await(timeout, unit)
-        }
-
-        fun resetLatch() {
-            latch = CountDownLatch(1)
-        }
+    @Test fun rangeQueriesDoNotReusePartialCursorResults() {
+        val text = Content("{[()]}")
+        val provider = TextMateBracketsProvider(text, spans(text), config)
+        provider.initialize(text.documentVersion)
+        assertNotNull(provider.getPairedBracketAt(text, 3))
+        assertEquals(3, provider.queryPairedBracketsForRange(text, 0, end(text).toPacked()).size)
+        val closing = provider.queryPairedBracketsForRange(text, TextOffset.of(0, 5).toPacked(), TextOffset.of(0, 6).toPacked())
+        assertTrue(closing.any { it.leftIndex == 0 && it.rightIndex == 5 })
     }
 
-    /**
-     * Test file resolver for loading test resources
-     */
-    private class TestFileResolver : FileResolver {
-
-        override fun resolveStreamByPath(path: String?): InputStream? {
-            return this.javaClass.classLoader.getResourceAsStream("$path")
-        }
-    }
-}
-
-/**
- * Helper object for AST debugging
- */
-object ASTDebugHelper {
-    private const val DEFAULT_MAX_DEPTH = 3
-    private const val DEFAULT_CHILD_SAMPLE = 4
-    private const val DETAILED_MAX_DEPTH = 8
-    private const val DETAILED_CHILD_SAMPLE = 10
-
-    fun summarize(
-        node: ASTNode?,
-        maxDepth: Int = DEFAULT_MAX_DEPTH,
-        childSample: Int = DEFAULT_CHILD_SAMPLE
-    ): String {
-        if (node == null) {
-            return "<null>"
-        }
-        val builder = StringBuilder()
-        appendNode(node, builder, 0, maxDepth, childSample)
-        return builder.toString()
+    @Test fun tokenOnlyUpdateInvalidatesBracketsAndRestoresThem() {
+        val text = Content("{}\n[()]\n{}")
+        val styles = spans(text)
+        val provider = TextMateBracketsProvider(text, styles, config)
+        provider.initialize(text.documentVersion)
+        styles.modify().setSpansOnLine(1, listOf(SpanFactory.obtainNoExt(0, 0).apply { extra = StandardTokenType.Comment }))
+        provider.updateSpans(1, 1, text.documentVersion)
+        assertEquals(parse(text, styles = styles).all(), provider.root!!.all())
+        assertEquals(2, provider.queryPairedBracketsForRange(text, 0, end(text).toPacked()).size)
+        styles.modify().setSpansOnLine(1, listOf(SpanFactory.obtainNoExt(0, 0)))
+        provider.updateSpans(1, 1, text.documentVersion)
+        assertEquals(4, provider.queryPairedBracketsForRange(text, 0, end(text).toPacked()).size)
     }
 
-    fun summarizeDetailed(node: ASTNode?): String {
-        return summarize(node, DETAILED_MAX_DEPTH, DETAILED_CHILD_SAMPLE)
+    @Test fun unpublishedRevisionIsNeverQueriedEvenForSameLengthEdits() {
+        val text = Content("{}()")
+        val shadow = text.copyText(false)
+        val provider = TextMateBracketsProvider(shadow, spans(shadow), config)
+        provider.initialize(text.documentVersion)
+        text.delete(0, 1)
+        assertNull(provider.getPairedBracketAt(text, 0))
+        shadow.delete(0, 1)
+        provider.update(0, 1, 0, text.documentVersion)
+        provider.updateSpans(0, 0, text.documentVersion)
+        assertNotNull(provider.getPairedBracketAt(text, 1))
+        text.insert(0, 0, "[")
+        assertTrue(provider.queryPairedBracketsForRange(text, 0, end(text).toPacked()).isEmpty())
+    }
+    @Test fun compoundReplacementDoesNotPublishTheIntermediateDeletion() {
+        val text = Content("{}()")
+        val shadow = text.copyText(false)
+        val provider = TextMateBracketsProvider(shadow, spans(shadow), config)
+        provider.initialize(text.documentVersion)
+        text.replace(0, 1, "[")
+        shadow.delete(0, 1)
+        provider.update(0, 1, 0, text.documentVersion)
+        provider.updateSpans(0, 0, text.documentVersion)
+        assertTrue(provider.queryPairedBracketsForRange(text, 0, end(text).toPacked()).isEmpty())
+        shadow.insert(0, 0, "[")
+        provider.update(0, 0, 1, text.documentVersion)
+        provider.updateSpans(0, 0, text.documentVersion)
+        assertEquals(1, provider.queryPairedBracketsForRange(text, 0, end(text).toPacked()).size)
     }
 
-    fun summarizeFull(node: ASTNode?): String {
-        return summarize(node, maxDepth = Int.MAX_VALUE, childSample = Int.MAX_VALUE)
+    @Test fun adjacentCodeSpansCanContainOneWordBracket() {
+        val text = Content("begin end")
+        val configuration = configuration("""{"brackets":[["begin","end"]]}""")
+        val styles = MappedSpans.Builder().apply {
+            add(0, SpanFactory.obtainNoExt(0, 0))
+            add(0, SpanFactory.obtainNoExt(2, 1))
+        }.build()
+        assertEquals(1, parse(text, configuration = configuration, styles = styles).all().size)
     }
 
-    private fun appendNode(
-        node: ASTNode,
-        builder: StringBuilder,
-        depth: Int,
-        maxDepth: Int,
-        childSample: Int
-    ) {
-        when (node) {
-            is TextAST -> builder.append("Text(len=").append(node.length).append(")")
-            is BracketAST -> builder.append("Bracket(id=").append(node.bracketId)
-                .append(", open=").append(node.isOpening).append(", len=").append(node.length)
-                .append(")")
-
-            is BracketPairAST -> builder.append("Pair(id=").append(node.bracketId)
-                .append(", closed=").append(node.isClosed)
-                .append(", len=").append(node.length).append(")")
-
-            is ListAST -> builder.append("List(children=").append(node.childCount)
-                .append(", len=").append(node.length).append(")")
-
-            is TwoThreeListAST -> builder.append("TwoThree(children=").append(node.childCount)
-                .append(", len=").append(node.length).append(")")
-
-            is InvalidBracketAST -> builder.append("Invalid(id=").append(node.bracketId)
-                .append(", len=").append(node.length).append(")")
-
-            else -> builder.append(node.javaClass.simpleName).append("(len=")
-                .append(node.length)
-                .append(")")
-        }
-
-        if (node.childCount == 0) {
-            return
-        }
-        if (depth >= maxDepth) {
-            builder.append(" -> ...")
-            return
-        }
-
-        builder.append(" [")
-        val limit = node.childCount.coerceAtMost(childSample)
-        for (i in 0 until limit) {
-            if (i > 0) {
-                builder.append(", ")
-            }
-            appendNode(node.getChild(i), builder, depth + 1, maxDepth, childSample)
-        }
-        if (node.childCount > limit) {
-            builder.append(", +").append(node.childCount - limit).append(" more")
-        }
-        builder.append("]")
-    }
 }

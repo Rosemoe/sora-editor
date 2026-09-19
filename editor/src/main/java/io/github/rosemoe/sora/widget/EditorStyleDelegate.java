@@ -41,6 +41,7 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticProvider;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.styling.HighlightTextProvider;
 import io.github.rosemoe.sora.lang.styling.HighlightTextContainer;
+import io.github.rosemoe.sora.lang.styling.patching.BracketColorizationProvider;
 import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintProvider;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;

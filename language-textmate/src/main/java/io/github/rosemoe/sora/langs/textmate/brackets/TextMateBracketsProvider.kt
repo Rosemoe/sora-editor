@@ -1,7 +1,7 @@
-/*******************************************************************************
+/*
  *    sora-editor - the awesome code editor for Android
  *    https://github.com/Rosemoe/sora-editor
- *    Copyright (C) 2020-2025  Rosemoe
+ *    Copyright (C) 2020-2026  Rosemoe
  *
  *     This library is free software; you can redistribute it and/or
  *     modify it under the terms of the GNU Lesser General Public
@@ -20,321 +20,159 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- ******************************************************************************/
+ */
 package io.github.rosemoe.sora.langs.textmate.brackets
 
 import io.github.rosemoe.sora.lang.brackets.BracketsProvider
-import io.github.rosemoe.sora.lang.brackets.CachedBracketsProvider
 import io.github.rosemoe.sora.lang.brackets.PairedBracket
+import io.github.rosemoe.sora.lang.styling.Span
 import io.github.rosemoe.sora.lang.styling.Spans
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.BracketASTManager
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.BracketMatcherAST
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.BracketTokenizer
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.EditCombiner
-import io.github.rosemoe.sora.langs.textmate.brackets.ast.EditInfo
 import io.github.rosemoe.sora.text.Content
-import org.eclipse.tm4e.languageconfiguration.internal.model.CharacterPair
+import io.github.rosemoe.sora.util.IntPair
 import org.eclipse.tm4e.languageconfiguration.internal.model.LanguageConfiguration
-import kotlin.math.max
 
 /**
- * TextMate implementation of [BracketsProvider] backed by the lexer/index/matcher stack.
- * Thread-safe for concurrent analyzer (writes) and UI (reads) access.
+ * Publishes the bracket tree built from TextMate tokenization.
  *
- * Uses Token AST strategy:
- * - Token AST: Updated after tokenization (accurate, uses fresh snapshot)
+ * The analyzer thread is the only writer. It parses after its shadow edits and tokenization have
+ * caught up, so it never describes a revision the UI cannot see. Readers take a snapshot and accept
+ * it only while the document version and text length still match.
  */
 class TextMateBracketsProvider(
-    content: Content,
-    spans: Spans,
-    configuration: LanguageConfiguration?
-) : CachedBracketsProvider() {
+    private val content: Content,
+    private val spans: Spans,
+    configuration: LanguageConfiguration
+) : BracketsProvider {
 
-    private val bracketPairs: List<CharacterPair> = extractBracketPairs(configuration)
-    private val hasBrackets = bracketPairs.isNotEmpty()
+    private data class Snapshot(val root: BracketNode, val version: Long, val textLength: Int)
 
-    // Core components
-    private val snapshot = SpanSnapshot(spans)
-    private val lexer = BracketLexer(content, snapshot, bracketPairs)
-    private val astManager = BracketASTManager()
-    private val matcher = BracketMatcherAST { astManager.getActiveAST() }
+    private val tokens = BracketTokens(configuration)
+    private val changes = TokenChanges(content, spans)
+    // The tree both parses of one edit start from. The provisional parse must not become the base
+    // of the token-aware parse that follows it, or the same edit would be applied twice.
+    private var tokenRoot: BracketNode? = null
 
-    // Edit tracking
-    private val editTracker = EditTracker()
+    @Volatile
+    private var snapshot: Snapshot? = null
 
-    /**
-     * Whether this provider has usable bracket data.
-     */
+    /** Whether the language configuration declares any usable bracket pair. */
     val isSupported: Boolean
-        get() = hasBrackets
+        get() = !tokens.isEmpty
+
+    /** Subtrees taken over by the last parse. */
+    internal var reusedNodes = 0
+        private set
+
+    /** Characters inspected by the last parse. */
+    internal var scannedCharacters = 0
+        private set
+
+    internal val root: BracketNode?
+        get() = snapshot?.root
 
     /**
-     * Current version of the underlying index. Useful for cache invalidation.
+     * Build the first tree. Empty spans give immediate, approximate colors before tokenization.
+     * Keep this snapshot visible until updateSpans() corrects it using the completed token pass.
      */
-    val version: Long
-        get() = astManager.currentVersion()
-
-    /**
-     * Performs a full lex/update pass. Must be called on the analyzer thread once spans are ready.
-     */
-    fun initialize() {
-        if (!hasBrackets) return
-        snapshot.rebuildAll()
-        val tokenizer = BracketTokenizer(lexer, 0, BracketToken.MAX_LINE_INDEX)
-        astManager.rebuildTokenAST(tokenizer)
-        matcher.invalidateCache()
-        super.clear()
+    fun initialize(documentVersion: Long) {
+        parse(null, documentVersion)
+        tokenRoot = snapshot?.root
     }
 
-    /**
-     * Propagates incremental span updates.
-     *
-     * Updates the Token AST with accurate bracket information now that tokens are available.
-     */
-    fun notifySpansChanged(startLine: Int, endLine: Int) {
-        if (!hasBrackets) return
-        snapshot.updateRange(startLine, endLine)
-
-        if (editTracker.hasPendingTokenEdits()) {
-            try {
-                val edits = editTracker.consumeTokenEdits()
-                // Guard against empty edit lists (e.g., all edits collapsed to no-ops)
-                if (edits.isEmpty()) {
-                    return
-                }
-                val tokenizer = BracketTokenizer(lexer, 0, BracketToken.MAX_LINE_INDEX)
-                astManager.updateTokenASTWithEdits(edits, tokenizer)
-            } catch (e: Exception) {
-                System.err.println("TextMateBracketsProvider: updateTokenAST failed, falling back to rebuild")
-                e.printStackTrace()
-                val tokenizer = BracketTokenizer(lexer, 0, BracketToken.MAX_LINE_INDEX)
-                astManager.rebuildTokenAST(tokenizer)
+    /** Report that the analyzer replaced the spans of `[startLine, endLine]`. */
+    fun updateSpans(startLine: Int, endLine: Int, documentVersion: Long) {
+        val edit = changes.finish(startLine, endLine)
+        if (edit != null) {
+            parse(edit, documentVersion, tokenRoot)
+        } else {
+            // Only the token categories of already known lines changed, so the tree is untouched.
+            if (snapshot?.version != documentVersion) {
+                snapshot = snapshot?.copy(version = documentVersion)
             }
-        } else {
-            // Fallback to full rebuild when no edit info is available
-            val tokenizer = BracketTokenizer(lexer, 0, BracketToken.MAX_LINE_INDEX)
-            astManager.rebuildTokenAST(tokenizer)
+            reusedNodes = 0
+            scannedCharacters = 0
         }
-        super.clear()
+        tokenRoot = snapshot?.root
     }
+
+    /** Report the spans the analyzer produced for one line. */
+    fun updateLineTokens(line: Int, spans: List<Span>) = changes.lineTokenized(line, spans)
 
     /**
-     * Called when content is inserted. Records edit information for incremental update.
-     *
-     * Queues the edit for Token AST (accurate) update.
-     *
-     * @param startLine Line where insertion starts (0-based)
-     * @param startColumn Column where insertion starts (0-based)
-     * @param insertedText The exact sequence inserted at the position
+     * Apply a text edit straight away, before the analyzer has published the spans that follow it,
+     * so that brackets keep up with typing instead of waiting for tokenization.
      */
-    fun onContentInsert(startLine: Int, startColumn: Int, insertedText: CharSequence) {
-        if (!hasBrackets || insertedText.isEmpty()) return
-
-        val (newLineCount, newColumnCount) = measureTextLength(insertedText)
-
-        val endLine = startLine + newLineCount
-        val endColumn = if (newLineCount == 0) startColumn + newColumnCount else newColumnCount
-
-        val edit = EditInfo(
-            startLine = startLine,
-            startColumn = startColumn,
-            oldLineCount = 0,
-            oldColumnCount = 0,
-            newLineCount = newLineCount,
-            newColumnCount = newColumnCount
-        )
-
-        editTracker.addEdit(edit)
-
-        // Update snapshot with immediate mapping after recording the old-coordinate edit
-        snapshot.adjustOnInsert(startLine, startColumn, endLine, endColumn)
-        super.clear()
-    }
-
-    /**
-     * Called when content is deleted. Records edit information for incremental update.
-     *
-     * Queues the edit for Token AST (accurate) update.
-     *
-     * @param startLine Line where deletion starts (0-based)
-     * @param startColumn Column where deletion starts (0-based)
-     * @param endLine Line where deletion ends (0-based, before deletion)
-     * @param endColumn Column where deletion ends (0-based, before deletion)
-     */
-    fun onContentDelete(startLine: Int, startColumn: Int, endLine: Int, endColumn: Int) {
-        if (!hasBrackets) return
-
-        // Calculate the length of deleted content
-        val oldLineCount: Int
-        val oldColumnCount: Int
-
-        if (startLine == endLine) {
-            // Single line deletion
-            oldLineCount = 0
-            oldColumnCount = endColumn - startColumn
-        } else {
-            // Multi-line deletion
-            oldLineCount = endLine - startLine
-            oldColumnCount = endColumn
+    fun update(start: Long, oldEnd: Long, newEnd: Long, documentVersion: Long) {
+        val edit = BracketEdit(toOffset(start), toOffset(oldEnd), toOffset(newEnd))
+        changes.record(edit)
+        // The provisional parse reuses the token categories of the previous revision. That is only
+        // sound while the edit stays on one line, because a multi-line edit invalidates the category
+        // layout of every line it spans. updateSpans() replaces this tree once tokenization lands.
+        val singleLine = edit.start.line == edit.oldEnd.line && edit.start.line == edit.newEnd.line
+        if (singleLine) {
+            parse(edit, documentVersion, tokenRoot, provisional = true)
         }
-
-        val edit = EditInfo(
-            startLine = startLine,
-            startColumn = startColumn,
-            oldLineCount = oldLineCount,
-            oldColumnCount = oldColumnCount,
-            newLineCount = 0,
-            newColumnCount = 0
-        )
-
-        editTracker.addEdit(edit)
-
-        // Update snapshot after enqueuing the edit so coordinates stay anchored to the pre-edit state
-        snapshot.adjustOnDelete(startLine, startColumn, endLine, endColumn)
-        super.clear()
     }
 
-    /**
-     * Clears all indexed data. Safe to call when TextMate analyzer tears down.
-     */
-    override fun clear() {
-        super.clear()
-        astManager.clear()
-        snapshot.clear()
-        matcher.invalidateCache()
+    override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? {
+        if (index !in 0..text.length) return null
+        val root = currentRoot(text) ?: return null
+        val position = text.indexer.getCharPosition(index)
+        // Inclusive endpoints also match a bracket that ends exactly at the cursor, which is what a
+        // selection needs for multi-character brackets.
+        val cursor = TextOffset.of(position.line, position.column)
+        return root.query(cursor, cursor).firstOrNull { !it.invalid }?.toEditorPair(text)
     }
 
-
-    override fun computePairedBracketAt(text: Content, index: Int): PairedBracket? {
-        if (!canQuery()) return null
-        val safeIndex = index.coerceIn(0, max(0, text.length))
-
-        val position = text.indexer.getCharPosition(safeIndex)
-
-        // Use the optimized matchBracket method
-        val matched = matcher.matchBracket(position.line, position.column)
-            ?: return null
-
-        try {
-            return toPairedBracket(text, matched)
-        } finally {
-            BracketPair.recycle(matched)
-        }
-
-    }
-
-    override fun computePairedBracketsForRange(
+    override fun queryPairedBracketsForRange(
         text: Content,
         leftRange: Long,
         rightRange: Long
-    ): List<PairedBracket>? {
-        if (!canQuery()) return null
+    ): List<PairedBracket> =
+        currentRoot(text)?.query(toOffset(leftRange), toOffset(rightRange))
+            .orEmpty()
+            .filter { !it.invalid && it.colorized }
+            .map { it.toEditorPair(text) }
 
-        val scratchPairs = ArrayList<BracketPair>(32)
-        matcher.collectPairsInRange(leftRange, rightRange, scratchPairs)
-        if (scratchPairs.isEmpty()) {
-            return null
-        }
-        val result = ArrayList<PairedBracket>(scratchPairs.size)
-        for (pair in scratchPairs) {
-            try {
-                val converted = toPairedBracket(text, pair)
-                if (converted != null) {
-                    result.add(converted)
-                }
-            } finally {
-                BracketPair.recycle(pair)
-            }
-        }
-        scratchPairs.clear()
-        return if (result.isEmpty()) emptyList() else result
-    }
+    override fun isReadyFor(text: Content): Boolean = currentRoot(text) != null
 
-    private fun canQuery(): Boolean {
-        return hasBrackets && astManager.isInitialized()
-    }
-
-    private fun toPairedBracket(text: Content, pair: BracketPair): PairedBracket? {
-        return try {
-            val leftIndex = text.getCharIndex(pair.leftLine, pair.leftColumn)
-            val rightIndex = text.getCharIndex(pair.rightLine, pair.rightColumn)
-            PairedBracket(leftIndex, pair.leftLength, rightIndex, pair.rightLength, pair.level)
-        } catch (_: IndexOutOfBoundsException) {
-            null
-        }
-    }
-
-    private companion object {
-        /**
-         * Returns (lineCount, columnCount) for the given text chunk.
-         * Mirrors VSCode's Length arithmetic where column count is taken
-         * from the last line of the inserted text.
-         */
-        fun measureTextLength(text: CharSequence): Pair<Int, Int> {
-            var lineCount = 0
-            var lastBreakIndex = -1
-            var i = 0
-            val length = text.length
-
-            while (i < length) {
-                when (text[i]) {
-                    '\n' -> {
-                        lineCount++
-                        lastBreakIndex = i
-                    }
-
-                    '\r' -> {
-                        lineCount++
-                        if (i + 1 < length && text[i + 1] == '\n') {
-                            i++
-                        }
-                        lastBreakIndex = i
-                    }
-                }
-                i++
-            }
-
-            val columnCount = if (lineCount == 0) {
-                length
-            } else {
-                length - (lastBreakIndex + 1)
-            }
-            return lineCount to columnCount
-        }
-
-        private fun extractBracketPairs(configuration: LanguageConfiguration?): List<CharacterPair> {
-            if (configuration == null) {
-                return emptyList()
-            }
-            val prioritized = configuration.colorizedBracketPairs
-            return when {
-                !prioritized.isNullOrEmpty() -> prioritized
-                configuration.brackets != null && configuration.brackets.isNotEmpty() && (prioritized == null || prioritized.isNotEmpty()) -> configuration.brackets
-                else -> null
-            } ?: return emptyList()
+    private fun parse(
+        edit: BracketEdit?, version: Long,
+        oldRoot: BracketNode? = null, provisional: Boolean = false
+    ) {
+        // Only a provisional parse passes the edit down: it is what makes the tokenizer map the
+        // span columns of the previous revision onto the current text.
+        val tokenizerEdit = if (provisional) edit else null
+        BracketTokenizer(content, spans, tokens, tokenizerEdit).use { tokenizer ->
+            val parser = BracketParser(
+                tokenizer,
+                oldRoot = oldRoot,
+                edit = edit
+            )
+            snapshot = Snapshot(parser.parse(), version, content.length)
+            reusedNodes = parser.reusedNodes
+            scannedCharacters = tokenizer.scannedCharacters
         }
     }
 
     /**
-     * Tracks pending edits for Token AST updates.
-     *
-     * This class rebases all incoming edits to the same "before-edit" coordinate system
-     * using EditCombiner, mirroring VS Code's combineTextEditInfos behavior.
+     * A snapshot is usable only while it describes the revision the caller is looking at. Comparing
+     * the text length as well rejects equal-length edits that were never published.
      */
-    private class EditTracker {
-        private var pendingTokenEdits: List<EditInfo> = emptyList()
+    private fun currentRoot(text: Content): BracketNode? =
+        snapshot?.takeIf { it.version == text.documentVersion && it.textLength == text.length }?.root
 
-        fun addEdit(edit: EditInfo) {
-            // Immediately combine with existing edits to maintain consistent coordinate system
-            pendingTokenEdits = EditCombiner.combine(pendingTokenEdits, listOf(edit))
-        }
+    private fun BracketPair.toEditorPair(text: Content) = PairedBracket(
+        text.getCharIndex(start.line, start.column),
+        openLength,
+        text.getCharIndex(closeStart.line, closeStart.column),
+        closeLength,
+        level
+    )
 
-        fun hasPendingTokenEdits(): Boolean = pendingTokenEdits.isNotEmpty()
+    private companion object {
 
-        fun consumeTokenEdits(): List<EditInfo> {
-            val edits = pendingTokenEdits
-            pendingTokenEdits = emptyList()
-            return edits
-        }
+        /** Ranges handed in by the editor are packed the same way as [TextOffset]. */
+        fun toOffset(packed: Long) = TextOffset.of(IntPair.getFirst(packed), IntPair.getSecond(packed))
     }
 }

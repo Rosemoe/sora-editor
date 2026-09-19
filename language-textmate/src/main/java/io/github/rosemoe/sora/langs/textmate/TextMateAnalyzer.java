@@ -63,7 +63,6 @@ import io.github.rosemoe.sora.langs.textmate.folding.IndentRange;
 import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 import io.github.rosemoe.sora.langs.textmate.utils.StringUtils;
-import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentReference;
@@ -252,6 +251,9 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
 
             tokens.add(span);
         }
+        if (isCurrentAnalyzerThread() && textMateBracketsProvider != null) {
+            textMateBracketsProvider.updateLineTokens(lineIndex, tokens);
+        }
         return new LineTokenizeResult<>(new MyState(lineTokens.getRuleStack(), cachedRegExp == null ? null : cachedRegExp.search(OnigString.of(line), 0), IndentRange.computeIndentLevel(lineC, line.length() - 1, language.getTabSize()), identifiers), null, tokens);
     }
 
@@ -276,55 +278,56 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
     }
 
     @Override
-    public void reset(@NonNull ContentReference content, @NonNull Bundle extraArguments) {
+    public synchronized void rerun() {
+        tearDownTextMateBracketsProvider();
+        super.rerun();
+    }
+
+    @Override
+    public synchronized void reset(@NonNull ContentReference content, @NonNull Bundle extraArguments) {
         tearDownTextMateBracketsProvider();
         super.reset(content, extraArguments);
         syncIdentifiers.clear();
     }
 
     @Override
-    public void destroy() {
+    public synchronized void destroy() {
         tearDownTextMateBracketsProvider();
         super.destroy();
         themeRegistry.removeListener(this);
     }
 
     @Override
-    public void insert(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence insertedText) {
-        if (textMateBracketsProvider != null) {
-            textMateBracketsProvider.onContentInsert(start.line, start.column, insertedText);
+    protected synchronized void onAnalysisUpdate(Styles styles, int startLine, int endLine,
+                                                  TextModification modification,
+                                                  boolean spansReady) {
+        if (!isCurrentAnalyzerThread()) {
+            return;
         }
-        super.insert(start, end, insertedText);
-    }
-
-    @Override
-    public void delete(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence deletedText) {
-        if (textMateBracketsProvider != null) {
-            textMateBracketsProvider.onContentDelete(start.line, start.column, end.line, end.column);
+        if (textMateBracketsProvider == null) {
+            ensureTextMateBracketsProviderInitialized();
+            return;
         }
-        super.delete(start, end, deletedText);
-    }
-
-    @Override
-    protected void onSpansChanged(Styles styles, int startLine, int endLine) {
-        super.onSpansChanged(styles, startLine, endLine);
-        ensureTextMateBracketsProviderInitialized();
-        if (textMateBracketsProvider != null && endLine >= startLine) {
-            textMateBracketsProvider.notifySpansChanged(startLine, endLine);
+        if (!spansReady) {
+            // The shadow edit is applied but its lines are still carrying the spans of the previous
+            // revision, so brackets are rebuilt from those old token categories for now. Without
+            // this the decorations would lag behind typing by a full tokenization pass.
+            if (modification != null) {
+                textMateBracketsProvider.update(modification.start, modification.oldEnd,
+                        modification.newEnd, modification.documentVersion);
+            }
+            return;
+        }
+        if (endLine >= startLine) {
+            textMateBracketsProvider.updateSpans(startLine, endLine, getManagedDocumentVersion());
         }
     }
 
-    @Override
-    protected void onSpansInit(Styles styles) {
-        ensureTextMateBracketsProviderInitialized();
-    }
-
-    private void tearDownTextMateBracketsProvider() {
+    private synchronized void tearDownTextMateBracketsProvider() {
         var activeProvider = textMateBracketsProvider;
         if (activeProvider == null) {
             return;
         }
-        activeProvider.clear();
         textMateBracketsProvider = null;
         if (bracketsProvider == activeProvider) {
             publishBracketProvider(buildLegacyBracketsProvider(this.configuration));
@@ -424,12 +427,11 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
         }
         var provider = new TextMateBracketsProvider(shadowed, spans, configuration);
         if (!provider.isSupported()) {
-            provider.clear();
             publishBracketProvider(buildLegacyBracketsProvider(configuration));
             return;
         }
         textMateBracketsProvider = provider;
-        textMateBracketsProvider.initialize();
+        textMateBracketsProvider.initialize(getManagedDocumentVersion());
         publishBracketProvider(textMateBracketsProvider);
     }
 

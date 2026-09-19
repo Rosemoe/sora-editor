@@ -595,8 +595,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         renderContext = new RenderContext(this);
         renderer = onCreateRenderer();
         stylePatchManager = new StylePatchManager(this, this::updateStylePatches);
-        subscribeAlways(ScrollEvent.class, event -> postInLifecycle(
-                () -> stylePatchManager.updateVisibleRange(getFirstVisibleLine(), getLastVisibleLine())));
 
         styleDelegate = new EditorStyleDelegate(this);
 
@@ -1417,6 +1415,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     public EditorRenderer getRenderer() {
         return renderer;
+    }
+
+    /** Source lines currently displayed by sticky scroll, in display order. */
+    @NonNull
+    public int[] getStickyLineIndices() {
+        return renderer.getStickyLineIndices();
     }
 
     public RenderContext getRenderContext() {
@@ -4358,7 +4362,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     public void refreshStylePatches(@NonNull StylePatchProvider provider) {
-        stylePatchManager.refresh(provider);
+        stylePatchManager.refresh(provider, null);
     }
 
     @NonNull
@@ -5268,12 +5272,18 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Override
+    protected void onScrollChanged(int x, int y, int oldX, int oldY) {
+        super.onScrollChanged(x, y, oldX, oldY);
+        // EditorScroller applies every actual position here, including the final fling position.
+        if (layout != null && stylePatchManager != null) {
+            stylePatchManager.updateVisibleRange(getFirstVisibleLine(), getLastVisibleLine());
+        }
+    }
+
+    @Override
     protected void onSizeChanged(int w, int h, int oldWidth, int oldHeight) {
         super.onSizeChanged(w, h, oldWidth, oldHeight);
         renderer.onSizeChanged(w, h);
-        if (stylePatchManager != null) {
-            stylePatchManager.updateVisibleRange(getFirstVisibleLine(), getLastVisibleLine());
-        }
         getVerticalEdgeEffect().setSize(w, h);
         getHorizontalEdgeEffect().setSize(h, w);
         getVerticalEdgeEffect().finish();
@@ -5287,6 +5297,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         horizontalAbsorb = false;
         if (oldHeight > h && props.adjustToSelectionOnResize) {
             ensureSelectionVisible();
+        }
+        if (stylePatchManager != null) {
+            stylePatchManager.updateVisibleRange(getFirstVisibleLine(), getLastVisibleLine());
         }
     }
 
