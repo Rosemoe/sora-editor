@@ -64,6 +64,12 @@ import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.ReferenceParams
 import org.eclipse.lsp4j.RegistrationParams
 import org.eclipse.lsp4j.RenameParams
+import org.eclipse.lsp4j.SemanticTokens
+import org.eclipse.lsp4j.SemanticTokensDelta
+import org.eclipse.lsp4j.SemanticTokensParams
+import org.eclipse.lsp4j.SemanticTokensDeltaParams
+import org.eclipse.lsp4j.SemanticTokensRangeParams
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.SetTraceParams
 import org.eclipse.lsp4j.ShowMessageRequestParams
@@ -114,6 +120,26 @@ class AggregatedRequestManager(
     fun getSessions(): Set<LanguageServerWrapper> {
         return sessionEntries
     }
+
+    // Token indices and result IDs are server-local. Select one server for the whole session.
+    internal val semanticTokensManager: RequestManager?
+        get() = activeManagers.firstOrNull {
+            val options = it.semanticTokensOptions
+            options != null && (options.full?.left == true || options.full?.right != null ||
+                options.range?.left == true || options.range?.right != null)
+        }
+
+    override val semanticTokensOptions: SemanticTokensWithRegistrationOptions?
+        get() = semanticTokensManager?.semanticTokensOptions
+
+    override fun semanticTokensFull(params: SemanticTokensParams): CompletableFuture<SemanticTokens>? =
+        semanticTokensManager?.semanticTokensFull(params)
+
+    override fun semanticTokensFullDelta(params: SemanticTokensDeltaParams): CompletableFuture<Either<SemanticTokens, SemanticTokensDelta>>? =
+        semanticTokensManager?.semanticTokensFullDelta(params)
+
+    override fun semanticTokensRange(params: SemanticTokensRangeParams): CompletableFuture<SemanticTokens>? =
+        semanticTokensManager?.semanticTokensRange(params)
 
     override val capabilities: ServerCapabilities?
         get() = mergeCapabilities()

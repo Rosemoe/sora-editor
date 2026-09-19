@@ -31,6 +31,7 @@ import io.github.rosemoe.sora.lang.QuickQuoteHandler
 import io.github.rosemoe.sora.lang.completion.CompletionPublisher
 import io.github.rosemoe.sora.lang.format.Formatter
 import io.github.rosemoe.sora.lang.smartEnter.NewlineHandler
+import java.util.concurrent.CopyOnWriteArrayList
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.SymbolPairMatch
@@ -59,7 +60,19 @@ open class TsLanguage(
         }
     }
 
-    protected var tsTheme = TsThemeBuilder(languageSpec.tsQuery).apply { themeDescription() }.theme
+    @Volatile protected var tsTheme = TsThemeBuilder(languageSpec.tsQuery).apply { themeDescription() }.theme
+
+    /** Current capture theme, also available to optional language integrations. */
+    val theme: TsTheme get() = tsTheme
+
+    private val themeListeners = CopyOnWriteArrayList<Runnable>()
+    private fun notifyThemeChanged() = themeListeners.forEach { it.run() }
+    private var themeSubscription = tsTheme.observeChanges(::notifyThemeChanged)
+
+    fun observeThemeChanges(listener: Runnable): AutoCloseable {
+        themeListeners.add(listener)
+        return AutoCloseable { themeListeners.remove(listener) }
+    }
 
     open val analyzer by lazy {
         TsAnalyzeManager(languageSpec, tsTheme)
@@ -79,8 +92,11 @@ open class TsLanguage(
      * Update tree-sitter colorizing theme
      */
     fun updateTheme(theme: TsTheme) {
+        themeSubscription.close()
         this.tsTheme = theme
+        themeSubscription = theme.observeChanges(::notifyThemeChanged)
         analyzer.updateTheme(theme)
+        notifyThemeChanged()
     }
 
     override fun getAnalyzeManager() = analyzer
@@ -109,6 +125,8 @@ open class TsLanguage(
     override fun getQuickQuoteHandler() = null
 
     override fun destroy() {
+        themeSubscription.close()
+        themeListeners.clear()
         languageSpec.close()
     }
 

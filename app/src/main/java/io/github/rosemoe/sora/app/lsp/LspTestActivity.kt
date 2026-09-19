@@ -48,8 +48,7 @@ import io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.languageServerDefinition
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler
 import io.github.rosemoe.sora.lsp.editor.LspEditor
-import io.github.rosemoe.sora.lsp.editor.LspEditorEventListener
-import io.github.rosemoe.sora.lsp.editor.LspEditorStatus
+import io.github.rosemoe.sora.lsp.editor.semantic.TextMateSemanticTokenStyleProvider
 import io.github.rosemoe.sora.lsp.editor.LspProject
 import io.github.rosemoe.sora.lsp.editor.text.MarkdownCodeHighlighterRegistry
 import io.github.rosemoe.sora.lsp.editor.text.withEditorHighlighter
@@ -64,16 +63,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.eclipse.lsp4j.DiagnosticRegistrationOptions
-import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams
 import org.eclipse.lsp4j.InitializeResult
-import org.eclipse.lsp4j.ServerCapabilities
-import org.eclipse.lsp4j.WorkspaceFolder
-import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
-import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.tm4e.core.registry.IThemeSource
-import java.io.File
 import java.io.FileOutputStream
 import java.lang.ref.WeakReference
 import java.util.zip.ZipFile
@@ -106,8 +98,8 @@ class LspTestActivity : BaseEditorActivity() {
 
         lifecycleScope.launch {
             unAssets()
-            connectToLanguageServer()
             setEditorText()
+            connectToLanguageServer()
         }
     }
 
@@ -156,9 +148,7 @@ class LspTestActivity : BaseEditorActivity() {
         }
 
 
-        startService(
-            Intent(this@LspTestActivity, LspLanguageServerService::class.java)
-        )
+        startService(Intent(this@LspTestActivity, LspLanguageServerService::class.java))
 
         val luaServerDefinition = languageServerDefinition {
             name("lua-lsp")
@@ -167,11 +157,7 @@ class LspTestActivity : BaseEditorActivity() {
                 local("lua-lsp")
             }
             eventListener(EventListener(this@LspTestActivity.ref))
-            val expectedCapabilities = ServerCapabilities().apply {
-                documentFormattingProvider = Either.forLeft(true)
-                diagnosticProvider = DiagnosticRegistrationOptions(true, false)
-            }
-            expectedCapabilities(expectedCapabilities)
+
         }
 
         lspProject = LspProject(projectPath)
@@ -182,6 +168,7 @@ class LspTestActivity : BaseEditorActivity() {
             lspEditor = lspProject.createEditor("$projectPath/sample.lua")
             val wrapperLanguage = createTextMateLanguage()
             lspEditor.wrapperLanguage = wrapperLanguage
+            lspEditor.semanticTokenStyleProvider = TextMateSemanticTokenStyleProvider(ThemeRegistry.getInstance())
             lspEditor.editor = editor
             lspEditor.isEnableInlayHint = true
             LspEditorTextActionWindow(lspEditor).setOnMoreButtonClickListener { window, lspEditor ->
@@ -194,25 +181,6 @@ class LspTestActivity : BaseEditorActivity() {
         }
 
         var connected: Boolean
-
-        lspEditor.eventListener = LspEditorEventListener { _, new, _ ->
-            if (new != LspEditorStatus.CONNECTED) {
-                return@LspEditorEventListener
-            }
-            lspEditor.requestManager.didChangeWorkspaceFolders(
-                DidChangeWorkspaceFoldersParams().apply {
-                    this.event = WorkspaceFoldersChangeEvent().apply {
-                        added =
-                            listOf(
-                                WorkspaceFolder(
-                                    File(projectPath).toURI().toString(),
-                                    "MyLuaProject"
-                                )
-                            )
-                    }
-                }
-            )
-        }
 
         try {
             lspEditor.connectWithTimeout()
@@ -334,9 +302,9 @@ class LspTestActivity : BaseEditorActivity() {
 
         ref.clear()
         editor.release()
-        lifecycleScope.launch {
-            lspEditor.dispose()
-            lspProject.dispose()
+        if (::lspProject.isInitialized) {
+            val project = lspProject
+            project.coroutineScope.launch(Dispatchers.IO) { project.dispose() }
         }
         stopService(Intent(this@LspTestActivity, LspLanguageServerService::class.java))
     }
@@ -349,8 +317,10 @@ class LspTestActivity : BaseEditorActivity() {
             val activity = activityRef.get() ?: return
             activity.apply {
                 runOnUiThread {
-                    rootMenu.findItem(R.id.code_format).isEnabled =
-                        result.capabilities.documentFormattingProvider != null
+                    if (::rootMenu.isInitialized) {
+                        rootMenu.findItem(R.id.code_format).isEnabled =
+                            result.capabilities.documentFormattingProvider != null
+                    }
                 }
             }
         }
@@ -360,4 +330,3 @@ class LspTestActivity : BaseEditorActivity() {
         }
     }
 }
-
