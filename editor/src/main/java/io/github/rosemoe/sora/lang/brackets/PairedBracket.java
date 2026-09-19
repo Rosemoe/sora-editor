@@ -30,15 +30,24 @@ package io.github.rosemoe.sora.lang.brackets;
  */
 public class PairedBracket {
 
-    public final int leftIndex, leftLength, rightIndex, rightLength;
+    public final int leftIndex, leftLength, rightIndex, rightLength, level;
 
     /**
      * Currently length is always 1.
      *
-     * @see #PairedBracket(int, int, int, int)
+     * @see #PairedBracket(int, int, int, int, int)
      */
     public PairedBracket(int leftIndex, int rightIndex) {
-        this(leftIndex, 1, rightIndex, 1);
+        this(leftIndex, 1, rightIndex, 1, 0);
+    }
+
+    /**
+     * Currently length is always 1.
+     *
+     * @see #PairedBracket(int, int, int, int, int)
+     */
+    public PairedBracket(int leftIndex, int rightIndex, int level) {
+        this(leftIndex, 1, rightIndex, 1, level);
     }
 
     /**
@@ -48,9 +57,20 @@ public class PairedBracket {
      * @param rightLength Text length of right bracket
      */
     public PairedBracket(int leftIndex, int leftLength, int rightIndex, int rightLength) {
+        this(leftIndex, leftLength, rightIndex, rightLength, 0);
+    }
+
+    /**
+     * @param leftIndex   Index of left bracket in text
+     * @param leftLength  Text length of left bracket
+     * @param rightIndex  Index of right bracket in text
+     * @param rightLength Text length of right bracket
+     */
+    public PairedBracket(int leftIndex, int leftLength, int rightIndex, int rightLength, int level) {
         this.leftIndex = leftIndex;
         this.leftLength = leftLength;
         this.rightIndex = rightIndex;
         this.rightLength = rightLength;
+        this.level = level;
     }
 }

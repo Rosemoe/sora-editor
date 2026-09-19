@@ -31,6 +31,7 @@ import androidx.annotation.Nullable;
 import java.lang.ref.WeakReference;
 
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
+import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager;
 import io.github.rosemoe.sora.lang.analysis.StyleReceiver;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
@@ -40,6 +41,7 @@ import io.github.rosemoe.sora.lang.diagnostic.DiagnosticProvider;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.styling.HighlightTextProvider;
 import io.github.rosemoe.sora.lang.styling.HighlightTextContainer;
+import io.github.rosemoe.sora.lang.styling.patching.BracketColorizationProvider;
 import io.github.rosemoe.sora.lang.styling.Styles;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintProvider;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
@@ -49,6 +51,8 @@ public class EditorStyleDelegate implements StyleReceiver, InlayHintProvider, Di
     private final WeakReference<CodeEditor> editorRef;
     private PairedBracket foundPair;
     private BracketsProvider bracketsProvider;
+    private final BracketColorizationProvider bracketColorization = new BracketColorizationProvider();
+    private boolean bracketPairColorizationEnabled;
     private DiagnosticsContainer diagnostics;
     private InlayHintsContainer inlayHints;
     private HighlightTextContainer highlightTexts;
@@ -60,6 +64,30 @@ public class EditorStyleDelegate implements StyleReceiver, InlayHintProvider, Di
                 postUpdateBracketPair();
             }
         });
+        editor.subscribeEvent(ColorSchemeUpdateEvent.class, (event, subscription) -> refreshBracketColors());
+    }
+
+    boolean isBracketPairColorizationEnabled() {
+        return bracketPairColorizationEnabled;
+    }
+
+    void setBracketPairColorizationEnabled(boolean enabled) {
+        if (bracketPairColorizationEnabled == enabled) return;
+        bracketPairColorizationEnabled = enabled;
+        var editor = editorRef.get();
+        if (editor == null) return;
+        if (enabled) {
+            editor.registerStylePatchProvider(bracketColorization);
+        } else {
+            editor.unregisterStylePatchProvider(bracketColorization);
+        }
+    }
+
+    private void refreshBracketColors() {
+        var editor = editorRef.get();
+        if (editor != null && !editor.isReleased() && bracketPairColorizationEnabled) {
+            editor.refreshStylePatches(bracketColorization);
+        }
     }
 
     void onTextChange() {
@@ -87,6 +115,8 @@ public class EditorStyleDelegate implements StyleReceiver, InlayHintProvider, Di
     void reset() {
         foundPair = null;
         bracketsProvider = null;
+        bracketColorization.setBracketsProvider(null);
+        refreshBracketColors();
         diagnostics = null;
         inlayHints = null;
         highlightTexts = null;
@@ -118,6 +148,7 @@ public class EditorStyleDelegate implements StyleReceiver, InlayHintProvider, Di
                     action.run();
                 }
                 editor.setStyles(styles);
+                refreshBracketColors();
             });
         }
     }
@@ -171,18 +202,24 @@ public class EditorStyleDelegate implements StyleReceiver, InlayHintProvider, Di
 
     @Override
     public void updateBracketProvider(@NonNull AnalyzeManager sourceManager, @Nullable BracketsProvider provider) {
-        var editor = editorRef.get();
-        if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager() && bracketsProvider != provider) {
-            this.bracketsProvider = provider;
+        runOnUiThread(() -> {
+            var editor = editorRef.get();
+            if (editor == null || sourceManager != editor.getEditorLanguage().getAnalyzeManager()) return;
+            bracketsProvider = provider;
+            bracketColorization.setBracketsProvider(provider);
             postUpdateBracketPair();
-        }
+            refreshBracketColors();
+        });
     }
 
     @Override
     public void updateStyles(@NonNull AnalyzeManager sourceManager, @NonNull Styles styles, @NonNull StyleUpdateRange range) {
         var editor = editorRef.get();
         if (editor != null && sourceManager == editor.getEditorLanguage().getAnalyzeManager()) {
-            runOnUiThread(() -> editor.updateStyles(styles, range));
+            runOnUiThread(() -> {
+                editor.updateStyles(styles, range);
+                refreshBracketColors();
+            });
         }
     }
 

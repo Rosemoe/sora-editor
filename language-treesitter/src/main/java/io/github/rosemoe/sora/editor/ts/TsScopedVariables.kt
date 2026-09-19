@@ -77,13 +77,18 @@ class TsScopedVariables(
                 cursor.exec(spec.tsQuery, tree.rootNode)
                 var match = cursor.nextMatch()
                 val captures = mutableListOf<TSQueryCapture>()
-                while (match != null && !cancellationToken.isCanceled()) {
+                while (match != null) {
+                    if (cancellationToken.isCanceled()) throw AnalysisCanceledException()
                     if (spec.queryPredicator.doPredicate(spec.predicates, text, match)) {
                         captures.addAll(match.captures)
                     }
                     match = cursor.nextMatch()
                 }
-                captures.sortBy { it.node.startByte }
+                if (cancellationToken.isCanceled()) throw AnalysisCanceledException()
+                captures.sortWith { left, right ->
+                    if (cancellationToken.isCanceled()) throw AnalysisCanceledException()
+                    left.node.startByte.compareTo(right.node.startByte)
+                }
                 val scopeStack = Stack<Scope>()
                 var lastAddedVariableNode: TSNode? = null
                 scopeStack.push(rootScope)
@@ -93,7 +98,7 @@ class TsScopedVariables(
                     }
                     val startIndex = capture.node.startByte / 2
                     val endIndex = capture.node.endByte / 2
-                    while (startIndex >= scopeStack.peek().endIndex) {
+                    while (scopeStack.size > 1 && startIndex >= scopeStack.peek().endIndex) {
                         scopeStack.pop()
                     }
                     val pattern = capture.index
