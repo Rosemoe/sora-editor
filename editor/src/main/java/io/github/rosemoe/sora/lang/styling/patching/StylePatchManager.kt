@@ -12,6 +12,7 @@ import io.github.rosemoe.sora.lang.styling.SpanFactory
 import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.lang.styling.span.SpanColorResolver
 import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs
+import io.github.rosemoe.sora.lang.styling.span.internal.NoExtSpanImpl
 import io.github.rosemoe.sora.widget.CodeEditor
 
 /** Coordinates asynchronous style patch providers and their latest snapshots. */
@@ -258,7 +259,13 @@ class StylePatchManager(
         return result
     }
 
-    private fun copyAt(span: Span, column: Int): Span = span.copy().also { it.column = column }
+    private fun copyAt(span: Span, column: Int): Span {
+        // TextMate commonly uses compact spans. Promote directly instead of throwing an
+        // UnsupportedOperationException for every colored segment during rendering.
+        return if (span is NoExtSpanImpl) {
+            SpanFactory.obtain(column, span.style).also { it.extra = span.extra }
+        } else span.copy().also { it.column = column }
+    }
 
     private fun applyPatch(span: Span, patch: StylePatch): Span {
         var style = span.style
