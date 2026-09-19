@@ -59,7 +59,6 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.jcodings)
     implementation(libs.joni)
-    implementation(libs.kotlinx.coroutines)
 
     implementation(libs.snakeyaml.engine)
     implementation(libs.jdt.annotation)

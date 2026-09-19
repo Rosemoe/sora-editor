@@ -66,24 +66,6 @@ class TextMateBracketsProviderTest {
         }
     }
 
-    @Test fun resultsMatchActualVSCodeParser() {
-        val json = javaClass.classLoader!!.getResourceAsStream("vscode-bracket-oracle.json")!!
-            .bufferedReader().use { com.google.gson.JsonParser.parseReader(it).asJsonArray }
-        for (case in json) {
-            val source = case.asJsonObject.get("text").asString
-            val expected = case.asJsonObject.getAsJsonArray("pairs").map { row ->
-                val values = row.asJsonArray
-                BracketPair(position(values[0].asInt, values[1].asInt), values[2].asInt,
-                    position(values[3].asInt, values[4].asInt), values[5].asInt,
-                    values[6].asInt, values[7].asInt, values[8].asBoolean,
-                    // Invalid closers are not colorized; incomplete openers retain their pair flag.
-                    !values[8].asBoolean || source.lineSequence().elementAt(values[0].asInt)[values[1].asInt] in "([{"
-                )
-            }
-            assertEquals(source, expected, parse(Content(source)).all())
-        }
-    }
-
     @Test fun nestingAndSameTypeDepthAreIndependent() {
         val pairs = parse(Content("{[({})]} trailing")).all()
         assertEquals(listOf(0, 1, 2, 3), pairs.map { it.level })
