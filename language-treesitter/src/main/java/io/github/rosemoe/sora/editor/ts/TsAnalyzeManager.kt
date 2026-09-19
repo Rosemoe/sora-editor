@@ -50,7 +50,9 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     val reference: ContentReference?
         get() = contentRef
     var thread: TsLooperThread? = null
-    var spanFactory : TsSpanFactory = DefaultSpanFactory()
+    var spanFactory: TsSpanFactory = DefaultSpanFactory()
+
+    internal var bracketPairColorization = false
 
     open var styles = Styles()
 
@@ -188,15 +190,15 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                         scopedVariables,
                         spanFactory
                     )
+                    currentReceiver?.updateBracketProvider(
+                        this@TsAnalyzeManager,
+                        TsBracketPairs(newTree, languageSpec)
+                    )
                     updateCodeBlocks()
                     currentReceiver?.setStyles(this@TsAnalyzeManager, styles) {
                         styles.spans = newSpans
                         oldTree?.close()
                     }
-                    currentReceiver?.updateBracketProvider(
-                        this@TsAnalyzeManager,
-                        TsBracketPairs(newTree, languageSpec)
-                    )
                 }
             }
         }

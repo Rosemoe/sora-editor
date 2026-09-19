@@ -125,6 +125,9 @@ public class EditorRenderer {
     private final CodeEditor editor;
     private final List<DiagnosticRegion> collectedDiagnostics = new ArrayList<>();
     protected List<CodeBlock> lastStuckLines;
+    private static final int[] EMPTY_STICKY_LINE_INDICES = new int[0];
+    private int[] stickyLineIndices = EMPTY_STICKY_LINE_INDICES;
+    private int stickyLineCount;
     Paint.FontMetricsInt metricsText;
     @Nullable
     private Drawable horizontalScrollbarThumbDrawable;
@@ -1112,6 +1115,37 @@ public class EditorRenderer {
             }
         }
         return finalCandidates;
+    }
+
+    /**
+     * Start lines of the blocks sticky scroll is currently showing, in display order.
+     *
+     * The result is cached because this is read on every style patch query while the sticky block
+     * list is rebuilt far less often. The returned array must not be modified.
+     */
+    int[] getStickyLineIndices() {
+        var lines = lastStuckLines;
+        if (!editor.getProps().stickyScroll || lines == null || lines.isEmpty()) {
+            stickyLineCount = 0;
+            return EMPTY_STICKY_LINE_INDICES;
+        }
+        boolean rebuild = lines.size() != stickyLineCount;
+        if (!rebuild) {
+            for (int i = 0; i < lines.size(); i++) {
+                if (stickyLineIndices[i] != lines.get(i).startLine) {
+                    rebuild = true;
+                    break;
+                }
+            }
+        }
+        if (rebuild) {
+            stickyLineCount = lines.size();
+            stickyLineIndices = new int[stickyLineCount];
+            for (int i = 0; i < stickyLineCount; i++) {
+                stickyLineIndices[i] = lines.get(i).startLine;
+            }
+        }
+        return stickyLineIndices;
     }
 
     private final LineStyles coordinateLine = new LineStyles(0);

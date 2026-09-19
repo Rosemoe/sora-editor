@@ -4338,6 +4338,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return stylePatchManager;
     }
 
+    /** Whether nested brackets are colored using style patches. Requires language support. */
+    public boolean isBracketPairColorizationEnabled() {
+        return styleDelegate.isBracketPairColorizationEnabled();
+    }
+
+    /** Enable or disable rainbow bracket decorations, invalidating cached rendering immediately. */
+    @UiThread
+    public void setBracketPairColorizationEnabled(boolean enabled) {
+        styleDelegate.setBracketPairColorizationEnabled(enabled);
+    }
+
     public void registerStylePatchProvider(@NonNull StylePatchProvider provider) {
         stylePatchManager.register(provider);
     }

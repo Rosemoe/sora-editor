@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="vscode-source" pattern="file[sora-editor.editor.main]:java/io/github/rosemoe/sora/lang/completion/filters.kt||file[sora-editor.editor.main]:java/io/github/rosemoe/sora/lang/completion/comparators.kt||file[sora-editor.language-textmate.main]:java/io/github/rosemoe/sora/langs/textmate/brackets/ast//**||file[sora-editor.language-textmate.main]:java/io/github/rosemoe/sora/langs/textmate/brackets/BracketLexer.kt" />
+</component>

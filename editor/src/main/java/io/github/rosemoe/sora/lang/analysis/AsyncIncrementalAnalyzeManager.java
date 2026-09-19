@@ -125,6 +125,21 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
         }
     }
 
+    /**
+     * Called on the analyzer thread every time a contiguous line range of spans is updated.
+     * {@code startLine} and {@code endLine} are inclusive.
+     */
+    protected void onSpansChanged(Styles styles, int startLine, int endLine) {
+    }
+
+    /**
+     * Called on the analyzer thread when the analyzer is initialized.
+     * @param styles The styles to be used
+     */
+    protected void onSpansInit(Styles styles) {
+    }
+
+
     @Override
     public void insert(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence insertedText) {
         if (thread != null) {
@@ -228,6 +243,14 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
             throw new IllegalThreadStateException();
         }
         return ((AsyncIncrementalAnalyzeManager<?, ?>.LooperThread) thread).styles;
+    }
+
+    public Content getManagedContent() {
+        var thread = Thread.currentThread();
+        if (thread.getClass() != AsyncIncrementalAnalyzeManager.LooperThread.class) {
+            throw new IllegalThreadStateException();
+        }
+        return ((AsyncIncrementalAnalyzeManager<?, ?>.LooperThread) thread).shadowed;
     }
 
     private static class LockedSpans implements Spans {
@@ -511,8 +534,10 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
             styles.setSuppressSwitch(delegate.suppressSwitch);
             styles.finishBuilding();
 
-            if (!abort)
+            if (!abort) {
+                AsyncIncrementalAnalyzeManager.this.onSpansInit(styles);
                 sendNewStyles(styles);
+            }
         }
 
         public boolean handleMessage(@NonNull Message msg) {
@@ -532,7 +557,6 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                             var mod = (TextModification) msg.obj;
                             int startLine = IntPair.getFirst(mod.start);
                             int endLine = IntPair.getFirst(mod.end);
-
                             updateStart = startLine;
                             if (mod.changedText == null) {
                                 shadowed.delete(IntPair.getFirst(mod.start), IntPair.getSecond(mod.start),
@@ -607,6 +631,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                                 updateEnd = line;
                             }
                         }
+
                         // Do not update incomplete code blocks
                         var blocks = computeBlocks(shadowed, delegate);
                         if (delegate.isNotCancelled()) {
@@ -614,7 +639,9 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                             styles.finishBuilding();
                             styles.setSuppressSwitch(delegate.suppressSwitch);
                         }
+
                         if (!abort) {
+                            AsyncIncrementalAnalyzeManager.this.onSpansChanged(styles, updateStart, updateEnd);
                             sendUpdate(styles, updateStart, updateEnd);
                         }
                         break;
