@@ -61,8 +61,12 @@ class StylePatchManager(
     }
 
     @Synchronized
-    fun refresh(provider: StylePatchProvider) {
-        request(provider, StylePatchRequest.Reason.MANUAL, EmptyStyleUpdateRange)
+    fun refresh(provider: StylePatchProvider, changedRange: StyleUpdateRange?) {
+        if (changedRange == null) {
+            request(provider, StylePatchRequest.Reason.MANUAL, EmptyStyleUpdateRange)
+        } else {
+            request(provider, StylePatchRequest.Reason.TEXT_CHANGED, changedRange)
+        }
     }
 
     @Synchronized
