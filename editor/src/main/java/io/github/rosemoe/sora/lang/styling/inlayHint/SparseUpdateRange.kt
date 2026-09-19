@@ -49,4 +49,15 @@ class SparseUpdateRange : StyleUpdateRange {
 
     }
 
+    override fun intersects(startLine: Int, endLine: Int): Boolean {
+        if (startLine > endLine) return false
+        var lo = 0
+        var hi = array.size() - 1
+        while (lo <= hi) {
+            val mid = (lo + hi) ushr 1
+            if (array.keyAt(mid) < startLine) lo = mid + 1 else hi = mid - 1
+        }
+        return lo < array.size() && array.keyAt(lo) <= endLine
+    }
+
 }
