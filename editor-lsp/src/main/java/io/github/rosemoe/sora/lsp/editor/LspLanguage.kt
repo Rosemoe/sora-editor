@@ -41,7 +41,6 @@ import io.github.rosemoe.sora.lsp.editor.completion.LspCompletionItem
 import io.github.rosemoe.sora.lsp.editor.format.LspFormatter
 import io.github.rosemoe.sora.lsp.events.EventType
 import io.github.rosemoe.sora.lsp.events.completion.completion
-import io.github.rosemoe.sora.lsp.events.document.DocumentChangeEvent
 import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.text.CharPosition
@@ -49,6 +48,8 @@ import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.util.MyCharacter
 import io.github.rosemoe.sora.widget.SymbolPairMatch
 import kotlinx.coroutines.future.future
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
@@ -101,15 +102,9 @@ class LspLanguage(var editor: LspEditor) : Language {
 
         val prefixLength = prefix.length
 
-        val documentChangeEvent =
-            editor.eventManager.getEventListener<DocumentChangeEvent>() ?: return
-
-        val documentChangeFuture =
-            documentChangeEvent.future
-
-        if (documentChangeFuture?.isDone == false || documentChangeFuture?.isCompletedExceptionally == false || documentChangeFuture?.isCancelled == false) {
-            runCatching {
-                documentChangeFuture.get(Timeout[Timeouts.WILLSAVE, editor].toLong(), TimeUnit.MILLISECONDS)
+        runBlocking {
+            withTimeout(Timeout[Timeouts.WILLSAVE, editor].toLong()) {
+                editor.uiDelegate.contentChangeReceiver.awaitChanges()
             }
         }
 

@@ -1,5 +1,6 @@
 package io.github.rosemoe.sora.lsp.editor
 
+import io.github.rosemoe.sora.event.EditorReleaseEvent
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.Event
 import io.github.rosemoe.sora.event.HoverEvent
@@ -46,6 +47,8 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import java.lang.ref.WeakReference
 
 internal class LspEditorUIDelegate(private val editor: LspEditor) : InlayHintProvider, DiagnosticProvider, HighlightTextProvider {
+
+    internal val contentChangeReceiver = LspEditorContentChangeEvent(editor)
 
     private var currentEditorRef: WeakReference<CodeEditor?> = WeakReference(null as CodeEditor?)
     private var hoverWindowRef: WeakReference<HoverWindow?> = WeakReference(null as HoverWindow?)
@@ -140,6 +143,8 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) : InlayHintPro
         get() = codeActionWindowRef.get()
 
     fun attachEditor(codeEditor: CodeEditor) {
+        if (codeEditor.isReleased) return
+        editor.semanticTokens.attach(codeEditor)
         clearSubscriptions()
 
         currentEditorRef.clear()
@@ -179,8 +184,9 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) : InlayHintPro
         }
 
         subscriptionReceipts = mutableListOf(
+            codeEditor.subscribeEvent<EditorReleaseEvent> { _, _ -> detachEditor() },
             codeEditor.subscribeEvent<ContentChangeEvent>(
-                LspEditorContentChangeEvent(editor)
+                contentChangeReceiver
             ),
             codeEditor.subscribeEvent<SelectionChangeEvent>(
                 LspEditorSelectionChangeEvent(editor)
@@ -202,6 +208,7 @@ internal class LspEditorUIDelegate(private val editor: LspEditor) : InlayHintPro
     }
 
     fun detachEditor() {
+        editor.semanticTokens.detach()
         clearSubscriptions()
 
         currentEditorRef.get()?.let {

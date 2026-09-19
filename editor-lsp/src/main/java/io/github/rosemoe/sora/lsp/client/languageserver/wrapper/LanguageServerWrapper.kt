@@ -63,6 +63,10 @@ import org.eclipse.lsp4j.PublishDiagnosticsCapabilities
 import org.eclipse.lsp4j.RangeFormattingCapabilities
 import org.eclipse.lsp4j.ReferencesCapabilities
 import org.eclipse.lsp4j.RenameCapabilities
+import org.eclipse.lsp4j.SemanticTokensCapabilities
+import org.eclipse.lsp4j.SemanticTokensClientCapabilitiesRequests
+import org.eclipse.lsp4j.SemanticTokensClientCapabilitiesRequestsFull
+import org.eclipse.lsp4j.SemanticTokensWorkspaceCapabilities
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.SignatureHelpCapabilities
 import org.eclipse.lsp4j.SignatureInformationCapabilities
@@ -297,20 +301,24 @@ class LanguageServerWrapper(
             if (isOffline() || status is ServerStatus.STOPPING) {
                 return
             }
+            // A failed initialize usually leaves the JSON-RPC pipe already closed. Sending
+            // shutdown in STARTING state only writes to that dead pipe and reports a second
+            // "Broken pipe" error while handling the original failure.
+            val canRequestShutdown = status is ServerStatus.STARTED || status is ServerStatus.INITIALIZED
             status = ServerStatus.STOPPING(reason)
             initializeFuture?.cancel(true)
             try {
-                val shutdown = languageServer?.shutdown()
+                if (canRequestShutdown) {
+                    val shutdown = languageServer?.shutdown()
+                    shutdown?.get(Timeout[Timeouts.SHUTDOWN, serverDefinition].toLong(), TimeUnit.MILLISECONDS)
 
-                shutdown?.get(Timeout[Timeouts.SHUTDOWN, serverDefinition].toLong(), TimeUnit.MILLISECONDS)
-
-                if (exit && serverDefinition.callExitForLanguageServer()) {
-                    languageServer?.exit()
+                    if (exit && serverDefinition.callExitForLanguageServer()) {
+                        languageServer?.exit()
+                    }
                 }
 
             } catch (e: java.lang.Exception) {
-                // most likely closed externally.
-                Log.w(TAG, "Exception occurred while trying to shut down", e)
+                // The peer may have exited first. The cleanup below is authoritative.
             } finally {
                 launcherFuture?.cancel(true)
                 serverDefinition.stop(project.projectUri.path)
@@ -335,6 +343,7 @@ class LanguageServerWrapper(
         }
 
         val workspaceClientCapabilities = WorkspaceClientCapabilities().apply {
+            semanticTokens = SemanticTokensWorkspaceCapabilities(true)
             applyEdit = true
             didChangeWatchedFiles = DidChangeWatchedFilesCapabilities()
             executeCommand = ExecuteCommandCapabilities()
@@ -363,6 +372,22 @@ class LanguageServerWrapper(
             documentHighlight = DocumentHighlightCapabilities()
             colorProvider = ColorProviderCapabilities()
             inlayHint = InlayHintCapabilities()
+            semanticTokens = SemanticTokensCapabilities().apply {
+                dynamicRegistration = false
+                requests = SemanticTokensClientCapabilitiesRequests(
+                    SemanticTokensClientCapabilitiesRequestsFull(true), true)
+                tokenTypes = listOf("namespace", "type", "class", "enum", "interface", "struct",
+                    "typeParameter", "parameter", "variable", "property", "enumMember", "event",
+                    "function", "method", "macro", "keyword", "modifier", "comment", "string",
+                    "number", "regexp", "operator", "decorator")
+                tokenModifiers = listOf("declaration", "definition", "readonly", "static",
+                    "deprecated", "abstract", "async", "modification", "documentation", "defaultLibrary")
+                formats = listOf("relative")
+                overlappingTokenSupport = true
+                multilineTokenSupport = true
+                augmentsSyntaxTokens = true
+                serverCancelSupport = false
+            }
             formatting = FormattingCapabilities()
             hover = HoverCapabilities(markupKinds, true)
             onTypeFormatting = OnTypeFormattingCapabilities()
