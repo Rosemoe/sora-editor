@@ -70,6 +70,7 @@ import org.eclipse.lsp4j.SymbolCapabilities
 import org.eclipse.lsp4j.SynchronizationCapabilities
 import org.eclipse.lsp4j.TextDocumentClientCapabilities
 import org.eclipse.lsp4j.TextDocumentSyncKind
+import org.eclipse.lsp4j.WindowClientCapabilities
 import org.eclipse.lsp4j.WorkspaceClientCapabilities
 import org.eclipse.lsp4j.WorkspaceEditCapabilities
 import org.eclipse.lsp4j.WorkspaceFolder
@@ -376,11 +377,18 @@ class LanguageServerWrapper(
             publishDiagnostics = PublishDiagnosticsCapabilities(true)
         }
 
+        // Servers only send `$/progress` notifications when the client declares that it
+        // supports work done progress.
+        val windowClientCapabilities = WindowClientCapabilities().apply {
+            workDoneProgress = true
+        }
+
         initParams.apply {
             capabilities =
                 ClientCapabilities(
                     workspaceClientCapabilities,
                     textDocumentClientCapabilities,
+                    windowClientCapabilities,
                     null
                 )
             initializationOptions =
