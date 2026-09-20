@@ -75,6 +75,8 @@ android {
     }
 
     packaging {
+        // The language server is an executable packaged as a native library.
+        jniLibs.useLegacyPackaging = true
         resources.pickFirsts.addAll(
             arrayOf(
                 "license/README.dom.txt",
@@ -116,8 +118,6 @@ dependencies {
     // Kotlin coroutines
     implementation(libs.kotlinx.coroutines)
 
-    // Lua language server
-    implementation(fileTree("dir" to "libs", "includes" to listOf("*.jar")))
     implementation(libs.lsp4j)
 
     debugImplementation(libs.leakcanary)
