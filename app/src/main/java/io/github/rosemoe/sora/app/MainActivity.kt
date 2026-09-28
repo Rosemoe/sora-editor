@@ -229,6 +229,7 @@ class MainActivity : AppCompatActivity() {
             )
             typefaceText = typeface
             props.stickyScroll = true
+            isBracketPairColorizationEnabled = true
             setLineSpacing(2f, 1.1f)
             nonPrintablePaintingFlags =
                 CodeEditor.FLAG_DRAW_WHITESPACE_LEADING or CodeEditor.FLAG_DRAW_LINE_SEPARATOR or CodeEditor.FLAG_DRAW_WHITESPACE_IN_SELECTION or CodeEditor.FLAG_DRAW_SOFT_WRAP
@@ -284,7 +285,9 @@ class MainActivity : AppCompatActivity() {
         val editor = binding.editor
         val language = TextMateLanguage.create(
             "source.java", true
-        )
+        ).apply {
+            isBracketPairColorization = true
+        }
         editor.setEditorLanguage(language)
 
         val savedText = savedInstanceState?.getString("text")
@@ -970,7 +973,9 @@ class MainActivity : AppCompatActivity() {
                                 editorLanguage.updateLanguage(info.first)
                                 editorLanguage
                             } else {
-                                TextMateLanguage.create(info.second, true)
+                                TextMateLanguage.create(info.second, true).apply {
+                                    isBracketPairColorization = true
+                                }
                             }
                             editor.setEditorLanguage(language)
                         } catch (e: Exception) {
@@ -1016,7 +1021,9 @@ class MainActivity : AppCompatActivity() {
                                             localsScmSource = assets.open("tree-sitter-queries/java/locals.scm")
                                                 .reader().readText()
                                         )
-                                    )
+                                    ).apply {
+                                        bracketPairColorization = true
+                                    }
                                 )
                             }
                         }

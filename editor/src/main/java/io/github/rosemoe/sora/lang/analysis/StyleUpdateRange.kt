@@ -41,4 +41,13 @@ interface StyleUpdateRange {
      */
     fun lineIndexIterator(maxLineIndex: Int): IntIterator
 
+    fun intersects(startLine: Int, endLine: Int): Boolean {
+        if (startLine > endLine) return false
+        val iterator = lineIndexIterator(Int.MAX_VALUE)
+        while (iterator.hasNext()) {
+            if (iterator.nextInt() in startLine..endLine) return true
+        }
+        return false
+    }
+
 }

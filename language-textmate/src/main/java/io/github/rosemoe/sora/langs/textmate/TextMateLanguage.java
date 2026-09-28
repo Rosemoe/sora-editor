@@ -56,6 +56,7 @@ public class TextMateLanguage extends EmptyLanguage {
 
     private final IdentifierAutoComplete autoComplete = new IdentifierAutoComplete();
     boolean autoCompleteEnabled;
+    boolean bracketPairColorization = false;
     final boolean collectIdentifiers;
 
     TextMateAnalyzer textMateAnalyzer;
@@ -188,6 +189,7 @@ public class TextMateLanguage extends EmptyLanguage {
         }
         try {
             textMateAnalyzer = new TextMateAnalyzer(this, grammar, languageConfiguration, /*grammarRegistry,*/ themeRegistry);
+            textMateAnalyzer.setBracketPairColorization(this.bracketPairColorization);
         } catch (Exception e) {
             Log.w(LOG_TAG, "Failed to create analyzer for TextMate", e);
         }
@@ -263,6 +265,20 @@ public class TextMateLanguage extends EmptyLanguage {
 
     public void useTab(boolean useTab) {
         this.useTab = useTab;
+    }
+
+    public boolean isBracketPairColorization() {
+        return bracketPairColorization;
+    }
+
+    public void setBracketPairColorization(boolean bracketPairColorization) {
+        if (this.bracketPairColorization == bracketPairColorization) {
+            return;
+        }
+        this.bracketPairColorization = bracketPairColorization;
+        if (textMateAnalyzer != null) {
+            textMateAnalyzer.setBracketPairColorization(bracketPairColorization);
+        }
     }
 
     public TextMateNewlineHandler getNewlineHandler() {
