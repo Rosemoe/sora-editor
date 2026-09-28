@@ -95,3 +95,6 @@ lint/tmp/
 # Local Signing Config
 signing.properties
 signing.keystore
+
+# macOS
+.DS_Store

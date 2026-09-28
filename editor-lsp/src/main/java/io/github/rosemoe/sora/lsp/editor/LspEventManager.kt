@@ -27,9 +27,10 @@ package io.github.rosemoe.sora.lsp.editor
 import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.lsp.events.EventContext
 import io.github.rosemoe.sora.lsp.events.EventListener
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.eclipse.lsp4j.FormattingOptions
 import java.util.function.Supplier
 
@@ -88,6 +89,21 @@ class LspEventManager(
 
     suspend fun emitAsync(eventName: String, vararg args: Any): EventContext  {
         return eventEmitter.emitAsync(eventName, createEventContext(*args))
+    }
+
+    /** Launch an event and return its task. An optional predecessor preserves caller-defined order. */
+    fun emitJob(eventName: String, vararg args: Any, after: Job? = null): Job =
+        project.coroutineScope.launch(Dispatchers.IO) {
+            after?.join()
+            emitAsync(eventName, *args)
+        }
+
+    fun emitJob(eventName: String, after: Job? = null, block: EventContext.() -> Unit): Job {
+        val context = createEventContext().apply(block)
+        return project.coroutineScope.launch(Dispatchers.IO) {
+            after?.join()
+            eventEmitter.emitAsync(eventName, context)
+        }
     }
 
     @WorkerThread

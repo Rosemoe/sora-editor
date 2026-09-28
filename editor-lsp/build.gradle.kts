@@ -43,6 +43,9 @@ android {
 
 dependencies {
     compileOnly(projects.editor)
+    // Optional theme adapters; applications include only the language modules they use.
+    compileOnly(projects.languageTextmate)
+    compileOnly(projects.languageTreesitter)
     implementation(libs.lsp4j)
     implementation(libs.kotlinx.coroutines)
     testImplementation(libs.junit)

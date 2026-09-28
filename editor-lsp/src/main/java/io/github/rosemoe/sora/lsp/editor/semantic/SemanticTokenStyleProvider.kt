@@ -22,11 +22,28 @@
  *     additional information or have any questions
  ******************************************************************************/
 
-package io.github.rosemoe.sora.lsp.client.languageserver
+package io.github.rosemoe.sora.lsp.editor.semantic
 
-enum class LspFeature {
-    Completion, Hover, SignatureHelp, Diagnostics,
-    InlayHint, SemanticTokens, CodeAction, Formatting, DocumentHighlight,
-    Folding, Rename, DocumentSymbol, DocumentLink, DocumentColor,
-    Definition, TypeDefinition, Implementation, References, CodeLens,
+import io.github.rosemoe.sora.lang.styling.color.ResolvableColor
+
+/** Null attributes preserve the corresponding syntax style. */
+data class SemanticTokenStyle(
+    val foreground: ResolvableColor? = null,
+    val bold: Boolean? = null,
+    val italic: Boolean? = null
+) {
+    /** Fill attributes not specified by this style using the language's syntax theme. */
+    fun withFallback(fallback: SemanticTokenStyle?) = SemanticTokenStyle(
+        foreground ?: fallback?.foreground, bold ?: fallback?.bold, italic ?: fallback?.italic)
+}
+
+/**
+ * Resolves language-independent token classifications against a language's own theme.
+ * Called on a background thread; returning null preserves syntax highlighting.
+ */
+fun interface SemanticTokenStyleProvider {
+    fun getStyle(type: String, modifiers: Set<String>, languageId: String?): SemanticTokenStyle?
+
+    /** Notify when cached semantic styles need resolving again. Close to unsubscribe. */
+    fun observeChanges(listener: Runnable): AutoCloseable = AutoCloseable {}
 }

@@ -38,12 +38,9 @@ import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
 import org.eclipse.lsp4j.TextDocumentSyncKind
-import java.util.concurrent.CompletableFuture
 
 class DocumentChangeEvent : AsyncEventListener() {
     override val eventName = EventType.documentChange
-
-    var future: CompletableFuture<Void>? = null
 
     override suspend fun doHandleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
@@ -51,23 +48,10 @@ class DocumentChangeEvent : AsyncEventListener() {
 
         val params = createDidChangeTextDocumentParams(editor, event)
 
-        editor.requestManager.let { requestManager ->
-            future = CompletableFuture.runAsync {
-                requestManager.didChange(
-                    params
-                )
-            }
-
-            withContext(Dispatchers.IO) {
-                future?.get()
-            }
-
+        withContext(Dispatchers.IO) {
+            editor.requestManager.didChange(params)
         }
-    }
-
-    override fun dispose() {
-        future?.cancel(true)
-        future = null
+        editor.refreshSemanticTokens()
     }
 
     private fun createFullTextDocumentContentChangeEvent(editor: LspEditor): List<TextDocumentContentChangeEvent> {
@@ -105,7 +89,8 @@ class DocumentChangeEvent : AsyncEventListener() {
         data: ContentChangeEvent
     ): DidChangeTextDocumentParams {
         val kind = editor.textDocumentSyncKind
-        val isFullSync = kind == TextDocumentSyncKind.None || kind == TextDocumentSyncKind.Full
+        val isFullSync = data.action == ContentChangeEvent.ACTION_SET_NEW_TEXT ||
+            kind == TextDocumentSyncKind.None || kind == TextDocumentSyncKind.Full
 
         return editor.uri.createDidChangeTextDocumentParams(
             if (isFullSync) createFullTextDocumentContentChangeEvent(editor) else createIncrementTextDocumentContentChangeEvent(
