@@ -1,0 +1,56 @@
+--- a/crates/emmylua_ls/src/handlers/semantic_token/semantic_token_builder.rs
++++ b/crates/emmylua_ls/src/handlers/semantic_token/semantic_token_builder.rs
+@@ -311,7 +311,7 @@
+                 .push(SemanticTokenData::Basic(BasicSemanticTokenData {
+                     line: start_line,
+                     col: start_col,
+-                    length: end_col.saturating_sub(start_col),
++                    length: self.document.get_text_slice(range).encode_utf16().count() as u32,
+                     typ,
+                     modifiers,
+                 }));
+@@ -338,25 +338,11 @@
+         ty: SemanticTokenTypeKind,
+         modifiers: Option<SemanticTokenModifierKind>,
+     ) {
+-        if !self.seen_positions.insert(position) {
+-            return;
+-        }
+-
+-        let lsp_position = match self.document.to_lsp_position(position) {
+-            Some(pos) => pos,
+-            None => return,
+-        };
+-        let start_line = lsp_position.line;
+-        let start_col = lsp_position.character;
+-
+-        self.data
+-            .push(SemanticTokenData::Basic(BasicSemanticTokenData {
+-                line: start_line,
+-                col: start_col,
+-                length,
+-                typ: ty.to_u32(),
+-                modifiers: modifiers.as_ref().map(|m| m.to_u32()).unwrap_or(0),
+-            }));
++        self.push_data(
++            TextRange::at(position, TextSize::from(length)),
++            ty.to_u32(),
++            modifiers.map(|m| m.to_u32()).unwrap_or(0),
++        );
+     }
+
+     pub fn push_at_range(
+@@ -402,7 +388,12 @@
+         let mut prev_line = 0;
+         let mut prev_col = 0;
+
+-        for token_data in data {
++        for mut token_data in data {
++            // The parser's columns count Unicode scalars; LSP uses UTF-16 code units.
++            if let Some(range) = self.document.get_line_range(token_data.line as usize) {
++                token_data.col = self.document.get_text_slice(range).chars()
++                    .take(token_data.col as usize).map(|c| c.len_utf16() as u32).sum();
++            }
+             let line_diff = token_data.line - prev_line;
+             if line_diff != 0 {
+                 prev_col = 0;

@@ -30,25 +30,28 @@ import android.net.LocalServerSocket
 import android.net.LocalSocket
 import android.os.IBinder
 import android.util.Log
-import com.tang.vscode.LuaLanguageClient
-import com.tang.vscode.LuaLanguageServer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.eclipse.lsp4j.jsonrpc.Launcher
-import java.util.concurrent.Future
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.currentCoroutineContext
+import java.io.InputStream
+import java.io.OutputStream
+import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 
 class LspLanguageServerService : Service() {
-    private lateinit var socket: LocalServerSocket
+    private var socket: LocalServerSocket? = null
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private var acceptJob: Job? = null
+    private val clients = ConcurrentHashMap<LocalSocket, Process>()
 
     companion object {
         private const val TAG = "LanguageServer"
@@ -59,16 +62,15 @@ class LspLanguageServerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (!::socket.isInitialized) {
-            socket = LocalServerSocket("lua-lsp")
-        }
+        if (socket == null) socket = LocalServerSocket("lua-lsp")
 
-        if (acceptJob == null) {
+        if (acceptJob?.isActive != true) {
+            val serverSocket = socket ?: return START_NOT_STICKY
             acceptJob = serviceScope.launch {
-                Log.d(TAG, "Starting accept loop on address ${socket.localSocketAddress.namespace}")
+                Log.d(TAG, "Starting accept loop on address ${serverSocket.localSocketAddress.namespace}")
                 while (true) {
                     try {
-                        val socketClient = socket.accept()
+                        val socketClient = serverSocket.accept()
                         Log.d(TAG, "Accepted client $socketClient")
                         launch { handleClient(socketClient) }
                     } catch (e: Exception) {
@@ -82,41 +84,66 @@ class LspLanguageServerService : Service() {
         return START_STICKY
     }
 
-    private suspend fun handleClient(socketClient: LocalSocket) {
-        var future: Future<Void>? = null
-
-        val server = LuaLanguageServer()
-
-        runCatching {
-
-            val inputStream = socketClient.inputStream
-            val outputStream = socketClient.outputStream
-
-            val launcher = Launcher.createLauncher(
-                server, LuaLanguageClient::class.java,
-                inputStream, outputStream
-            )
-
-            server.connect(launcher.remoteProxy)
-
-            future = launcher.startListening()
-
-            // Suspend until the session ends, without blocking the dispatcher thread
-            withContext(Dispatchers.IO) {
-                future?.get()
+    private suspend fun handleClient(socketClient: LocalSocket) = coroutineScope {
+        val resources = File(cacheDir, "emmylua").apply { mkdirs() }
+        var process: Process? = null
+        try {
+            val executable = File(applicationInfo.nativeLibraryDir, "libemmylua_ls.so")
+            val server = ProcessBuilder(executable.absolutePath, "--resources-path", resources.absolutePath)
+                .directory(resources)
+                .redirectError(File(resources, "stderr.log"))
+                .start()
+            process = server
+            clients[socketClient] = server
+            currentCoroutineContext().ensureActive()
+            // Preserve the example's local socket transport; the native server speaks standard LSP stdio.
+            val input = launch {
+                try {
+                    socketClient.inputStream.forwardTo(server.outputStream)
+                } catch (e: Exception) {
+                    Log.d(TAG, "Client input closed", e)
+                } finally {
+                    runCatching { server.outputStream.close() }
+                }
             }
-        }.onFailure {
-            Log.d(TAG, "Unexpected exception in Language Server client thread.", it)
+            try {
+                server.inputStream.forwardTo(socketClient.outputStream)
+            } finally {
+                runCatching { socketClient.close() }
+                server.destroy()
+                input.cancel()
+            }
+        } catch (e: Exception) {
+            Log.d(TAG, "Language server connection closed", e)
+        } finally {
+            clients.remove(socketClient)
+            process?.destroy()
+            runCatching { process?.outputStream?.close() }
+            runCatching { process?.inputStream?.close() }
+            runCatching { process?.errorStream?.close() }
+            runCatching { socketClient.close() }
         }
+    }
 
-        Log.d(TAG, "Closed client $socketClient")
-        future?.cancel(true)
-        runCatching { socketClient.close() }
+    private fun InputStream.forwardTo(output: OutputStream) {
+        val buffer = ByteArray(8192)
+        while (true) {
+            val count = read(buffer)
+            if (count < 0) return
+            output.write(buffer, 0, count)
+            output.flush()
+        }
     }
 
     override fun onDestroy() {
         serviceScope.cancel()
-        runCatching { socket.close() }
+        acceptJob = null
+        runCatching { socket?.close() }
+        socket = null
+        clients.forEach { (client, process) ->
+            runCatching { client.close() }
+            process.destroy()
+        }
         super.onDestroy()
     }
 }
