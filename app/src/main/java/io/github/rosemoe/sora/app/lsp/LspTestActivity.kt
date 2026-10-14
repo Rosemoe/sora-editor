@@ -67,6 +67,7 @@ import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.DiagnosticRegistrationOptions
 import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams
 import org.eclipse.lsp4j.InitializeResult
+import org.eclipse.lsp4j.ProgressParams
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.WorkspaceFolder
 import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent
@@ -357,6 +358,15 @@ class LspTestActivity : BaseEditorActivity() {
 
         override fun onStatusChange(newStatus: ServerStatus, oldStatus: ServerStatus) {
             Log.d("LSP_TEST_ACTIVITY", "New status: $newStatus; Old status: $oldStatus")
+        }
+
+        override fun onProgress(params: ProgressParams) {
+            // The value is a WorkDoneProgressBegin/Report/End, or an arbitrary payload sent by
+            // the server. It is not guaranteed to be a work done progress notification.
+            Log.d(
+                "LSP_TEST_ACTIVITY",
+                "Progress: token=${params.token}, value=${params.value?.left ?: params.value?.right}"
+            )
         }
     }
 }

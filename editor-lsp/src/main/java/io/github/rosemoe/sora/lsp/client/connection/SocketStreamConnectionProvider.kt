@@ -39,30 +39,28 @@ class SocketStreamConnectionProvider(
     private val port:Int,
     private val host:String? = null
 ) : StreamConnectionProvider {
-    private lateinit var socket: Socket
+    private var socket: Socket? = null
 
     @Throws(IOException::class)
     override fun start() {
-        val port = port
-        socket = Socket()
-        socket.connect(InetSocketAddress(host ?: "localhost", port), 20)
-        socket.soTimeout = 0
+        socket?.let { runCatching { it.close() } }
+        socket = Socket().also {
+            it.connect(InetSocketAddress(host ?: "localhost", port), 20)
+            it.soTimeout = 0
+        }
     }
 
     override val inputStream: InputStream
-        get() = socket.getInputStream()
+        get() = requireNotNull(socket).inputStream
 
     override val outputStream: OutputStream
-        get() = socket.getOutputStream()
+        get() = requireNotNull(socket).outputStream
 
     override val isClosed: Boolean
-        get() = !::socket.isInitialized || socket.isClosed
+        get() = socket?.isClosed != false
 
     override fun close() {
-        try {
-            socket.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        socket?.let { runCatching { it.close() } }
+        socket = null
     }
 }
