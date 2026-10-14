@@ -28,6 +28,7 @@ import android.util.SparseLongArray
 import com.itsaky.androidide.treesitter.TSQuery
 import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Theme for tree-sitter. This is different from [io.github.rosemoe.sora.widget.schemes.EditorColorScheme].
@@ -46,6 +47,22 @@ class TsTheme(private val tsQuery: TSQuery) {
 
     private val styles = mutableMapOf<String, Long>()
     private val mapping = SparseLongArray()
+    private val listeners = CopyOnWriteArrayList<Runnable>()
+    fun observeChanges(listener: Runnable): AutoCloseable {
+        listeners.add(listener)
+        return AutoCloseable { listeners.remove(listener) }
+    }
+
+    /** Resolve a named capture without the catch-all style. Returns zero when no rule matches. */
+    @Synchronized
+    fun resolveStyleForCapture(capture: String): Long {
+        var name = capture
+        while (name.isNotEmpty()) {
+            styles[name]?.takeIf { it != 0L }?.let { return it }
+            name = name.substringBeforeLast('.', "")
+        }
+        return 0L
+    }
 
     /**
      * The text style for normal texts
@@ -60,8 +77,11 @@ class TsTheme(private val tsQuery: TSQuery) {
      * @see io.github.rosemoe.sora.lang.styling.TextStyle
      */
     fun putStyleRule(rule: String, style: Long) {
-        styles[rule] = style
-        mapping.clear()
+        synchronized(this) {
+            styles[rule] = style
+            mapping.clear()
+        }
+        listeners.forEach { it.run() }
     }
 
     /**
@@ -70,17 +90,14 @@ class TsTheme(private val tsQuery: TSQuery) {
      */
     fun eraseStyleRule(rule: String) = putStyleRule(rule, 0L)
 
+    @Synchronized
     fun resolveStyleForPattern(pattern: Int): Long {
         val index = mapping.indexOfKey(pattern)
         return if (index >= 0) {
             mapping.valueAt(index)
         } else {
-            var mappedName = tsQuery.getCaptureNameForId(pattern)
-            var style = styles[mappedName] ?: 0L
-            while (style == 0L && mappedName.isNotEmpty()) {
-                mappedName = mappedName.substringBeforeLast('.', "")
-                style = styles[mappedName] ?: 0L
-            }
+            val style = resolveStyleForCapture(tsQuery.getCaptureNameForId(pattern))
+                .takeIf { it != 0L } ?: styles[""] ?: 0L
             mapping.put(pattern, style)
             style
         }

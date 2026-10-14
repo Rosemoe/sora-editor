@@ -26,6 +26,8 @@ package io.github.rosemoe.sora.lsp.editor
 
 import androidx.annotation.WorkerThread
 import io.github.rosemoe.sora.annotations.Experimental
+import io.github.rosemoe.sora.lsp.editor.semantic.SemanticTokenStyleProvider
+import io.github.rosemoe.sora.lsp.editor.semantic.SemanticTokensSupport
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lsp.client.languageserver.requestmanager.RequestManager
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.LanguageServerWrapper
@@ -80,6 +82,25 @@ class LspEditor(
 ) {
     private val delegate = LspEditorDelegate(this)
     internal val uiDelegate = LspEditorUIDelegate(this)
+    internal val semanticTokens = SemanticTokensSupport(this)
+
+    /** Overlay server semantic colors on the wrapper language's syntax highlighting. */
+    var isEnableSemanticTokens: Boolean = true
+        set(value) {
+            field = value
+            semanticTokens.refresh()
+        }
+
+    /** Resolves LSP token classifications against the application or language theme. */
+    var semanticTokenStyleProvider: SemanticTokenStyleProvider? = null
+        set(value) {
+            field = value
+            semanticTokens.restyle()
+        }
+
+    /** Ask the selected semantic token server to recompute this document. */
+    fun refreshSemanticTokens() = semanticTokens.refresh()
+
 
     private var _currentEditor: WeakReference<CodeEditor?> = WeakReference(null)
 
@@ -103,6 +124,7 @@ class LspEditor(
     var signatureHelpReTriggers = mutableSetOf<String>()
 
     val coroutineScope = project.coroutineScope
+
 
     var editor: CodeEditor?
         set(currentEditor) {
@@ -244,6 +266,7 @@ class LspEditor(
             requestDocumentColor()
 
             status = LspEditorStatus.CONNECTED
+            refreshSemanticTokens()
         }.onFailure {
             if (throwException) {
                 status = LspEditorStatus.DISCONNECTED
@@ -321,6 +344,7 @@ class LspEditor(
     internal fun onWrapperStopped(wrapper: LanguageServerWrapper) {
         uiDelegate.clearWrapperState()
         delegate.onWrapperDisconnected(wrapper)
+        refreshSemanticTokens()
     }
 
     /**

@@ -31,12 +31,13 @@ import io.github.rosemoe.sora.lsp.editor.LspEditor
 import io.github.rosemoe.sora.lsp.editor.requestDocumentColor
 import io.github.rosemoe.sora.lsp.editor.requestInlayHint
 import io.github.rosemoe.sora.lsp.events.EventType
-import io.github.rosemoe.sora.lsp.events.diagnostics.queryDocumentDiagnostics
 import io.github.rosemoe.sora.lsp.events.document.documentChange
+import io.github.rosemoe.sora.lsp.events.diagnostics.queryDocumentDiagnostics
 import io.github.rosemoe.sora.lsp.events.highlight.DocumentHighlightEvent
 import io.github.rosemoe.sora.lsp.events.highlight.documentHighlight
 import io.github.rosemoe.sora.lsp.events.hover.hover
 import io.github.rosemoe.sora.lsp.events.signature.signatureHelp
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.DocumentDiagnosticReport
@@ -46,14 +47,25 @@ private const val DIAGNOSTIC_QUERY_SOURCE = "sora.lsp.query"
 
 class LspEditorContentChangeEvent(private val editor: LspEditor) :
     EventReceiver<ContentChangeEvent> {
+    @Volatile private var changeJob: Job? = null
+
+    internal suspend fun awaitChanges() {
+        do {
+            val pending = changeJob
+            pending?.join()
+        } while (pending !== changeJob)
+    }
+
     override fun onReceive(event: ContentChangeEvent, unsubscribe: Unsubscribe) {
         if (!editor.isConnected) {
             return
         }
 
+        val change = editor.eventManager.emitJob(EventType.documentChange, event, after = changeJob)
+        changeJob = change
+
         editor.coroutineScope.launch(Dispatchers.IO) {
-            // send to server
-            editor.eventManager.emitAsync(EventType.documentChange, event)
+            change.join()
 
             if (editor.hitReTrigger(event.changedText)) {
                 editor.showSignatureHelp(null)

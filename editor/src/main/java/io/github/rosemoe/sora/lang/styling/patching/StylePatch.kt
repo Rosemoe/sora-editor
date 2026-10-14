@@ -25,6 +25,7 @@
 package io.github.rosemoe.sora.lang.styling.patching
 
 import io.github.rosemoe.sora.lang.styling.color.ResolvableColor
+import io.github.rosemoe.sora.util.IntPair
 
 class StylePatch(
     var startLine: Int,
@@ -32,7 +33,6 @@ class StylePatch(
     var endLine: Int,
     var endColumn: Int
 ) : Comparable<StylePatch> {
-
     init {
         if (startLine < 0 || startColumn < 0 || endLine < 0 || endColumn < 0) {
             throw IllegalArgumentException("negative number")
@@ -47,13 +47,33 @@ class StylePatch(
     var overrideItalics: Boolean? = null
     var overrideBold: Boolean? = null
 
+    internal var start: Position
+        get() = Position(startLine, startColumn)
+        set(value) {
+            startLine = value.line
+            startColumn = value.column
+        }
+
+    internal var end: Position
+        get() = Position(endLine, endColumn)
+        set(value) {
+            endLine = value.line
+            endColumn = value.column
+        }
+
     override fun compareTo(other: StylePatch): Int {
-        var res = startLine.compareTo(other.startLine)
-        if (res != 0) return res
-        res = startColumn.compareTo(other.startColumn)
-        if (res != 0) return res
-        res = endLine.compareTo(other.endLine)
-        if (res != 0) return res
-        return endColumn.compareTo(other.endColumn)
+        val byStart = start.compareTo(other.start)
+        return if (byStart != 0) byStart else end.compareTo(other.end)
     }
+}
+
+@JvmInline
+internal value class Position private constructor(private val packed: Long) : Comparable<Position> {
+
+    constructor(line: Int, column: Int) : this(IntPair.pack(line, column))
+
+    val line: Int get() = IntPair.getFirst(packed)
+    val column: Int get() = IntPair.getSecond(packed)
+
+    override fun compareTo(other: Position) = packed.compareTo(other.packed)
 }

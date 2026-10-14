@@ -38,11 +38,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.MessageParams;
-import org.eclipse.lsp4j.WorkspaceFolder;
-import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.tm4e.core.registry.IThemeSource;
 
@@ -53,8 +50,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.Enumeration;
-import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -69,12 +64,13 @@ import io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry;
 import io.github.rosemoe.sora.langs.textmate.registry.dsl.LanguageDefinitionListBuilder;
 import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel;
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver;
-import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider;
 import io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus;
 import io.github.rosemoe.sora.lsp.client.languageserver.serverdefinition.CustomLanguageServerDefinition;
 import io.github.rosemoe.sora.lsp.client.languageserver.wrapper.EventHandler;
 import io.github.rosemoe.sora.lsp.editor.LspEditor;
 import io.github.rosemoe.sora.lsp.editor.LspProject;
+import io.github.rosemoe.sora.lsp.client.connection.LocalSocketStreamConnectionProvider;
+import io.github.rosemoe.sora.lsp.editor.semantic.TextMateSemanticTokenStyleProvider;
 import io.github.rosemoe.sora.text.ContentIO;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 import kotlin.Unit;
@@ -105,8 +101,8 @@ public class LspTestJavaActivity extends BaseEditorActivity {
         ForkJoinPool.commonPool().execute(() -> {
             try {
                 unAssets();
-                connectToLanguageServer();
                 setEditorText();
+                connectToLanguageServer();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -136,11 +132,7 @@ public class LspTestJavaActivity extends BaseEditorActivity {
 
         var projectPath = new File(getExternalCacheDir(), "testProject").getAbsolutePath();
 
-        var intent = new Intent(this, LspLanguageServerService.class);
-
-        startService(
-                intent
-        );
+        startService(new Intent(this, LspLanguageServerService.class));
 
         var luaServerDefinition =
                 new CustomLanguageServerDefinition("lua",
@@ -167,6 +159,7 @@ public class LspTestJavaActivity extends BaseEditorActivity {
 
             var wrapperLanguage = createTextMateLanguage();
             lspEditor.setWrapperLanguage(wrapperLanguage);
+            lspEditor.setSemanticTokenStyleProvider(new TextMateSemanticTokenStyleProvider(ThemeRegistry.getInstance()));
             lspEditor.setEditor(editor);
             lspEditor.setEnableInlayHint(true);
 
@@ -186,17 +179,6 @@ public class LspTestJavaActivity extends BaseEditorActivity {
 
         try {
             lspEditor.connectWithTimeoutBlocking();
-
-            var changeWorkspaceFoldersParams = new DidChangeWorkspaceFoldersParams();
-
-            changeWorkspaceFoldersParams.setEvent(new WorkspaceFoldersChangeEvent());
-
-            changeWorkspaceFoldersParams.getEvent().setAdded(List.of(new WorkspaceFolder("file://" + projectPath + "/std/Lua53", "MyLuaProject")));
-
-            Objects.requireNonNull(lspEditor.getRequestManager())
-                    .didChangeWorkspaceFolders(
-                            changeWorkspaceFoldersParams
-                    );
 
             connected = true;
 
@@ -284,8 +266,8 @@ public class LspTestJavaActivity extends BaseEditorActivity {
             ForkJoinPool.commonPool().execute(() -> {
                 lspEditor.dispose();
                 lspProject.dispose();
+                stopService(new Intent(LspTestJavaActivity.this, LspLanguageServerService.class));
             });
-            stopService(new Intent(LspTestJavaActivity.this, LspLanguageServerService.class));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -370,6 +352,7 @@ public class LspTestJavaActivity extends BaseEditorActivity {
             }
 
             activity.runOnUiThread(() -> {
+                if (rootMenu == null) return;
                 var item = rootMenu.findItem(R.id.code_format);
 
                 var isEnabled =
@@ -400,5 +383,3 @@ public class LspTestJavaActivity extends BaseEditorActivity {
         }
     }
 }
-
-

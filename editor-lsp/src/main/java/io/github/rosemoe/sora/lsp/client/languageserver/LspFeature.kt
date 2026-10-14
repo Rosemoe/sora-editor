@@ -26,7 +26,7 @@ package io.github.rosemoe.sora.lsp.client.languageserver
 
 enum class LspFeature {
     Completion, Hover, SignatureHelp, Diagnostics,
-    InlayHint, CodeAction, Formatting, DocumentHighlight,
+    InlayHint, SemanticTokens, CodeAction, Formatting, DocumentHighlight,
     Folding, Rename, DocumentSymbol, DocumentLink, DocumentColor,
     Definition, TypeDefinition, Implementation, References, CodeLens,
 }

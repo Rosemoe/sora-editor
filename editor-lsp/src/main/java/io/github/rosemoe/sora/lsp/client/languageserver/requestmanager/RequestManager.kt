@@ -81,6 +81,7 @@ import org.eclipse.lsp4j.SemanticTokens
 import org.eclipse.lsp4j.SemanticTokensDelta
 import org.eclipse.lsp4j.SemanticTokensDeltaParams
 import org.eclipse.lsp4j.SemanticTokensParams
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions
 import org.eclipse.lsp4j.SemanticTokensRangeParams
 import org.eclipse.lsp4j.SetTraceParams
 import org.eclipse.lsp4j.ShowMessageRequestParams
@@ -186,18 +187,15 @@ abstract class RequestManager : LanguageClient, TextDocumentService, WorkspaceSe
     abstract override fun colorPresentation(params: ColorPresentationParams): CompletableFuture<List<ColorPresentation>>?
     abstract override fun foldingRange(params: FoldingRangeRequestParams): CompletableFuture<List<FoldingRange>>?
 
-    // TODO: waiting sora support style patch
-    override fun semanticTokensFull(params: SemanticTokensParams): CompletableFuture<SemanticTokens> {
-        return super.semanticTokensFull(params)
-    }
+    /** Options and legend belong to this server, never to a merged multi-server capability. */
+    open val semanticTokensOptions: SemanticTokensWithRegistrationOptions?
+        get() = capabilities?.semanticTokensProvider
 
-    override fun semanticTokensFullDelta(params: SemanticTokensDeltaParams): CompletableFuture<Either<SemanticTokens, SemanticTokensDelta>> {
-        return super.semanticTokensFullDelta(params)
-    }
+    override fun semanticTokensFull(params: SemanticTokensParams): CompletableFuture<SemanticTokens>? = null
 
-    override fun semanticTokensRange(params: SemanticTokensRangeParams): CompletableFuture<SemanticTokens> {
-        return super.semanticTokensRange(params)
-    }
+    override fun semanticTokensFullDelta(params: SemanticTokensDeltaParams): CompletableFuture<Either<SemanticTokens, SemanticTokensDelta>>? = null
+
+    override fun semanticTokensRange(params: SemanticTokensRangeParams): CompletableFuture<SemanticTokens>? = null
     abstract override fun logTrace(params: LogTraceParams)
     abstract override fun setTrace(params: SetTraceParams)
     abstract override fun notifyProgress(params: ProgressParams)

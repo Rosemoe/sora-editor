@@ -85,6 +85,12 @@ import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.ReferenceParams
 import org.eclipse.lsp4j.RegistrationParams
 import org.eclipse.lsp4j.RenameParams
+import org.eclipse.lsp4j.SemanticTokens
+import org.eclipse.lsp4j.SemanticTokensDelta
+import org.eclipse.lsp4j.SemanticTokensParams
+import org.eclipse.lsp4j.SemanticTokensDeltaParams
+import org.eclipse.lsp4j.SemanticTokensRangeParams
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.SetTraceParams
 import org.eclipse.lsp4j.ShowMessageRequestParams
@@ -781,6 +787,29 @@ class DefaultRequestManager(
                 null
             }
         } else null
+    }
+
+    override val semanticTokensOptions: SemanticTokensWithRegistrationOptions?
+        get() = serverCapabilities.semanticTokensProvider.takeIf {
+            checkStatus() && LspFeature.SemanticTokens !in disabledFeatures &&
+                (serverCapabilities.positionEncoding == null || serverCapabilities.positionEncoding == "utf-16")
+        }
+
+    override fun semanticTokensFull(params: SemanticTokensParams): CompletableFuture<SemanticTokens>? {
+        val options = semanticTokensOptions ?: return null
+        if (options.full?.left != true && options.full?.right == null) return null
+        return textDocumentService.semanticTokensFull(params)
+    }
+
+    override fun semanticTokensFullDelta(params: SemanticTokensDeltaParams): CompletableFuture<Either<SemanticTokens, SemanticTokensDelta>>? {
+        if (semanticTokensOptions?.full?.right?.delta != true) return null
+        return textDocumentService.semanticTokensFullDelta(params)
+    }
+
+    override fun semanticTokensRange(params: SemanticTokensRangeParams): CompletableFuture<SemanticTokens>? {
+        val options = semanticTokensOptions ?: return null
+        if (options.range?.left != true && options.range?.right == null) return null
+        return textDocumentService.semanticTokensRange(params)
     }
 
     override fun colorPresentation(params: ColorPresentationParams): CompletableFuture<List<ColorPresentation>>? {

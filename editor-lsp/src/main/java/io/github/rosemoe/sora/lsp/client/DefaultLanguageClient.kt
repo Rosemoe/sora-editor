@@ -121,6 +121,13 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
         editor?.onDiagnosticsUpdate()
     }
 
+    override fun refreshSemanticTokens(): CompletableFuture<Void> {
+        context.project?.getEditors()?.filter { editor ->
+            editor.requestManager.semanticTokensManager?.serverName == context.serverName
+        }?.forEach { it.refreshSemanticTokens() }
+        return CompletableFuture.completedFuture(null)
+    }
+
     override fun refreshDiagnostics(): CompletableFuture<Void> {
         //TODO: support it.
         return CompletableFuture.completedFuture(null)
