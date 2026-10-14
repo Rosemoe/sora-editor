@@ -172,7 +172,7 @@ public final class RuleFactory {
                         if (localIncludedRule != null) {
                             ruleId = getCompiledRuleId(localIncludedRule, helper, repository);
                         } else {
-                            LOGGER.w("CANNOT find rule for scopeName [{0}]. I am [{1}]",
+                            LOGGER.d("CANNOT find rule for scopeName [%s]. I am [%s]",
                                     patternInclude, repository.getBase().getName());
                         }
                         break;
@@ -193,14 +193,14 @@ public final class RuleFactory {
                                 if (externalIncludedRule != null) {
                                     ruleId = getCompiledRuleId(externalIncludedRule, helper, externalGrammarRepo);
                                 } else {
-                                    LOGGER.w("CANNOT find rule for scopeName [{0}]. I am [{1}]",
+                                    LOGGER.d("CANNOT find rule for scopeName [%s]. I am [%s]",
                                             patternInclude, repository.getBase().getName());
                                 }
                             } else {
                                 ruleId = getCompiledRuleId(externalGrammarRepo.getSelf(), helper, externalGrammarRepo);
                             }
                         } else {
-                            LOGGER.w("CANNOT find grammar for scopeName [{0}]. I am [{1}]",
+                            LOGGER.d("CANNOT find grammar for scopeName [%s]. I am [%s]",
                                     patternInclude, repository.getBase().getName());
                         }
                         break;
@@ -239,7 +239,7 @@ public final class RuleFactory {
                 }
 
                 if (skipRule) {
-                    LOGGER.w("REMOVING " + rule + " ENTIRELY DUE TO EMPTY PATTERNS THAT ARE MISSING");
+                    LOGGER.d("REMOVING %s ENTIRELY DUE TO EMPTY PATTERNS THAT ARE MISSING", rule);
                     continue;
                 }
 
