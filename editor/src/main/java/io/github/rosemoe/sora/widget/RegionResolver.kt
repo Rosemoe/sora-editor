@@ -35,7 +35,7 @@ const val REGION_DIVIDER = 4
 const val REGION_TEXT = 5
 
 /**
- * Column left of the line numbers that shows the code folding indicators
+ * Column right of the line numbers that shows the code folding indicators
  */
 const val REGION_FOLD = 6
 
@@ -60,19 +60,21 @@ fun CodeEditor.resolveTouchRegion(event: MotionEvent, pointerIndex: Int = -1): L
     // A pinned gutter stays on screen while the content scrolls below it
     val gutterStart = if (isLineNumberEnabled && isLineNumberPinned && !isWordwrap) offsetX.toFloat() else 0f
     val localX = x - gutterStart
-    val breakpointStart = foldWidth
-    val lineNumberStart = breakpointStart + breakpointWidth
+    val breakpointEnd = breakpointWidth
+    val lineNumberStart = breakpointEnd
     val lineNumberEnd = lineNumberStart + lineNumberWidth
-    val iconEnd = lineNumberEnd + iconWidth
+    val foldStart = lineNumberEnd
+    val foldEnd = foldStart + foldWidth
+    val iconEnd = foldEnd + iconWidth
     val dividerStart = iconEnd + dividerMarginLeft
     val dividerEnd = dividerStart + dividerWidth
     val gutterEnd = dividerEnd + dividerMarginRight
     val region = when {
         x < 0f -> REGION_OUTBOUND
-        foldWidth > 0f && localX in 0f..breakpointStart -> REGION_FOLD
-        breakpointWidth > 0f && localX in breakpointStart..lineNumberStart -> REGION_BREAKPOINT
+        breakpointWidth > 0f && localX in 0f..breakpointEnd -> REGION_BREAKPOINT
         localX in lineNumberStart..lineNumberEnd -> REGION_LINE_NUMBER
-        localX in lineNumberEnd..iconEnd -> REGION_SIDE_ICON
+        foldWidth > 0f && localX in foldStart..foldEnd -> REGION_FOLD
+        localX in foldEnd..iconEnd -> REGION_SIDE_ICON
         localX in iconEnd..dividerStart || localX in dividerEnd..gutterEnd -> REGION_DIVIDER_MARGIN
         localX in dividerStart..dividerEnd -> REGION_DIVIDER
         x >= maxOf(textOffset, gutterEnd) && x <= scrollMaxX + width -> REGION_TEXT

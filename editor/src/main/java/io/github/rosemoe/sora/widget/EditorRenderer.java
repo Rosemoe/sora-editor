@@ -137,6 +137,8 @@ public class EditorRenderer {
     private final Drawable lineBreakGraph;
     private final Drawable softwrapLeftGraph;
     private final Drawable softwrapRightGraph;
+    private final Drawable foldExpandIcon;
+    private final Drawable foldCollapseIcon;
     private volatile long displayTimestamp;
     private Paint.FontMetricsInt metricsLineNumber;
     private Paint.FontMetricsInt metricsGraph;
@@ -175,6 +177,8 @@ public class EditorRenderer {
         lineBreakGraph = editor.getContext().getDrawable(R.drawable.line_break);
         softwrapLeftGraph = editor.getContext().getDrawable(R.drawable.softwrap_left);
         softwrapRightGraph = editor.getContext().getDrawable(R.drawable.softwrap_right);
+        foldExpandIcon = editor.getContext().getDrawable(R.drawable.ic_expand_more);
+        foldCollapseIcon = editor.getContext().getDrawable(R.drawable.ic_chevron_right);
         minimapRenderer = new MinimapRenderer(editor);
 
         onEditorFullTextUpdate();
@@ -567,7 +571,7 @@ public class EditorRenderer {
 
             canvas.save();
             canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
-            drawFoldAndBreakpointIndicator(canvas, offsetX, foldIndicatorWidth, breakpointIndicatorWidth);
+            drawFoldAndBreakpointIndicator(canvas, offsetX, breakpointIndicatorWidth, lineNumberWidth, foldIndicatorWidth);
             if (firstLn != null && firstLn.value != -1) {
                 int bottom = editor.getRowBottom(0);
                 float y;
@@ -583,18 +587,18 @@ public class EditorRenderer {
                 var text = Integer.toString(firstLn.value + 1);
                 switch (editor.getLineNumberAlign()) {
                     case LEFT:
-                        canvas.drawText(text, offsetX + indicatorWidth, y, paintOther);
+                        canvas.drawText(text, offsetX + breakpointIndicatorWidth, y, paintOther);
                         break;
                     case RIGHT:
-                        canvas.drawText(text, offsetX + indicatorWidth + lineNumberWidth, y, paintOther);
+                        canvas.drawText(text, offsetX + breakpointIndicatorWidth + lineNumberWidth, y, paintOther);
                         break;
                     case CENTER:
-                        canvas.drawText(text, offsetX + indicatorWidth + (lineNumberWidth + editor.getDividerMarginLeft()) / 2f, y, paintOther);
+                        canvas.drawText(text, offsetX + breakpointIndicatorWidth + (lineNumberWidth + editor.getDividerMarginLeft()) / 2f, y, paintOther);
                 }
             }
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
-                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX + indicatorWidth, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
+                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX + breakpointIndicatorWidth, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
             }
             canvas.restore();
         }
@@ -645,10 +649,10 @@ public class EditorRenderer {
 
             canvas.save();
             canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
-            drawFoldAndBreakpointIndicator(canvas, 0, foldIndicatorWidth, breakpointIndicatorWidth);
+            drawFoldAndBreakpointIndicator(canvas, 0, breakpointIndicatorWidth, lineNumberWidth, foldIndicatorWidth);
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
-                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), indicatorWidth, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
+                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), breakpointIndicatorWidth, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
             }
             canvas.restore();
         }
@@ -685,7 +689,6 @@ public class EditorRenderer {
         var currentLine = cursor.isSelected() ? -1 : cursor.getLeftLine();
         float foldIndicatorWidth = editor.measureFoldIndicatorWidth();
         float breakpointIndicatorWidth = editor.measureBreakpointIndicatorWidth();
-        float indicatorWidth = foldIndicatorWidth + breakpointIndicatorWidth;
         float gutterBase = editor.isLineNumberPinned() ? 0 : offset;
         canvas.save();
         var offsetY = editor.getOffsetY();
@@ -713,9 +716,9 @@ public class EditorRenderer {
                 if (color != 0)
                     drawColor(canvas, color, tmpRect);
             }
-            drawFoldAndBreakpointIndicatorRow(canvas, gutterBase, line, i, foldIndicatorWidth, breakpointIndicatorWidth);
+            drawFoldAndBreakpointIndicatorRow(canvas, gutterBase, line, i, breakpointIndicatorWidth, lineNumberWidth, foldIndicatorWidth);
             drawLineNumber(canvas, line, i,
-                    gutterBase + indicatorWidth, lineNumberWidth,
+                    gutterBase + breakpointIndicatorWidth, lineNumberWidth,
                     currentLine == line ? editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
             if (shouldTranslate) {
                 canvas.restore();
@@ -868,11 +871,12 @@ public class EditorRenderer {
      * Draw the code folding indicators and the breakpoint markers of all visible rows
      *
      * @param canvas              Canvas to draw
-     * @param base                Left edge of the fold indicator column
-     * @param foldIndicatorWidth  Width of the fold indicator column
+     * @param base                Left edge of the breakpoint indicator column
      * @param breakpointWidth     Width of the breakpoint indicator column
+     * @param lineNumberWidth     Width of the line number column
+     * @param foldIndicatorWidth  Width of the fold indicator column
      */
-    protected void drawFoldAndBreakpointIndicator(Canvas canvas, float base, float foldIndicatorWidth, float breakpointWidth) {
+    protected void drawFoldAndBreakpointIndicator(Canvas canvas, float base, float breakpointWidth, float lineNumberWidth, float foldIndicatorWidth) {
         if (foldIndicatorWidth <= 0f && breakpointWidth <= 0f) {
             return;
         }
@@ -881,7 +885,7 @@ public class EditorRenderer {
         var itr = editor.getLayout().obtainRowIterator(row);
         while (row <= lastRow && itr.hasNext()) {
             var rowInf = itr.next();
-            drawFoldAndBreakpointIndicatorRow(canvas, base, rowInf.lineIndex, row, foldIndicatorWidth, breakpointWidth);
+            drawFoldAndBreakpointIndicatorRow(canvas, base, rowInf.lineIndex, row, breakpointWidth, lineNumberWidth, foldIndicatorWidth);
             row++;
         }
     }
@@ -890,19 +894,20 @@ public class EditorRenderer {
      * Draw the folding indicator and the breakpoint marker of a single displayed row
      *
      * @param canvas              Canvas to draw
-     * @param base                Left edge of the fold indicator column
+     * @param base                Left edge of the breakpoint indicator column
      * @param line                Logical line of the row
      * @param row                 Displayed row
-     * @param foldIndicatorWidth  Width of the fold indicator column
      * @param breakpointWidth     Width of the breakpoint indicator column
+     * @param lineNumberWidth     Width of the line number column
+     * @param foldIndicatorWidth  Width of the fold indicator column
      */
-    protected void drawFoldAndBreakpointIndicatorRow(Canvas canvas, float base, int line, int row, float foldIndicatorWidth, float breakpointWidth) {
+    protected void drawFoldAndBreakpointIndicatorRow(Canvas canvas, float base, int line, int row, float breakpointWidth, float lineNumberWidth, float foldIndicatorWidth) {
         final var colorScheme = editor.getColorScheme();
         final float centerY = editor.getRowTop(row) + editor.getRowHeight() / 2f - editor.getOffsetY();
         if (breakpointWidth > 0f) {
             var breakpoint = editor.getBreakpoints().get(line);
             if (breakpoint != null) {
-                float cx = base + foldIndicatorWidth + breakpointWidth / 2f;
+                float cx = base + breakpointWidth / 2f;
                 float radius = Math.min(breakpointWidth, editor.getRowHeight()) * 0.4f;
                 paintOther.setStyle(Paint.Style.FILL);
                 paintOther.setColor(colorScheme.getColor(EditorColorScheme.DEBUG_BREAKPOINT));
@@ -920,24 +925,40 @@ public class EditorRenderer {
         if (foldIndicatorWidth > 0f) {
             var region = editor.getFoldingManager().regionAt(line);
             if (region != null && region.isFoldable()) {
-                float cx = base + foldIndicatorWidth / 2f;
-                float half = foldIndicatorWidth * 0.3f;
-                tmpPath.reset();
-                if (editor.getFoldingManager().isCollapsed(region)) {
-                    tmpPath.moveTo(cx - half, centerY - half);
-                    tmpPath.lineTo(cx + half, centerY);
-                    tmpPath.lineTo(cx - half, centerY + half);
-                } else {
-                    tmpPath.moveTo(cx - half, centerY - half);
-                    tmpPath.lineTo(cx + half, centerY - half);
-                    tmpPath.lineTo(cx, centerY + half);
-                }
-                tmpPath.close();
-                paintOther.setStyle(Paint.Style.FILL);
-                paintOther.setColor(colorScheme.getColor(EditorColorScheme.FOLD_INDICATOR));
-                canvas.drawPath(tmpPath, paintOther);
+                drawFoldIcon(
+                        canvas,
+                        base + breakpointWidth + lineNumberWidth,
+                        foldIndicatorWidth,
+                        centerY,
+                        editor.getFoldingManager().isCollapsed(region),
+                        colorScheme.getColor(EditorColorScheme.FOLD_INDICATOR)
+                );
             }
         }
+    }
+
+    /**
+     * Draw the fold icon of a foldable region
+     *
+     * @param canvas          Canvas to draw
+     * @param columnStart     Left edge of the fold indicator column
+     * @param columnWidth     Width of the fold indicator column
+     * @param centerY         Vertical center of the row
+     * @param collapsed       Whether the region is currently collapsed
+     * @param color           Color of the icon
+     */
+    protected void drawFoldIcon(Canvas canvas, float columnStart, float columnWidth, float centerY, boolean collapsed, int color) {
+        var icon = collapsed ? foldCollapseIcon : foldExpandIcon;
+        if (icon == null) {
+            return;
+        }
+        float box = Math.min(columnWidth, editor.getRowHeight());
+        int half = (int) (box / 2f);
+        int cx = (int) (columnStart + columnWidth / 2f);
+        int cy = (int) centerY;
+        icon.setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
+        icon.setBounds(cx - half, cy - half, cx + half, cy + half);
+        icon.draw(canvas);
     }
 
     protected void drawFormatTip(Canvas canvas) {
