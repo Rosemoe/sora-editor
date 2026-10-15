@@ -76,6 +76,16 @@
                 android:checkable="true"
                 android:title="@string/pin_line_number" />
             <item
+                android:id="@+id/code_folding"
+                android:checkable="true"
+                android:checked="true"
+                android:title="Code folding" />
+            <item
+                android:id="@+id/breakpoint_markers"
+                android:checkable="true"
+                android:checked="true"
+                android:title="Breakpoint markers" />
+            <item
                 android:id="@+id/magnifier"
                 android:checkable="true"
                 android:checked="true"
@@ -100,6 +110,34 @@
                 android:checkable="true"
                 android:checked="true"
                 android:title="@string/hide_soft_kbd_if_hard_kbd_available" />
+        </menu>
+    </item>
+    <item android:title="Folding &amp; debug">
+        <menu>
+            <item
+                android:id="@+id/fold_all"
+                android:title="Fold all" />
+            <item
+                android:id="@+id/expand_all"
+                android:title="Expand all" />
+            <item
+                android:id="@+id/toggle_breakpoint"
+                android:title="Toggle breakpoint" />
+            <item
+                android:id="@+id/clear_breakpoints"
+                android:title="Clear all breakpoints" />
+            <item
+                android:id="@+id/action_run"
+                android:title="Run" />
+            <item
+                android:id="@+id/action_run_selection"
+                android:title="Run selection" />
+            <item
+                android:id="@+id/action_copy_line"
+                android:title="Copy line" />
+            <item
+                android:id="@+id/action_list"
+                android:title="List registered actions" />
         </menu>
     </item>
     <item android:title="@string/line_info_panel_position">

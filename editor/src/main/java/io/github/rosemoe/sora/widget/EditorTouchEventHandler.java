@@ -59,6 +59,9 @@ import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.TextRange;
 import io.github.rosemoe.sora.util.IntPair;
 import io.github.rosemoe.sora.util.Numbers;
+import io.github.rosemoe.sora.widget.action.ActionContext;
+import io.github.rosemoe.sora.widget.action.ActionTrigger;
+import io.github.rosemoe.sora.widget.action.EditorActionManager;
 import io.github.rosemoe.sora.widget.component.Magnifier;
 import io.github.rosemoe.sora.widget.layout.RowElementTypes;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
@@ -872,6 +875,22 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             }
         }
         if ((dispatchEditorMotionEvent(ClickEvent::new, position, e, region, regionBound) & InterceptTarget.TARGET_EDITOR) != 0) {
+            return true;
+        }
+        if (region == RegionResolverKt.REGION_FOLD) {
+            if (editor.isCodeFoldingEnabled()) {
+                editor.getActionManager().perform(
+                        EditorActionManager.ACTION_FOLD_TOGGLE,
+                        new ActionContext(editor, position, ActionTrigger.GUTTER));
+            }
+            return true;
+        }
+        if (region == RegionResolverKt.REGION_BREAKPOINT) {
+            if (editor.isBreakpointMarkerEnabled()) {
+                editor.getActionManager().perform(
+                        EditorActionManager.ACTION_BREAKPOINT_TOGGLE,
+                        new ActionContext(editor, position, ActionTrigger.GUTTER));
+            }
             return true;
         }
         editor.showSoftInput();

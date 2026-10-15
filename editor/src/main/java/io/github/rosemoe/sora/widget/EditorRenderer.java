@@ -482,11 +482,14 @@ public class EditorRenderer {
         drawColor(canvas, color.getColor(EditorColorScheme.WHOLE_BACKGROUND), viewRect);
 
         float lineNumberWidth = editor.measureLineNumber(); // include line number margin
+        float foldIndicatorWidth = editor.measureFoldIndicatorWidth();
+        float breakpointIndicatorWidth = editor.measureBreakpointIndicatorWidth();
+        float indicatorWidth = foldIndicatorWidth + breakpointIndicatorWidth;
         var sideIconWidth = hasSideHintIcons() ? editor.getRowHeight() : 0f;
         float offsetX = -editor.getOffsetX() + editor.measureTextRegionOffset();
         float textOffset = offsetX;
 
-        var gutterWidth = (int) (lineNumberWidth + sideIconWidth + editor.getDividerWidth() + editor.getDividerMarginLeft() + editor.getDividerMarginRight());
+        var gutterWidth = (int) (indicatorWidth + lineNumberWidth + sideIconWidth + editor.getDividerWidth() + editor.getDividerMarginLeft() + editor.getDividerMarginRight());
         if (editor.isWordwrap()) {
             if (cachedGutterWidth == 0) {
                 cachedGutterWidth = gutterWidth;
@@ -539,7 +542,7 @@ public class EditorRenderer {
         int currentLineNumber = cursor.isSelected() ? -1 : cursor.getLeftLine();
 
         if (lineNumberNotPinned) {
-            drawLineNumberBackground(canvas, offsetX, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
+            drawLineNumberBackground(canvas, offsetX, indicatorWidth + lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             int lineNumberColor = editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = editor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
             if (editor.getCursorAnimator().isRunning() && editor.isHighlightCurrentLine() && editor.isEditable()) {
@@ -557,13 +560,14 @@ public class EditorRenderer {
             }
             // User defined gutter background
             drawUserGutterBackground(canvas, (int) (textOffset - editor.getDividerMarginRight()));
-            drawSideIcons(canvas, offsetX + lineNumberWidth);
+            drawSideIcons(canvas, offsetX + indicatorWidth + lineNumberWidth);
             canvas.restore();
 
-            drawDivider(canvas, offsetX + lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_DIVIDER));
+            drawDivider(canvas, offsetX + indicatorWidth + lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_DIVIDER));
 
             canvas.save();
             canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
+            drawFoldAndBreakpointIndicator(canvas, offsetX, foldIndicatorWidth, breakpointIndicatorWidth);
             if (firstLn != null && firstLn.value != -1) {
                 int bottom = editor.getRowBottom(0);
                 float y;
@@ -579,18 +583,18 @@ public class EditorRenderer {
                 var text = Integer.toString(firstLn.value + 1);
                 switch (editor.getLineNumberAlign()) {
                     case LEFT:
-                        canvas.drawText(text, offsetX, y, paintOther);
+                        canvas.drawText(text, offsetX + indicatorWidth, y, paintOther);
                         break;
                     case RIGHT:
-                        canvas.drawText(text, offsetX + lineNumberWidth, y, paintOther);
+                        canvas.drawText(text, offsetX + indicatorWidth + lineNumberWidth, y, paintOther);
                         break;
                     case CENTER:
-                        canvas.drawText(text, offsetX + (lineNumberWidth + editor.getDividerMarginLeft()) / 2f, y, paintOther);
+                        canvas.drawText(text, offsetX + indicatorWidth + (lineNumberWidth + editor.getDividerMarginLeft()) / 2f, y, paintOther);
                 }
             }
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
-                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
+                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), offsetX + indicatorWidth, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
             }
             canvas.restore();
         }
@@ -617,7 +621,7 @@ public class EditorRenderer {
         drawStuckLines(canvas, stuckLines, textOffset);
 
         if (editor.isLineNumberEnabled() && !lineNumberNotPinned) {
-            drawLineNumberBackground(canvas, 0, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
+            drawLineNumberBackground(canvas, 0, indicatorWidth + lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
 
             canvas.save();
             canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
@@ -634,16 +638,17 @@ public class EditorRenderer {
                 drawRowBackground(canvas, currentLineBgColor, postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight() + editor.getOffsetX()));
             }
             drawUserGutterBackground(canvas, (int) (textOffset - editor.getDividerMarginRight() + editor.getOffsetX()));
-            drawSideIcons(canvas, lineNumberWidth);
+            drawSideIcons(canvas, indicatorWidth + lineNumberWidth);
             canvas.restore();
 
-            drawDivider(canvas, lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_DIVIDER));
+            drawDivider(canvas, indicatorWidth + lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_DIVIDER));
 
             canvas.save();
             canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
+            drawFoldAndBreakpointIndicator(canvas, 0, foldIndicatorWidth, breakpointIndicatorWidth);
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
-                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), 0, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
+                drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), indicatorWidth, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
             }
             canvas.restore();
         }
@@ -678,6 +683,10 @@ public class EditorRenderer {
         }
         var cursor = editor.getCursor();
         var currentLine = cursor.isSelected() ? -1 : cursor.getLeftLine();
+        float foldIndicatorWidth = editor.measureFoldIndicatorWidth();
+        float breakpointIndicatorWidth = editor.measureBreakpointIndicatorWidth();
+        float indicatorWidth = foldIndicatorWidth + breakpointIndicatorWidth;
+        float gutterBase = editor.isLineNumberPinned() ? 0 : offset;
         canvas.save();
         var offsetY = editor.getOffsetY();
         canvas.translate(0, offsetY);
@@ -687,7 +696,7 @@ public class EditorRenderer {
             var bg = getUserGutterBackgroundForLine(line);
             var color = bg != null ? bg.resolve(editor.getColorScheme()) : 0;
             var bottomOffset = editor.getRowBottom(i);
-            var endLineTop = editor.getRowTop(block.endLine) - editor.getOffsetY();
+            var endLineTop = editor.getRowTop(editor.getRowIndexOfLine(block.endLine)) - editor.getOffsetY();
             var shouldTranslate = endLineTop < bottomOffset && endLineTop >= bottomOffset - editor.getRowHeight();
             if (shouldTranslate) {
                 canvas.save();
@@ -697,15 +706,16 @@ public class EditorRenderer {
             if (currentLine == line || color != 0) {
                 tmpRect.top = editor.getRowTop(i) - offsetY;
                 tmpRect.bottom = editor.getRowBottom(i) - offsetY - editor.getDpUnit();
-                tmpRect.left = editor.isLineNumberPinned() ? 0 : offset;
+                tmpRect.left = gutterBase;
                 tmpRect.right = tmpRect.left + editor.measureTextRegionOffset();
                 if (currentLine == line && editor.isHighlightCurrentLine())
                     drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE), tmpRect);
                 if (color != 0)
                     drawColor(canvas, color, tmpRect);
             }
+            drawFoldAndBreakpointIndicatorRow(canvas, gutterBase, line, i, foldIndicatorWidth, breakpointIndicatorWidth);
             drawLineNumber(canvas, line, i,
-                    editor.isLineNumberPinned() ? 0 : offset, lineNumberWidth,
+                    gutterBase + indicatorWidth, lineNumberWidth,
                     currentLine == line ? editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
             if (shouldTranslate) {
                 canvas.restore();
@@ -725,7 +735,7 @@ public class EditorRenderer {
             var block = candidates.get(i);
             if (block.startLine > previousLine) {
                 bottomOffset = editor.getRowBottom(offsetLine);
-                var endLineTop = editor.getRowTop(block.endLine) - editor.getOffsetY();
+                var endLineTop = editor.getRowTop(editor.getRowIndexOfLine(block.endLine)) - editor.getOffsetY();
                 var shouldTranslate = endLineTop < bottomOffset && endLineTop >= bottomOffset - editor.getRowHeight();
                 if (shouldTranslate) {
                     bottomOffset += endLineTop - bottomOffset;
@@ -756,7 +766,7 @@ public class EditorRenderer {
                 bottomOffset = tmpRect.bottom = editor.getRowBottom(offsetLine);
                 tmpRect.left = offset;
                 tmpRect.right = editor.getWidth();
-                var endLineTop = editor.getRowTop(block.endLine) - editor.getOffsetY();
+                var endLineTop = editor.getRowTop(editor.getRowIndexOfLine(block.endLine)) - editor.getOffsetY();
                 var shouldTranslate = endLineTop < tmpRect.bottom && endLineTop >= tmpRect.top;
                 if (shouldTranslate) {
                     canvas.save();
@@ -851,6 +861,82 @@ public class EditorRenderer {
                 }
             }
             row++;
+        }
+    }
+
+    /**
+     * Draw the code folding indicators and the breakpoint markers of all visible rows
+     *
+     * @param canvas              Canvas to draw
+     * @param base                Left edge of the fold indicator column
+     * @param foldIndicatorWidth  Width of the fold indicator column
+     * @param breakpointWidth     Width of the breakpoint indicator column
+     */
+    protected void drawFoldAndBreakpointIndicator(Canvas canvas, float base, float foldIndicatorWidth, float breakpointWidth) {
+        if (foldIndicatorWidth <= 0f && breakpointWidth <= 0f) {
+            return;
+        }
+        int row = editor.getFirstVisibleRow();
+        int lastRow = editor.getLastVisibleRow();
+        var itr = editor.getLayout().obtainRowIterator(row);
+        while (row <= lastRow && itr.hasNext()) {
+            var rowInf = itr.next();
+            drawFoldAndBreakpointIndicatorRow(canvas, base, rowInf.lineIndex, row, foldIndicatorWidth, breakpointWidth);
+            row++;
+        }
+    }
+
+    /**
+     * Draw the folding indicator and the breakpoint marker of a single displayed row
+     *
+     * @param canvas              Canvas to draw
+     * @param base                Left edge of the fold indicator column
+     * @param line                Logical line of the row
+     * @param row                 Displayed row
+     * @param foldIndicatorWidth  Width of the fold indicator column
+     * @param breakpointWidth     Width of the breakpoint indicator column
+     */
+    protected void drawFoldAndBreakpointIndicatorRow(Canvas canvas, float base, int line, int row, float foldIndicatorWidth, float breakpointWidth) {
+        final var colorScheme = editor.getColorScheme();
+        final float centerY = editor.getRowTop(row) + editor.getRowHeight() / 2f - editor.getOffsetY();
+        if (breakpointWidth > 0f) {
+            var breakpoint = editor.getBreakpoints().get(line);
+            if (breakpoint != null) {
+                float cx = base + foldIndicatorWidth + breakpointWidth / 2f;
+                float radius = Math.min(breakpointWidth, editor.getRowHeight()) * 0.4f;
+                paintOther.setStyle(Paint.Style.FILL);
+                paintOther.setColor(colorScheme.getColor(EditorColorScheme.DEBUG_BREAKPOINT));
+                if (breakpoint.getEnabled()) {
+                    canvas.drawCircle(cx, centerY, radius, paintOther);
+                } else {
+                    paintOther.setStyle(Paint.Style.STROKE);
+                    paintOther.setStrokeWidth(Math.max(1f, radius / 3f));
+                    canvas.drawCircle(cx, centerY, radius, paintOther);
+                    paintOther.setStrokeWidth(1f);
+                }
+                paintOther.setStyle(Paint.Style.FILL);
+            }
+        }
+        if (foldIndicatorWidth > 0f) {
+            var region = editor.getFoldingManager().regionAt(line);
+            if (region != null && region.isFoldable()) {
+                float cx = base + foldIndicatorWidth / 2f;
+                float half = foldIndicatorWidth * 0.3f;
+                tmpPath.reset();
+                if (editor.getFoldingManager().isCollapsed(region)) {
+                    tmpPath.moveTo(cx - half, centerY - half);
+                    tmpPath.lineTo(cx + half, centerY);
+                    tmpPath.lineTo(cx - half, centerY + half);
+                } else {
+                    tmpPath.moveTo(cx - half, centerY - half);
+                    tmpPath.lineTo(cx + half, centerY - half);
+                    tmpPath.lineTo(cx, centerY + half);
+                }
+                tmpPath.close();
+                paintOther.setStyle(Paint.Style.FILL);
+                paintOther.setColor(colorScheme.getColor(EditorColorScheme.FOLD_INDICATOR));
+                canvas.drawPath(tmpPath, paintOther);
+            }
         }
     }
 
@@ -1074,7 +1160,7 @@ public class EditorRenderer {
         List<CodeBlock> finalCandidates = new ArrayList<>();
         for (int i = 0; i < visibleBlocks.size(); i++) {
             var block = visibleBlocks.get(i);
-            if (block.endLine > startLine && editor.getRowTop(block.startLine) - offsetY < 0) {
+            if (block.endLine > startLine && editor.getRowTop(editor.getRowIndexOfLine(block.startLine)) - offsetY < 0) {
                 finalCandidates.add(block);
                 startLine++;
                 offsetY += rowHeight;
@@ -1226,7 +1312,7 @@ public class EditorRenderer {
             circleRadius = Math.min(editor.getRowHeight(), spaceWidth) * RenderingConstants.NON_PRINTABLE_CIRCLE_RADIUS_FACTOR;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !editor.isWordwrap() && canvas.isHardwareAccelerated() && editor.isHardwareAcceleratedDrawAllowed()) {
-            editor.getRenderContext().getRenderNodeHolder().keepCurrentInDisplay(firstVis, editor.getLastVisibleRow(), stuckLines);
+            editor.getRenderContext().getRenderNodeHolder().keepCurrentInDisplay(editor.getLineOfRow(firstVis), editor.getLineOfRow(editor.getLastVisibleRow()), stuckLines);
         }
         float offset2 = editor.getOffsetX() - editor.measureTextRegionOffset();
 
@@ -2031,8 +2117,8 @@ public class EditorRenderer {
         if (blocks == null || blocks.isEmpty()) {
             return;
         }
-        int first = editor.getFirstVisibleRow();
-        int last = editor.getLastVisibleRow();
+        int first = editor.getLineOfRow(editor.getFirstVisibleRow());
+        int last = editor.getLineOfRow(editor.getLastVisibleRow());
         boolean mark = false;
         int invalidCount = 0;
         int maxCount = styles.getSuppressSwitch();
@@ -2049,13 +2135,13 @@ public class EditorRenderer {
             if (CodeEditor.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
                 try {
                     var lineContent = getLine(block.endLine);
-                    float offsetEnd = indentMode ? paintGeneral.getSpaceWidth() * block.endColumn : createTextRow(block.endLine).getCursorOffsetForIndex(Math.min(block.endColumn, lineContent.length()));
+                    float offsetEnd = indentMode ? paintGeneral.getSpaceWidth() * block.endColumn : createTextRow(editor.getRowIndexOfLine(block.endLine)).getCursorOffsetForIndex(Math.min(block.endColumn, lineContent.length()));
                     lineContent = getLine(block.startLine);
-                    float offsetStart = indentMode ? paintGeneral.getSpaceWidth() * block.startColumn : createTextRow(block.startLine).getCursorOffsetForIndex(Math.min(block.startColumn, lineContent.length()));
+                    float offsetStart = indentMode ? paintGeneral.getSpaceWidth() * block.startColumn : createTextRow(editor.getRowIndexOfLine(block.startLine)).getCursorOffsetForIndex(Math.min(block.startColumn, lineContent.length()));
                     float offset = Math.min(offsetEnd, offsetStart);
                     float centerX = offset + offsetX;
-                    tmpRect.top = Math.max(0, editor.getRowBottom(block.startLine) - editor.getOffsetY());
-                    tmpRect.bottom = Math.min(editor.getHeight(), (block.toBottomOfEndLine ? editor.getRowBottom(block.endLine) : editor.getRowTop(block.endLine)) - editor.getOffsetY());
+                    tmpRect.top = Math.max(0, editor.getRowBottom(editor.getRowIndexOfLine(block.startLine)) - editor.getOffsetY());
+                    tmpRect.bottom = Math.min(editor.getHeight(), (block.toBottomOfEndLine ? editor.getRowBottom(editor.getRowIndexOfLine(block.endLine)) : editor.getRowTop(editor.getRowIndexOfLine(block.endLine))) - editor.getOffsetY());
                     tmpRect.left = centerX - editor.getDpUnit() * editor.getBlockLineWidth() / 2;
                     tmpRect.right = centerX + editor.getDpUnit() * editor.getBlockLineWidth() / 2;
                     drawColor(canvas, editor.getColorScheme().getColor(curr == cursorIdx ? EditorColorScheme.BLOCK_LINE_CURRENT : EditorColorScheme.BLOCK_LINE), tmpRect);
@@ -2086,7 +2172,7 @@ public class EditorRenderer {
             try {
                 float top = layout.getCharLayoutOffset(block.startLine, block.startColumn)[0] - editor.getRowHeight() - editor.getOffsetY();
                 float bottom = layout.getCharLayoutOffset(block.endLine, block.endColumn)[0] - editor.getOffsetY();
-                float left = editor.measureLineNumber();
+                float left = editor.measureTextRegionOffset() - editor.getDividerMarginLeft() - editor.getDividerMarginRight() - editor.getDividerWidth();
                 float right = left + editor.getDividerMarginLeft();
                 float center = (left + right) / 2 - editor.getOffsetX();
                 paintGeneral.setColor(editor.getColorScheme().getColor(EditorColorScheme.SIDE_BLOCK_LINE));

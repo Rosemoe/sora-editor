@@ -319,6 +319,26 @@ public class DirectAccessProps implements Serializable {
     @FloatRange(from = 0.0f, to = 1.0f)
     public final float miniMarkerSizeFactor = 0.5f;
 
+    /**
+     * Specify the code folding indicator size factor.
+     * result size = row height * foldIndicatorSizeFactor
+     *
+     * @see CodeEditor#measureFoldIndicatorWidth()
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float foldIndicatorSizeFactor = 0.8f;
+
+    /**
+     * Specify the breakpoint indicator size factor.
+     * result size = row height * breakpointIndicatorSizeFactor
+     *
+     * @see CodeEditor#measureBreakpointIndicatorWidth()
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float breakpointIndicatorSizeFactor = 0.7f;
+
 
     /**
      * Specify the text size factor for function characters

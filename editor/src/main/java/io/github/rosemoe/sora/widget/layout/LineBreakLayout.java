@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.SingleCharacterWidths;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
+import io.github.rosemoe.sora.lang.folding.FoldedLineMap;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.ContentLine;
@@ -169,7 +170,7 @@ public class LineBreakLayout extends AbstractLayout {
 
     @Override
     public int getRowCount() {
-        return text.getLineCount();
+        return getFoldedLineMap().getVisibleLineCount();
     }
 
     @Override
@@ -218,19 +219,21 @@ public class LineBreakLayout extends AbstractLayout {
     @NonNull
     @Override
     public Row getRowAt(int rowIndex) {
+        var line = getFoldedLineMap().displayToLine(rowIndex);
         var row = new Row();
-        row.lineIndex = rowIndex;
+        row.lineIndex = line;
         row.startColumn = 0;
         row.isLeadingRow = true;
         row.isTrailingRow = true;
-        row.endColumn = text.getColumnCount(rowIndex);
-        row.inlayHints = getInlayHints(rowIndex);
+        row.endColumn = text.getColumnCount(line);
+        row.inlayHints = getInlayHints(line);
         return row;
     }
 
     @Override
     public int getRowIndexForPosition(int index) {
-        return editor.getText().getIndexer().getCharPosition(index).line;
+        var line = editor.getText().getIndexer().getCharPosition(index).line;
+        return getFoldedLineMap().lineToDisplay(line);
     }
 
     @Override
@@ -242,7 +245,7 @@ public class LineBreakLayout extends AbstractLayout {
 
     @Override
     public int getLineNumberForRow(int row) {
-        return Math.max(0, Math.min(row, text.getLineCount() - 1));
+        return getFoldedLineMap().displayToLine(row);
     }
 
     @Override
@@ -252,15 +255,15 @@ public class LineBreakLayout extends AbstractLayout {
 
     @Override
     public int getLayoutHeight() {
-        return text.getLineCount() * editor.getRowHeight();
+        return getFoldedLineMap().getVisibleLineCount() * editor.getRowHeight();
     }
 
     @NonNull
     @Override
     public VisualLocation getVisualPositionForLayoutOffset(float offsetX, float offsetY) {
-        int lineCount = text.getLineCount();
-        int line = Math.min(lineCount - 1, Math.max((int) (offsetY / editor.getRowHeight()), 0));
-        var tr = editor.getRenderer().createTextRow(line);
+        int row = (int) (offsetY / editor.getRowHeight());
+        int line = getFoldedLineMap().displayToLine(row);
+        var tr = editor.getRenderer().createTextRow(row);
         var pos = tr.getElementPositionForCursorOffset(offsetX);
         return new VisualLocation(line, pos.textOffset, pos.element, pos.isInElementBounds);
     }
@@ -271,9 +274,12 @@ public class LineBreakLayout extends AbstractLayout {
         if (dest == null || dest.length < 2) {
             dest = new float[2];
         }
-        dest[0] = editor.getRowBottom(line);
-        var tr = editor.getRenderer().createTextRow(line);
-        dest[1] = tr.getCursorOffsetForIndex(column);
+        var lineMap = getFoldedLineMap();
+        var visibleLine = lineMap.clampToVisible(line);
+        var displayRow = lineMap.lineToDisplay(visibleLine);
+        dest[0] = editor.getRowBottom(displayRow);
+        var tr = editor.getRenderer().createTextRow(displayRow);
+        dest[1] = tr.getCursorOffsetForIndex(Math.min(column, text.getColumnCount(visibleLine)));
         return dest;
     }
 
@@ -284,28 +290,38 @@ public class LineBreakLayout extends AbstractLayout {
 
     @Override
     public long getDownPosition(int line, int column) {
-        int c_line = text.getLineCount();
-        if (line + 1 >= c_line) {
+        int lineCount = text.getLineCount();
+        var lineMap = getFoldedLineMap();
+        int target = line + 1;
+        while (target < lineCount && lineMap.isHidden(target)) {
+            target++;
+        }
+        if (target >= lineCount) {
             return IntPair.pack(line, text.getColumnCount(line));
         } else {
-            int c_column = text.getColumnCount(line + 1);
+            int c_column = text.getColumnCount(target);
             if (column > c_column) {
                 column = c_column;
             }
-            return IntPair.pack(line + 1, column);
+            return IntPair.pack(target, column);
         }
     }
 
     @Override
     public long getUpPosition(int line, int column) {
-        if (line - 1 < 0) {
+        var lineMap = getFoldedLineMap();
+        int target = line - 1;
+        while (target >= 0 && lineMap.isHidden(target)) {
+            target--;
+        }
+        if (target < 0) {
             return IntPair.pack(0, 0);
         }
-        int c_column = text.getColumnCount(line - 1);
+        int c_column = text.getColumnCount(target);
         if (column > c_column) {
             column = c_column;
         }
-        return IntPair.pack(line - 1, column);
+        return IntPair.pack(target, column);
     }
 
     public void reuse(Content text) {
@@ -335,12 +351,14 @@ public class LineBreakLayout extends AbstractLayout {
         private final SparseArray<ContentLine> preloadedLines;
         private int currentRow;
         private final AbstractLayout layout;
+        private final FoldedLineMap lineMap;
 
         LineBreakLayoutRowItr(AbstractLayout layout, @NonNull Content text, int initialRow, @Nullable SparseArray<ContentLine> preloadedLines) {
             initRow = currentRow = initialRow;
             result = new Row();
             this.text = text;
             this.layout = layout;
+            this.lineMap = layout.getFoldedLineMap();
             result.isLeadingRow = true;
             result.isTrailingRow = true;
             result.startColumn = 0;
@@ -353,12 +371,13 @@ public class LineBreakLayout extends AbstractLayout {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            result.lineIndex = currentRow;
-            var line = preloadedLines != null ? preloadedLines.get(currentRow) : null;
-            if (line == null) {
-                line = text.getLine(currentRow);
+            final var line = lineMap.displayToLine(currentRow);
+            result.lineIndex = line;
+            var contentLine = preloadedLines != null ? preloadedLines.get(line) : null;
+            if (contentLine == null) {
+                contentLine = text.getLine(line);
             }
-            result.endColumn = line.length();
+            result.endColumn = contentLine.length();
             result.inlayHints = layout.getInlayHints(result.lineIndex);
             currentRow++;
             return result;
@@ -366,7 +385,7 @@ public class LineBreakLayout extends AbstractLayout {
 
         @Override
         public boolean hasNext() {
-            return currentRow >= 0 && currentRow < text.getLineCount();
+            return currentRow >= 0 && currentRow < lineMap.getVisibleLineCount();
         }
 
         @Override

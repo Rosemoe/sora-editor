@@ -32,6 +32,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import io.github.rosemoe.sora.lang.folding.FoldedLineMap;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.text.Content;
@@ -76,6 +77,16 @@ public abstract class AbstractLayout implements Layout {
             return inlayHints.getForLine(line);
         }
         return Collections.emptyList();
+    }
+
+    /**
+     * Mapping between logical lines and the rows that are displayed when code folding is active.
+     * The instance is owned by the editor and updated in place, so it is safe to keep a
+     * reference to it while the layout is alive.
+     */
+    @NonNull
+    protected FoldedLineMap getFoldedLineMap() {
+        return editor.getFoldingManager().getFoldedLineMap();
     }
 
     @Override

@@ -109,8 +109,11 @@ import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRendererProvider;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
+import io.github.rosemoe.sora.lang.debugging.BreakpointContainer;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticProvider;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
+import io.github.rosemoe.sora.lang.folding.FoldingManager;
+import io.github.rosemoe.sora.lang.folding.FoldingProvider;
 import io.github.rosemoe.sora.lang.format.Formatter;
 import io.github.rosemoe.sora.lang.format.FormatterProvider;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
@@ -146,6 +149,10 @@ import io.github.rosemoe.sora.util.Numbers;
 import io.github.rosemoe.sora.util.TemporaryFloatBuffer;
 import io.github.rosemoe.sora.util.ThemeUtils;
 import io.github.rosemoe.sora.util.ViewUtils;
+import io.github.rosemoe.sora.widget.action.ActionContext;
+import io.github.rosemoe.sora.widget.action.ActionTrigger;
+import io.github.rosemoe.sora.widget.action.EditorAction;
+import io.github.rosemoe.sora.widget.action.EditorActionManager;
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion;
 import io.github.rosemoe.sora.widget.component.EditorBuiltinComponent;
 import io.github.rosemoe.sora.widget.component.EditorContextMenuCreator;
@@ -275,6 +282,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private final List<InlayHintProvider> inlayHintProviders = new ArrayList<>();
     private final List<DiagnosticProvider> diagnosticProviders = new ArrayList<>();
     private final List<HighlightTextProvider> highlightTextProviders = new ArrayList<>();
+    private FoldingManager foldingManager;
+    private BreakpointContainer breakpoints;
+    private EditorActionManager actionManager;
+    private boolean codeFoldingEnabled;
+    private boolean breakpointMarkerEnabled;
     int startedActionMode;
     protected CharPosition selectionAnchor;
     EditorInputConnection inputConnection;
@@ -522,9 +534,33 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public float measureTextRegionOffset() {
         return isLineNumberEnabled() ?
-                measureLineNumber() + dividerMarginLeft + dividerMarginRight + dividerWidth +
+                measureFoldIndicatorWidth() + measureBreakpointIndicatorWidth() + measureLineNumber() + dividerMarginLeft + dividerMarginRight + dividerWidth +
                         (renderer.hasSideHintIcons() ? getRowHeight() : 0) :
                 dpUnit * 5;
+    }
+
+    /**
+     * Get the width of the code folding indicator column in the gutter.
+     * The column is 0 when {@link #isCodeFoldingEnabled()} or line numbers are off.
+     *
+     * @return The width in pixels
+     * @see #setCodeFoldingEnabled(boolean)
+     */
+    public float measureFoldIndicatorWidth() {
+        return codeFoldingEnabled && isLineNumberEnabled()
+                ? getRowHeight() * props.foldIndicatorSizeFactor : 0f;
+    }
+
+    /**
+     * Get the width of the breakpoint indicator column in the gutter.
+     * The column is 0 when {@link #isBreakpointMarkerEnabled()} or line numbers are off.
+     *
+     * @return The width in pixels
+     * @see #setBreakpointMarkerEnabled(boolean)
+     */
+    public float measureBreakpointIndicatorWidth() {
+        return breakpointMarkerEnabled && isLineNumberEnabled()
+                ? getRowHeight() * props.breakpointIndicatorSizeFactor : 0f;
     }
 
     /**
@@ -642,6 +678,12 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         textActionWindow = new EditorTextActionWindow(this);
         diagnosticTooltip = new EditorDiagnosticTooltipWindow(this);
         contextMenuCreator = new EditorContextMenuCreator(this);
+        codeFoldingEnabled = true;
+        breakpointMarkerEnabled = true;
+        // Created before the first setText() because layouts query them while being created
+        foldingManager = new FoldingManager(this);
+        breakpoints = new BreakpointContainer(this);
+        actionManager = new EditorActionManager(this);
         setEditorLanguage(null);
         setText(null);
         setTabWidth(4);
@@ -1710,6 +1752,192 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             single = Math.max(single, buffer[i]);
         }
         return single * count + lineNumberMarginLeft;
+    }
+
+    /**
+     * Get the manager that owns the foldable regions and the collapsed state of this editor
+     */
+    @NonNull
+    public FoldingManager getFoldingManager() {
+        return foldingManager;
+    }
+
+    /**
+     * Get the container that stores the debug breakpoints of this editor
+     */
+    @NonNull
+    public BreakpointContainer getBreakpoints() {
+        return breakpoints;
+    }
+
+    /**
+     * Get the registry of custom and built-in actions of this editor
+     */
+    @NonNull
+    public EditorActionManager getActionManager() {
+        return actionManager;
+    }
+
+    /**
+     * Whether code folding is enabled. When disabled, all regions are expanded and no folding
+     * indicator is drawn in the gutter.
+     *
+     * @return Whether code folding is enabled
+     */
+    public boolean isCodeFoldingEnabled() {
+        return codeFoldingEnabled;
+    }
+
+    /**
+     * Enable or disable code folding
+     *
+     * @param enabled True to enable code folding
+     */
+    public void setCodeFoldingEnabled(boolean enabled) {
+        if (codeFoldingEnabled == enabled) {
+            return;
+        }
+        codeFoldingEnabled = enabled;
+        if (!enabled) {
+            foldingManager.expandAll();
+        }
+        invalidate();
+    }
+
+    /**
+     * Whether the breakpoint indicator column is displayed in the gutter
+     *
+     * @return Whether breakpoints are displayed
+     */
+    public boolean isBreakpointMarkerEnabled() {
+        return breakpointMarkerEnabled;
+    }
+
+    /**
+     * Show or hide the breakpoint indicator column of the gutter
+     *
+     * @param enabled True to show the column
+     */
+    public void setBreakpointMarkerEnabled(boolean enabled) {
+        if (breakpointMarkerEnabled == enabled) {
+            return;
+        }
+        breakpointMarkerEnabled = enabled;
+        invalidate();
+    }
+
+    /**
+     * Register a provider that contributes foldable regions to this editor
+     *
+     * @param provider The provider to register
+     * @see FoldingManager#registerProvider(FoldingProvider)
+     */
+    public void registerFoldingProvider(@NonNull FoldingProvider provider) {
+        foldingManager.registerProvider(provider);
+        invalidateFoldingRegions();
+    }
+
+    /**
+     * Remove a previously registered folding provider
+     *
+     * @param provider The provider to remove
+     */
+    public void unregisterFoldingProvider(@NonNull FoldingProvider provider) {
+        foldingManager.unregisterProvider(provider);
+        invalidateFoldingRegions();
+    }
+
+    /**
+     * Mark the foldable regions as out of date. They are recomputed on the next query, e.g. when
+     * the gutter is drawn the next time.
+     */
+    public void invalidateFoldingRegions() {
+        foldingManager.invalidateRegions();
+        invalidate();
+    }
+
+    /**
+     * Register an action that can be triggered by the user or by code
+     *
+     * @param action The action to register
+     * @return The action that was replaced, or null
+     * @see EditorActionManager
+     */
+    @Nullable
+    public EditorAction registerAction(@NonNull EditorAction action) {
+        return actionManager.register(action);
+    }
+
+    /**
+     * Remove the action with the given id
+     *
+     * @param id Id of the action
+     * @return The removed action, or null when it was not registered
+     */
+    @Nullable
+    public EditorAction unregisterAction(@NonNull String id) {
+        return actionManager.unregister(id);
+    }
+
+    /**
+     * Find the action with the given id
+     *
+     * @param id Id of the action
+     * @return The action, or null when it is not registered
+     */
+    @Nullable
+    public EditorAction findAction(@NonNull String id) {
+        return actionManager.find(id);
+    }
+
+    /**
+     * Get all registered actions
+     *
+     * @see EditorActionManager#getActions()
+     */
+    @NonNull
+    public List<EditorAction> getActions() {
+        return actionManager.getActions();
+    }
+
+    /**
+     * Perform the action with the given id from code
+     *
+     * @param id      Id of the action
+     * @param trigger Describes where the action was triggered from
+     * @return Whether the action has been performed
+     */
+    public boolean performAction(@NonNull String id, @NonNull ActionTrigger trigger) {
+        return actionManager.perform(id, trigger);
+    }
+
+    /**
+     * Perform the action with the given id in the given context
+     *
+     * @param id      Id of the action
+     * @param context Context of the action call
+     * @return Whether the action has been performed
+     */
+    public boolean performAction(@NonNull String id, @NonNull ActionContext context) {
+        return actionManager.perform(id, context);
+    }
+
+    /**
+     * Called by {@link FoldingManager} after the collapsed state changed.
+     * Notifies the renderer and clamps the scroll position to the new layout height.
+     */
+    @UnsupportedUserUsage
+    public void onFoldingStateChanged() {
+        if (layout == null) {
+            return;
+        }
+        renderContext.invalidateRenderNodes();
+        renderer.updateTimestamp();
+        checkForRelayout();
+        if (touchHandler != null) {
+            touchHandler.scrollBy(0, 0);
+        }
+        invalidate();
     }
 
     protected void createLayout() {
@@ -3253,6 +3481,28 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     /**
+     * Get the row that displays the given logical line.
+     * A line hidden by code folding is mapped to the row of its fold header, so the result is
+     * always a row that exists on screen.
+     *
+     * @param line Logical line index
+     * @return Row index that displays the line
+     */
+    public int getRowIndexOfLine(int line) {
+        return foldingManager.getFoldedLineMap().lineToDisplay(line);
+    }
+
+    /**
+     * Get the logical line that is displayed on the given row
+     *
+     * @param row Row index
+     * @return Logical line index
+     */
+    public int getLineOfRow(int row) {
+        return layout.getLineNumberForRow(row);
+    }
+
+    /**
      * Get the height of text in row
      */
     public int getRowHeightOfText() {
@@ -4062,6 +4312,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         inlayHints = null;
 
         dispatchEvent(new ContentChangeEvent(this, ContentChangeEvent.ACTION_SET_NEW_TEXT, new CharPosition(), this.text.getIndexer().getCharPosition(getLineCount() - 1, this.text.getColumnCount(getLineCount() - 1)), this.text, false));
+        foldingManager.reset();
         createLayout();
         if (inputMethodManager != null) {
             inputMethodManager.restartInput(this);
@@ -4300,6 +4551,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @UiThread
     public void setStyles(@Nullable Styles styles) {
         textStyles = styles;
+        if (foldingManager != null) {
+            foldingManager.invalidateRegions();
+        }
         if (highlightCurrentBlock) {
             cursorPosition = findCursorBlock();
         }
@@ -4313,6 +4567,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (textStyles != styles || range == null) {
             setStyles(styles);
             return;
+        }
+        if (foldingManager != null) {
+            foldingManager.invalidateRegions();
         }
         if (highlightCurrentBlock) {
             cursorPosition = findCursorBlock();
@@ -5395,6 +5652,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             Log.w(LOG_TAG, "Update failure", e);
         }
 
+        // Keep folding state and breakpoints in sync with the new line numbers before the
+        // layout queries them
+        foldingManager.onContentInserted(startLine, startColumn, endLine, endColumn);
+        breakpoints.shiftOnInsert(startLine, startColumn, endLine, endColumn);
         layout.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
         renderer.buildMeasureCacheForLines(startLine, endLine);
         checkForRelayout();
@@ -5445,6 +5706,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             Log.w(LOG_TAG, "Update failure", e);
         }
 
+        foldingManager.onContentDeleted(startLine, startColumn, endLine, endColumn);
+        breakpoints.shiftOnDelete(startLine, startColumn, endLine, endColumn);
         layout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
         renderer.buildMeasureCacheForLines(startLine, startLine + 1);
         checkForRelayout();
