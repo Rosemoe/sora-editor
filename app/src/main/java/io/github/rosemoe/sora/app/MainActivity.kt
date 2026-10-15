@@ -370,7 +370,8 @@ class MainActivity : AppCompatActivity() {
                 ACTION_RUN,
                 "Run",
                 EditorAction.GROUP_RUN,
-                showInContextMenu = true
+                showInContextMenu = true,
+                iconRes = io.github.rosemoe.sora.R.drawable.ic_play
             ) { context ->
                 val line = context.line
                 toast("Run line ${line + 1}: ${editor.text.getLine(line)}")
@@ -401,6 +402,7 @@ class MainActivity : AppCompatActivity() {
                 }
             )
         )
+        editor.actionManager.bindIconForLine(0, ACTION_RUN)
         editor.subscribeAlways<FoldingChangeEvent> {
             Log.d(
                 TAG,
@@ -990,6 +992,16 @@ class MainActivity : AppCompatActivity() {
 
             R.id.action_copy_line -> editor.performAction(ACTION_COPY_LINE, ActionTrigger.TOOLBAR)
             R.id.action_list -> showActionList()
+            R.id.toggle_run_icon -> {
+                val actionManager = editor.actionManager
+                if (actionManager.getActionIdBoundToLine(0) != null) {
+                    actionManager.unbindIconForLine(0)
+                    toast("Run icon removed from first line")
+                } else {
+                    actionManager.bindIconForLine(0, ACTION_RUN)
+                    toast("Run icon bound to first line")
+                }
+            }
 
             R.id.switch_typeface -> chooseTypeface()
         }

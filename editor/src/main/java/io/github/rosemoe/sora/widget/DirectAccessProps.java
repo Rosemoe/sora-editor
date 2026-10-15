@@ -312,6 +312,14 @@ public class DirectAccessProps implements Serializable {
     public float sideIconSizeFactor = 0.7f;
 
     /**
+     * Specify the padding around the side icons, e.g. the custom action icons.
+     * result column width = row height * (1 + 2 * sideIconPadding)
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float sideIconPadding = 0f;
+
+    /**
      * Specify the marker text size factor, such as line-break markers.
      * not available for setting now
      */
@@ -330,6 +338,16 @@ public class DirectAccessProps implements Serializable {
     public float foldIndicatorSizeFactor = 0.8f;
 
     /**
+     * Specify the padding around the fold icons.
+     * result column width = row height * (foldIndicatorSizeFactor + 2 * foldIndicatorPadding)
+     *
+     * @see CodeEditor#measureFoldIndicatorWidth()
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float foldIndicatorPadding = 0f;
+
+    /**
      * Specify the breakpoint indicator size factor.
      * result size = row height * breakpointIndicatorSizeFactor
      *
@@ -338,6 +356,16 @@ public class DirectAccessProps implements Serializable {
     @InvalidateRequired
     @FloatRange(from = 0.0f, to = 1.0f)
     public float breakpointIndicatorSizeFactor = 0.7f;
+
+    /**
+     * Specify the padding around the breakpoint markers.
+     * result column width = row height * (breakpointIndicatorSizeFactor + 2 * breakpointIndicatorPadding)
+     *
+     * @see CodeEditor#measureBreakpointIndicatorWidth()
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float breakpointIndicatorPadding = 0f;
 
 
     /**

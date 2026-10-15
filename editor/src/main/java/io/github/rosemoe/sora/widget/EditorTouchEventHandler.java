@@ -865,6 +865,13 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                         return true;
                     }
                 }
+                var actionId = editor.getActionManager().getActionIdBoundToLine(inf.lineIndex);
+                if (actionId != null) {
+                    var iconPosition = editor.getText().getIndexer().getCharPosition(inf.lineIndex, 0);
+                    editor.getActionManager().perform(actionId,
+                            new ActionContext(editor, iconPosition, ActionTrigger.GUTTER));
+                    return true;
+                }
             }
         }
         var position = editor.getText().getIndexer().getCharPosition(line, column);

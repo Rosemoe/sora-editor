@@ -23,11 +23,14 @@
  ******************************************************************************/
 package io.github.rosemoe.sora.widget.action
 
+import android.graphics.drawable.Drawable
+import android.util.SparseArray
 import io.github.rosemoe.sora.event.ActionPerformEvent
 import io.github.rosemoe.sora.event.CreateContextMenuEvent
 import io.github.rosemoe.sora.event.InterceptTarget
 import io.github.rosemoe.sora.event.subscribeAlways
 import io.github.rosemoe.sora.widget.CodeEditor
+import java.util.TreeMap
 
 /**
  * Registry and dispatcher of all [EditorAction]s of an editor.
@@ -152,6 +155,94 @@ class EditorActionManager(val editor: CodeEditor) {
      */
     var addActionsToContextMenu: Boolean = true
 
+    private val iconBindings = SparseArray<String>()
+
+    /**
+     * Show the icon of the action with the given id in the side icon column next to the
+     * given line. Tapping the icon performs the action.
+     *
+     * The binding is shifted when lines are inserted or deleted, and is dropped when the
+     * line is removed.
+     */
+    fun bindIconForLine(line: Int, actionId: String) {
+        iconBindings.put(line, actionId)
+        editor.requestLayout()
+        editor.invalidate()
+    }
+
+    /**
+     * Remove the action icon bound to the given line
+     */
+    fun unbindIconForLine(line: Int) {
+        if (iconBindings.indexOfKey(line) >= 0) {
+            iconBindings.remove(line)
+            editor.requestLayout()
+            editor.invalidate()
+        }
+    }
+
+    /**
+     * Id of the action whose icon is shown next to the given line, or null
+     */
+    fun getActionIdBoundToLine(line: Int): String? = iconBindings.get(line)
+
+    /**
+     * Icon drawn in the side icon column for the given line, or null
+     */
+    fun getIconForLine(line: Int): Drawable? =
+        iconBindings.get(line)?.let { actions[it] }?.iconOrNull(editor.context)
+
+    /**
+     * Whether any line has an action icon bound
+     */
+    fun hasIconBindings(): Boolean = iconBindings.size() > 0
+
+    /**
+     * Shift the action icons when lines are inserted into the content
+     */
+    fun shiftIconsOnInsert(startLine: Int, startColumn: Int, endLine: Int, endColumn: Int) {
+        val delta = endLine - startLine
+        if (delta == 0 || iconBindings.size() == 0) {
+            return
+        }
+        val updated = TreeMap<Int, String>()
+        for (i in 0 until iconBindings.size()) {
+            var line = iconBindings.keyAt(i)
+            if (startLine < line || (startLine == line && startColumn == 0)) {
+                line += delta
+            }
+            updated[line] = iconBindings.valueAt(i)
+        }
+        replaceIconBindings(updated)
+    }
+
+    /**
+     * Shift the action icons when lines are deleted from the content. Icons on fully
+     * deleted lines are removed.
+     */
+    fun shiftIconsOnDelete(startLine: Int, startColumn: Int, endLine: Int, endColumn: Int) {
+        if ((startLine == endLine && startColumn == endColumn) || iconBindings.size() == 0) {
+            return
+        }
+        val delta = startLine - endLine
+        val updated = TreeMap<Int, String>()
+        for (i in 0 until iconBindings.size()) {
+            val line = iconBindings.keyAt(i)
+            when {
+                line > endLine -> updated[line + delta] = iconBindings.valueAt(i)
+                line < startLine || line == startLine -> updated[line] = iconBindings.valueAt(i)
+            }
+        }
+        replaceIconBindings(updated)
+    }
+
+    private fun replaceIconBindings(updated: TreeMap<Int, String>) {
+        iconBindings.clear()
+        for ((line, actionId) in updated) {
+            iconBindings.put(line, actionId)
+        }
+    }
+
     private fun onCreateContextMenu(event: CreateContextMenuEvent) {
         if (!addActionsToContextMenu) {
             return
@@ -167,6 +258,7 @@ class EditorActionManager(val editor: CodeEditor) {
                 continue
             }
             val item = event.menu.add(MENU_GROUP, menuIdOf(action), order, action.title)
+            action.iconOrNull(editor.context)?.let { item.setIcon(it) }
             item.setOnMenuItemClickListener {
                 perform(action, ActionContext(editor, position, ActionTrigger.CONTEXT_MENU))
                 true

@@ -535,7 +535,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public float measureTextRegionOffset() {
         return isLineNumberEnabled() ?
                 measureFoldIndicatorWidth() + measureBreakpointIndicatorWidth() + measureLineNumber() + dividerMarginLeft + dividerMarginRight + dividerWidth +
-                        (renderer.hasSideHintIcons() ? getRowHeight() : 0) :
+                        measureSideIconWidth() :
                 dpUnit * 5;
     }
 
@@ -548,7 +548,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public float measureFoldIndicatorWidth() {
         return codeFoldingEnabled && isLineNumberEnabled()
-                ? getRowHeight() * props.foldIndicatorSizeFactor : 0f;
+                ? getRowHeight() * (props.foldIndicatorSizeFactor + 2f * props.foldIndicatorPadding) : 0f;
     }
 
     /**
@@ -560,7 +560,17 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public float measureBreakpointIndicatorWidth() {
         return breakpointMarkerEnabled && isLineNumberEnabled()
-                ? getRowHeight() * props.breakpointIndicatorSizeFactor : 0f;
+                ? getRowHeight() * (props.breakpointIndicatorSizeFactor + 2f * props.breakpointIndicatorPadding) : 0f;
+    }
+
+    /**
+     * Get the width of the side icon column in the gutter.
+     * The column is 0 when no side icon or action icon is shown or line numbers are off.
+     *
+     * @return The width in pixels
+     */
+    public float measureSideIconWidth() {
+        return renderer.hasSideIcons() ? getRowHeight() * (1f + 2f * props.sideIconPadding) : 0f;
     }
 
     /**
@@ -5656,6 +5666,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // layout queries them
         foldingManager.onContentInserted(startLine, startColumn, endLine, endColumn);
         breakpoints.shiftOnInsert(startLine, startColumn, endLine, endColumn);
+        actionManager.shiftIconsOnInsert(startLine, startColumn, endLine, endColumn);
+        if (foldingManager.isLineHidden(cursor.getLeftLine())) {
+            foldingManager.revealLine(cursor.getLeftLine());
+        }
         layout.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
         renderer.buildMeasureCacheForLines(startLine, endLine);
         checkForRelayout();
@@ -5708,6 +5722,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         foldingManager.onContentDeleted(startLine, startColumn, endLine, endColumn);
         breakpoints.shiftOnDelete(startLine, startColumn, endLine, endColumn);
+        actionManager.shiftIconsOnDelete(startLine, startColumn, endLine, endColumn);
+        if (foldingManager.isLineHidden(cursor.getLeftLine())) {
+            foldingManager.revealLine(cursor.getLeftLine());
+        }
         layout.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
         renderer.buildMeasureCacheForLines(startLine, startLine + 1);
         checkForRelayout();

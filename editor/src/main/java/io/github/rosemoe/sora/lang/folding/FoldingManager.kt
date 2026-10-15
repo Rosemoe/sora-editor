@@ -149,6 +149,27 @@ class FoldingManager(val editor: CodeEditor) {
     fun isLineHidden(line: Int): Boolean = lineMap.isHidden(line)
 
     /**
+     * Expand collapsed regions until the given line is visible.
+     *
+     * Used when the cursor lands on a hidden line, e.g. pressing enter at the end of the
+     * header line of a collapsed region, where the newly inserted line would otherwise
+     * stay hidden inside the region.
+     *
+     * @return true when at least one region has been expanded
+     */
+    fun revealLine(line: Int): Boolean {
+        var revealed = false
+        while (lineMap.isHidden(line)) {
+            val region = collapsedRegionFor(line) ?: break
+            if (!unfold(region)) {
+                break
+            }
+            revealed = true
+        }
+        return revealed
+    }
+
+    /**
      * Collapse the region that starts at (or contains) the given line.
      *
      * @return true when the region has been collapsed

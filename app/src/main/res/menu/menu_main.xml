@@ -138,6 +138,9 @@
             <item
                 android:id="@+id/action_list"
                 android:title="List registered actions" />
+            <item
+                android:id="@+id/toggle_run_icon"
+                android:title="Toggle run icon on first line" />
         </menu>
     </item>
     <item android:title="@string/line_info_panel_position">

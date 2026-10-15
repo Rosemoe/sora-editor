@@ -475,6 +475,14 @@ public class EditorRenderer {
     }
 
     /**
+     * Whether the side icon column of the gutter is shown. It is shown when the visible
+     * lines have side icon styles or when any line has an action icon bound to it.
+     */
+    public boolean hasSideIcons() {
+        return hasSideHintIcons() || editor.getActionManager().hasIconBindings();
+    }
+
+    /**
      * Paint the view on given Canvas
      *
      * @param canvas Canvas you want to draw
@@ -489,7 +497,7 @@ public class EditorRenderer {
         float foldIndicatorWidth = editor.measureFoldIndicatorWidth();
         float breakpointIndicatorWidth = editor.measureBreakpointIndicatorWidth();
         float indicatorWidth = foldIndicatorWidth + breakpointIndicatorWidth;
-        var sideIconWidth = hasSideHintIcons() ? editor.getRowHeight() : 0f;
+        var sideIconWidth = editor.measureSideIconWidth();
         float offsetX = -editor.getOffsetX() + editor.measureTextRegionOffset();
         float textOffset = offsetX;
 
@@ -843,14 +851,16 @@ public class EditorRenderer {
     }
 
     protected void drawSideIcons(Canvas canvas, float offset) {
-        if (!hasSideHintIcons()) {
+        if (!hasSideIcons()) {
             return;
         }
         var row = editor.getFirstVisibleRow();
         var itr = editor.getLayout().obtainRowIterator(row);
         final var iconSizeFactor = editor.getProps().sideIconSizeFactor;
+        var columnWidth = editor.measureSideIconWidth();
         var size = (int) (editor.getRowHeight() * iconSizeFactor);
-        var offsetToLeftTop = (int) (editor.getRowHeight() * (1 - iconSizeFactor) / 2f);
+        var insetX = (int) ((columnWidth - size) / 2f);
+        var insetY = (int) ((editor.getRowHeight() - size) / 2f);
         while (row <= editor.getLastVisibleRow() && itr.hasNext()) {
             var rowInf = itr.next();
             if (rowInf.isLeadingRow) {
@@ -858,9 +868,16 @@ public class EditorRenderer {
                 if (hint != null) {
                     var drawable = hint.getDrawable();
                     var rect = new Rect(0, 0, size, size);
-                    rect.offsetTo((int) offset + offsetToLeftTop, editor.getRowTop(row) - editor.getOffsetY() + offsetToLeftTop);
+                    rect.offsetTo((int) offset + insetX, editor.getRowTop(row) - editor.getOffsetY() + insetY);
                     drawable.setBounds(rect);
                     drawable.draw(canvas);
+                }
+                var actionIcon = editor.getActionManager().getIconForLine(rowInf.lineIndex);
+                if (actionIcon != null) {
+                    var iconRect = new Rect(0, 0, size, size);
+                    iconRect.offsetTo((int) offset + insetX, editor.getRowTop(row) - editor.getOffsetY() + insetY);
+                    actionIcon.setBounds(iconRect);
+                    actionIcon.draw(canvas);
                 }
             }
             row++;
@@ -907,19 +924,23 @@ public class EditorRenderer {
         if (breakpointWidth > 0f) {
             var breakpoint = editor.getBreakpoints().get(line);
             if (breakpoint != null) {
-                float cx = base + breakpointWidth / 2f;
-                float radius = Math.min(breakpointWidth, editor.getRowHeight()) * 0.4f;
-                paintOther.setStyle(Paint.Style.FILL);
-                paintOther.setColor(colorScheme.getColor(EditorColorScheme.DEBUG_BREAKPOINT));
-                if (breakpoint.getEnabled()) {
-                    canvas.drawCircle(cx, centerY, radius, paintOther);
-                } else {
-                    paintOther.setStyle(Paint.Style.STROKE);
-                    paintOther.setStrokeWidth(Math.max(1f, radius / 3f));
-                    canvas.drawCircle(cx, centerY, radius, paintOther);
-                    paintOther.setStrokeWidth(1f);
+                float inset = editor.getRowHeight() * editor.getProps().breakpointIndicatorPadding;
+                float box = Math.min(breakpointWidth - 2f * inset, editor.getRowHeight());
+                if (box > 0f) {
+                    float cx = base + breakpointWidth / 2f;
+                    float radius = box * 0.4f;
+                    paintOther.setStyle(Paint.Style.FILL);
+                    paintOther.setColor(colorScheme.getColor(EditorColorScheme.DEBUG_BREAKPOINT));
+                    if (breakpoint.getEnabled()) {
+                        canvas.drawCircle(cx, centerY, radius, paintOther);
+                    } else {
+                        paintOther.setStyle(Paint.Style.STROKE);
+                        paintOther.setStrokeWidth(Math.max(1f, radius / 3f));
+                        canvas.drawCircle(cx, centerY, radius, paintOther);
+                        paintOther.setStrokeWidth(1f);
+                    }
+                    paintOther.setStyle(Paint.Style.FILL);
                 }
-                paintOther.setStyle(Paint.Style.FILL);
             }
         }
         if (foldIndicatorWidth > 0f) {
@@ -952,7 +973,11 @@ public class EditorRenderer {
         if (icon == null) {
             return;
         }
-        float box = Math.min(columnWidth, editor.getRowHeight());
+        float inset = editor.getRowHeight() * editor.getProps().foldIndicatorPadding;
+        float box = Math.min(columnWidth - 2f * inset, editor.getRowHeight());
+        if (box <= 0f) {
+            return;
+        }
         int half = (int) (box / 2f);
         int cx = (int) (columnStart + columnWidth / 2f);
         int cy = (int) centerY;

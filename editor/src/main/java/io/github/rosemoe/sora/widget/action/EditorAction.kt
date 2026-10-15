@@ -23,6 +23,10 @@
  ******************************************************************************/
 package io.github.rosemoe.sora.widget.action
 
+import android.content.Context
+import android.graphics.drawable.Drawable
+import androidx.annotation.DrawableRes
+
 /**
  * A named command that can be triggered by the user or by code, e.g. "Run", "Toggle breakpoint"
  * or "Fold all".
@@ -36,12 +40,18 @@ package io.github.rosemoe.sora.widget.action
  * })
  * ```
  *
+ * The action can carry an icon ([iconRes] or [icon]). The icon is shown in the context menu
+ * and, when the action is bound to a line with
+ * [EditorActionManager.bindIconForLine], in the side icon column of the gutter.
+ *
  * @property id Stable unique identifier of the action
  * @property title Text shown to the user (context menu, action list, ...)
  * @property group One of the [GROUP_*] constants, used by apps to group their actions
  * @property showInContextMenu Whether the editor should append this action to its context menu
  * @property handler Executes the action. Subclasses may override [perform] instead.
  * @property enabledPredicate Custom availability check, null means always enabled.
+ * @property iconRes Drawable resource of the icon, 0 for none
+ * @property icon Icon drawn for the action, takes precedence over [iconRes]
  *
  * @author nullij
  * @see <a href="https://github.com/nullij">https://github.com/nullij</a>
@@ -52,7 +62,9 @@ open class EditorAction @JvmOverloads constructor(
     val group: Int = GROUP_GENERAL,
     var showInContextMenu: Boolean = false,
     private val handler: ((ActionContext) -> Unit)? = null,
-    private val enabledPredicate: ((ActionContext) -> Boolean)? = null
+    private val enabledPredicate: ((ActionContext) -> Boolean)? = null,
+    @DrawableRes val iconRes: Int = 0,
+    val icon: Drawable? = null
 ) {
 
     /**
@@ -66,6 +78,12 @@ open class EditorAction @JvmOverloads constructor(
     open fun perform(context: ActionContext) {
         handler?.invoke(context)
     }
+
+    /**
+     * Resolve the icon of this action, null when the action has none
+     */
+    fun iconOrNull(context: Context): Drawable? =
+        icon ?: if (iconRes != 0) context.resources.getDrawable(iconRes, null) else null
 
     override fun toString(): String = "EditorAction{$id, title=$title}"
 
@@ -96,8 +114,10 @@ open class EditorAction @JvmOverloads constructor(
             title: CharSequence,
             group: Int = GROUP_GENERAL,
             showInContextMenu: Boolean = false,
+            @DrawableRes iconRes: Int = 0,
+            icon: Drawable? = null,
             handler: (ActionContext) -> Unit
-        ) = EditorAction(id, title, group, showInContextMenu, handler)
+        ) = EditorAction(id, title, group, showInContextMenu, handler, null, iconRes, icon)
 
     }
 

@@ -55,7 +55,7 @@ fun CodeEditor.resolveTouchRegion(event: MotionEvent, pointerIndex: Int = -1): L
     val foldWidth = measureFoldIndicatorWidth()
     val breakpointWidth = measureBreakpointIndicatorWidth()
     val lineNumberWidth = measureLineNumber()
-    val iconWidth = if (renderer.hasSideHintIcons()) rowHeight else 0
+    val iconWidth = measureSideIconWidth()
     val textOffset = measureTextRegionOffset()
     // A pinned gutter stays on screen while the content scrolls below it
     val gutterStart = if (isLineNumberEnabled && isLineNumberPinned && !isWordwrap) offsetX.toFloat() else 0f
