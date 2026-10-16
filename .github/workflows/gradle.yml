@@ -33,7 +33,7 @@ jobs:
         with:
           submodules: true
 
-      - name: Set up JDK 17
+      - name: Setup JDK
         uses: actions/setup-java@v6
         with:
           java-version: 25
