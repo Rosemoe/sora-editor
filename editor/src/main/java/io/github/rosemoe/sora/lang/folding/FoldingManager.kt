@@ -418,7 +418,13 @@ class FoldingManager(val editor: CodeEditor) {
             if (blocks != null) {
                 for (block in blocks) {
                     if (block.endLine > block.startLine) {
-                        regions.add(FoldingRegion(block.startLine, block.endLine))
+                        var endLine = block.endLine
+                        if (!block.toBottomOfEndLine && startsWithClosingDelimiter(endLine)) {
+                            endLine--
+                        }
+                        if (endLine > block.startLine) {
+                            regions.add(FoldingRegion(block.startLine, endLine))
+                        }
                     }
                 }
             }
@@ -428,6 +434,28 @@ class FoldingManager(val editor: CodeEditor) {
         list.sort()
         regionsCache = list
         return list
+    }
+
+    /**
+     * Whether the given line starts with a closing bracket (`}`, `]` or `)`) after its
+     * indentation. Analyzers whose code blocks have toBottomOfEndLine false end the block
+     * on the line of the closing bracket, and folding must keep that line visible.
+     */
+    private fun startsWithClosingDelimiter(line: Int): Boolean {
+        val text = editor.text ?: return false
+        if (line < 0 || line >= text.lineCount) {
+            return false
+        }
+        val chars = text.getLine(line)
+        var i = 0
+        while (i < chars.length) {
+            val ch = chars[i]
+            if (ch != ' ' && ch != '\t') {
+                return ch == '}' || ch == ']' || ch == ')'
+            }
+            i++
+        }
+        return false
     }
 
     private fun ensureProviderRegions(): List<FoldingRegion> {
