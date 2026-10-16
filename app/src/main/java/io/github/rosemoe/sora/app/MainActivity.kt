@@ -73,6 +73,7 @@ import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.folding.FoldingProvider
 import io.github.rosemoe.sora.lang.folding.FoldingRegion
+import io.github.rosemoe.sora.lang.folding.ImportFoldingProvider
 import io.github.rosemoe.sora.lang.styling.color.ConstColor
 import io.github.rosemoe.sora.lang.styling.inlayHint.ColorInlayHint
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintProvider
@@ -356,6 +357,8 @@ class MainActivity : AppCompatActivity() {
         editor.setBreakpointMarkerEnabled(true)
         // Extra foldable regions on top of the code blocks of the language
         editor.registerFoldingProvider(createCommentFoldingProvider())
+        // Fold contiguous runs of import statements
+        editor.registerFoldingProvider(ImportFoldingProvider())
         // Make the built-in folding and debug actions visible in the context menu
         listOf(
             EditorActionManager.ACTION_FOLD_TOGGLE,
@@ -726,9 +729,19 @@ class MainActivity : AppCompatActivity() {
                 demoInlayHintProvider?.let { binding.editor.unregisterInlayHintProvider(it) }
                 if ("big_sample" !in name) {
                     demoInlayHintProvider = InlayHintProvider { container ->
-                        container.add(ColorInlayHint(10, 30, ConstColor("#f44336")))
-                        container.add(TextInlayHint(29, 7, "^DigitTens"))
-                        container.add(TextInlayHint(100, 1, "^Numbers"))
+                        val content = binding.editor.text
+                        for (i in 0 until content.lineCount) {
+                            val line = content.getLine(i)
+                            val col = content.getColumnCount(i)
+                            when {
+                                "String RED =" in line ->
+                                    container.add(ColorInlayHint(i, col, ConstColor("#f44336")))
+                                "char [] DigitTens" in line ->
+                                    container.add(TextInlayHint(i, col, "^DigitTens"))
+                                "public class Numbers" in line ->
+                                    container.add(TextInlayHint(i, col, "^Numbers"))
+                            }
+                        }
                     }
                     binding.editor.registerInlayHintProvider(demoInlayHintProvider!!)
                 } else {

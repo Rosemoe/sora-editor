@@ -45,6 +45,7 @@ class FoldingManager(val editor: CodeEditor) {
     private val collapsed = LinkedHashSet<FoldingRegion>()
     private val lineMap = FoldedLineMap()
     private var regionsCache: List<FoldingRegion>? = null
+    private var providerRegionsCache: List<FoldingRegion>? = null
     private var startIndex: SparseArray<FoldingRegion>? = null
 
     /**
@@ -107,6 +108,18 @@ class FoldingManager(val editor: CodeEditor) {
      * Call this whenever the analyze results or the source of your provider changed.
      */
     fun invalidateRegions() {
+        regionsCache = null
+        startIndex = null
+        providerRegionsCache = null
+    }
+
+    /**
+     * Drop only the regions derived from the language code blocks, keeping the results of
+     * the [FoldingProvider]s. Used for style updates: providers are derived from the
+     * content, which does not change when the analyzer streams style batches into a large
+     * file, and re-running them there would scan the whole document on the main thread.
+     */
+    fun invalidateCodeBlockRegions() {
         regionsCache = null
         startIndex = null
     }
@@ -410,20 +423,26 @@ class FoldingManager(val editor: CodeEditor) {
                 }
             }
         }
+        regions.addAll(ensureProviderRegions())
+        val list = regions.toMutableList()
+        list.sort()
+        regionsCache = list
+        return list
+    }
+
+    private fun ensureProviderRegions(): List<FoldingRegion> {
+        providerRegionsCache?.let { return it }
+        val provided = ArrayList<FoldingRegion>()
         for (provider in providers) {
-            val provided = ArrayList<FoldingRegion>()
             try {
                 provider.computeFoldingRegions(editor, provided)
             } catch (e: Exception) {
                 // Ignore broken providers so that folding keeps working
                 continue
             }
-            regions.addAll(provided)
         }
-        val list = regions.toMutableList()
-        list.sort()
-        regionsCache = list
-        return list
+        providerRegionsCache = provided
+        return provided
     }
 
     private fun ensureStartIndex(): SparseArray<FoldingRegion> {

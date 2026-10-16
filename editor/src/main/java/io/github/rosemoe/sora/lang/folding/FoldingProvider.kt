@@ -36,6 +36,11 @@ import io.github.rosemoe.sora.widget.CodeEditor
  * Regions produced by the language analyze manager (its code blocks) are used automatically as
  * well. Set [FoldingManager.useCodeBlocks] to false when only your own regions should be offered.
  *
+ * Provider results are cached: they are recomputed when the content changes or when
+ * [FoldingManager.invalidateRegions] is called, but not when the analyzer streams style
+ * updates into a large file. Derive the regions from the content so they stay valid across
+ * style batches.
+ *
  * @author nullij
  * @see <a href="https://github.com/nullij">https://github.com/nullij</a>
  */

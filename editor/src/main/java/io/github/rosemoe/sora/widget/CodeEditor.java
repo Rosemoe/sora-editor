@@ -1942,6 +1942,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             return;
         }
         renderContext.invalidateRenderNodes();
+        renderContext.getCache().invalidateStyleHashes();
         renderer.updateTimestamp();
         checkForRelayout();
         if (touchHandler != null) {
@@ -4562,7 +4563,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     public void setStyles(@Nullable Styles styles) {
         textStyles = styles;
         if (foldingManager != null) {
-            foldingManager.invalidateRegions();
+            foldingManager.invalidateCodeBlockRegions();
         }
         if (highlightCurrentBlock) {
             cursorPosition = findCursorBlock();
@@ -4579,7 +4580,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             return;
         }
         if (foldingManager != null) {
-            foldingManager.invalidateRegions();
+            foldingManager.invalidateCodeBlockRegions();
         }
         if (highlightCurrentBlock) {
             cursorPosition = findCursorBlock();

@@ -503,15 +503,19 @@ public class EditorRenderer {
 
         var gutterWidth = (int) (indicatorWidth + lineNumberWidth + sideIconWidth + editor.getDividerWidth() + editor.getDividerMarginLeft() + editor.getDividerMarginRight());
         if (editor.isWordwrap()) {
-            if (cachedGutterWidth == 0) {
+            if (forcedRecreateLayout) {
+                // Text size changed (e.g. pinch zoom). The old row table was broken at the old
+                // size, so it must not be reused. Fall back to unwrapped rows (rebuilt by
+                // breakAllLines asynchronously) instead of drawing with stale wrap points.
+                cachedGutterWidth = gutterWidth;
+                editor.createLayout();
+                editor.postInLifecycle(editor::requestLayoutIfNeeded);
+            } else if (cachedGutterWidth == 0) {
                 cachedGutterWidth = gutterWidth;
             } else if (cachedGutterWidth != gutterWidth && !editor.getEventHandler().isScaling) {
                 cachedGutterWidth = gutterWidth;
                 editor.postInLifecycle(editor::requestLayoutIfNeeded);
                 editor.createLayout(false);
-            } else if (forcedRecreateLayout) {
-                editor.createLayout();
-                editor.postInLifecycle(editor::requestLayoutIfNeeded);
             }
         } else {
             cachedGutterWidth = 0;
@@ -746,10 +750,12 @@ public class EditorRenderer {
             var block = candidates.get(i);
             if (block.startLine > previousLine) {
                 bottomOffset = editor.getRowBottom(offsetLine);
-                var endLineTop = editor.getRowTop(editor.getRowIndexOfLine(block.endLine)) - editor.getOffsetY();
-                var shouldTranslate = endLineTop < bottomOffset && endLineTop >= bottomOffset - editor.getRowHeight();
-                if (shouldTranslate) {
-                    bottomOffset += endLineTop - bottomOffset;
+                if (!editor.getFoldingManager().isLineHidden(block.endLine)) {
+                    var endLineTop = editor.getRowTop(editor.getRowIndexOfLine(block.endLine)) - editor.getOffsetY();
+                    var shouldTranslate = endLineTop < bottomOffset && endLineTop >= bottomOffset - editor.getRowHeight();
+                    if (shouldTranslate) {
+                        bottomOffset += endLineTop - bottomOffset;
+                    }
                 }
                 previousLine = block.startLine;
                 offsetLine++;
@@ -777,13 +783,16 @@ public class EditorRenderer {
                 bottomOffset = tmpRect.bottom = editor.getRowBottom(offsetLine);
                 tmpRect.left = offset;
                 tmpRect.right = editor.getWidth();
-                var endLineTop = editor.getRowTop(editor.getRowIndexOfLine(block.endLine)) - editor.getOffsetY();
-                var shouldTranslate = endLineTop < tmpRect.bottom && endLineTop >= tmpRect.top;
-                if (shouldTranslate) {
-                    canvas.save();
-                    canvas.clipRect(0, tmpRect.top, editor.getWidth(), editor.getHeight());
-                    canvas.translate(0, endLineTop - tmpRect.bottom);
-                    bottomOffset += endLineTop - tmpRect.bottom;
+                var shouldTranslate = false;
+                if (!editor.getFoldingManager().isLineHidden(block.endLine)) {
+                    var endLineTop = editor.getRowTop(editor.getRowIndexOfLine(block.endLine)) - editor.getOffsetY();
+                    shouldTranslate = endLineTop < tmpRect.bottom && endLineTop >= tmpRect.top;
+                    if (shouldTranslate) {
+                        canvas.save();
+                        canvas.clipRect(0, tmpRect.top, editor.getWidth(), editor.getHeight());
+                        canvas.translate(0, endLineTop - tmpRect.bottom);
+                        bottomOffset += endLineTop - tmpRect.bottom;
+                    }
                 }
                 var colorId = EditorColorScheme.WHOLE_BACKGROUND;
                 if (block.startLine == currentLine && editor.isHighlightCurrentLine()) {
@@ -1188,9 +1197,13 @@ public class EditorRenderer {
         if (mm == -1) {
             mm = 0;
         }
+        var foldingManager = editor.getFoldingManager();
         for (int curr = mm; curr < codeBlocks.size(); curr++) {
             CodeBlock block = codeBlocks.get(curr);
             if (block == null) {
+                continue;
+            }
+            if (foldingManager != null && foldingManager.isLineHidden(block.startLine)) {
                 continue;
             }
             if (CodeEditor.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
@@ -2663,7 +2676,12 @@ public class EditorRenderer {
     protected void buildMeasureCacheForLines(int startLine, int endLine, long timestamp, boolean useCachedContent) {
         var text = content;
         var context = editor.getRenderContext();
+        var foldingManager = editor.getFoldingManager();
         while (startLine <= endLine && startLine < text.getLineCount()) {
+            if (foldingManager != null && foldingManager.isLineHidden(startLine)) {
+                startLine++;
+                continue;
+            }
             var line = useCachedContent ? getLine(startLine) : getLineDirect(startLine);
             var cache = editor.getRenderContext().getCache().getOrCreateMeasureCache(startLine);
             if (cache.getUpdateTimestamp() < timestamp) {
