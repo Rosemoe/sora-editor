@@ -62,8 +62,9 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
     private final static int MSG_BASE = 11451400;
     private final static int MSG_INIT = MSG_BASE + 1;
     private final static int MSG_MOD = MSG_BASE + 2;
+    private final static int MSG_TOKENIZE = MSG_BASE + 3;
     private static int sThreadId = 0;
-    private LooperThread thread;
+    private volatile LooperThread thread;
     private volatile long runCount;
     private final boolean useShallowCopy;
 
@@ -125,11 +126,32 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
         }
     }
 
+    /**
+     * Called on the analyzer thread whenever the shadow document or its spans move.
+     *
+     * @param styles       the styles being built
+     * @param startLine    first line of the affected range, inclusive
+     * @param endLine      last line of the affected range, inclusive
+     * @param modification the edit that was applied, or {@code null} while initializing and between
+     *                     continuation batches
+     * @param spansReady   {@code false} before initial tokenization, with empty spans, or right after
+     *                     a shadow edit, while affected lines still carry the previous spans;
+     *                     {@code true} once those lines have been tokenized. The range reported
+     *                     with {@code true} is one batch, so further batches may follow.
+     */
+    protected void onAnalysisUpdate(Styles styles, int startLine, int endLine,
+                                    @Nullable TextModification modification, boolean spansReady) {
+    }
+
+    protected final boolean isCurrentAnalyzerThread() {
+        return Thread.currentThread() == thread;
+    }
+
     @Override
     public void insert(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence insertedText) {
         if (thread != null) {
             increaseRunCount();
-            thread.offerMessage(MSG_MOD, new TextModification(IntPair.pack(start.line, start.column), IntPair.pack(end.line, end.column), insertedText));
+            thread.offerMessage(MSG_MOD, new TextModification(IntPair.pack(start.line, start.column), IntPair.pack(end.line, end.column), insertedText, getContentRef().getReference().getDocumentVersion()));
         }
     }
 
@@ -137,7 +159,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
     public void delete(@NonNull CharPosition start, @NonNull CharPosition end, @NonNull CharSequence deletedText) {
         if (thread != null) {
             increaseRunCount();
-            thread.offerMessage(MSG_MOD, new TextModification(IntPair.pack(start.line, start.column), IntPair.pack(end.line, end.column), null));
+            thread.offerMessage(MSG_MOD, new TextModification(IntPair.pack(start.line, start.column), IntPair.pack(end.line, end.column), null, getContentRef().getReference().getDocumentVersion()));
         }
     }
 
@@ -155,6 +177,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
             final var text = ref.getReference().copyText(false, useShallowCopy);
             text.setUndoEnabled(false);
             thread = new LooperThread();
+            thread.documentVersion = ref.getReference().getDocumentVersion();
             thread.setName("AsyncAnalyzer-" + nextThreadId());
             thread.offerMessage(MSG_INIT, text);
             increaseRunCount();
@@ -228,6 +251,22 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
             throw new IllegalThreadStateException();
         }
         return ((AsyncIncrementalAnalyzeManager<?, ?>.LooperThread) thread).styles;
+    }
+
+    public Content getManagedContent() {
+        var thread = Thread.currentThread();
+        if (thread.getClass() != AsyncIncrementalAnalyzeManager.LooperThread.class) {
+            throw new IllegalThreadStateException();
+        }
+        return ((AsyncIncrementalAnalyzeManager<?, ?>.LooperThread) thread).shadowed;
+    }
+
+    /** Source-document version represented by the current analyzer message (not queued edits). */
+    protected long getManagedDocumentVersion() {
+        if (Thread.currentThread() != thread) {
+            throw new IllegalThreadStateException("Abandoned or non-analyzer thread");
+        }
+        return thread.documentVersion;
     }
 
     private static class LockedSpans implements Spans {
@@ -418,19 +457,27 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
 
     }
 
-    private static class TextModification {
+    public static class TextModification {
 
-        private final long start;
-        private final long end;
-        /**
-         * null for deletion
-         */
-        private final CharSequence changedText;
+        /** Where the edit begins, valid in both the old and the new revision. */
+        public final long start;
+        /** End of the replaced range in the old revision. */
+        public final long oldEnd;
+        /** End of the replacement in the new revision. */
+        public final long newEnd;
+        /** Inserted text, or {@code null} for a deletion. */
+        public final CharSequence changedText;
+        public final long documentVersion;
 
-        TextModification(long start, long end, CharSequence text) {
+        TextModification(long start, long end, @Nullable CharSequence text, long documentVersion) {
+            this.documentVersion = documentVersion;
             this.start = start;
-            this.end = end;
-            changedText = text;
+            this.changedText = text;
+            // A deletion replaces `start..end` with nothing, an insertion replaces `start` with
+            // `start..end`. Both cases therefore collapse one of the two ends onto `start`.
+            boolean deletion = text == null;
+            this.oldEnd = deletion ? end : start;
+            this.newEnd = deletion ? start : end;
         }
     }
 
@@ -470,6 +517,11 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
         volatile boolean abort;
         Content shadowed;
         long myRunCount;
+        long documentVersion;
+        // Dirty tokenization survives messages; a long state propagation must not delay new edits.
+        int tokenizeStart = -1;
+        int tokenizeEnd = -1;
+        boolean tokenizeQueued;
 
         List<LineTokenizeResult<S, T>> states = new ArrayList<>();
         Styles styles;
@@ -491,6 +543,9 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
 
         private void initialize() {
             styles = new Styles(spans = new LockedSpans());
+            // Publish text-derived models before the first token is available.
+            AsyncIncrementalAnalyzeManager.this.onAnalysisUpdate(
+                    styles, 0, shadowed.getLineCount() - 1, null, false);
             S state = getInitialState();
             var mdf = spans.modify();
             for (int i = 0; i < shadowed.getLineCount() && !abort && !isInterrupted(); i++) {
@@ -507,18 +562,26 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                     sendNewStyles(tmpStyles);
                 }
             }
+            if (abort || isInterrupted() || thread != this) return;
+            AsyncIncrementalAnalyzeManager.this.onAnalysisUpdate(
+                    styles, 0, shadowed.getLineCount() - 1, null, true);
+            // Token-aware models can replace their initial approximation without waiting for folds.
+            sendUpdate(styles, 0, shadowed.getLineCount() - 1);
             styles.blocks = computeBlocks(shadowed, delegate);
             styles.setSuppressSwitch(delegate.suppressSwitch);
             styles.finishBuilding();
 
-            if (!abort)
+            if (!abort && thread == this) {
                 sendNewStyles(styles);
+            }
         }
 
         public boolean handleMessage(@NonNull Message msg) {
             try {
                 myRunCount = runCount;
                 delegate.reset();
+                // Whether this message leaves a tokenization pass to run, and what it resumes from.
+                boolean tokenizeAfter = false;
                 switch (msg.what) {
                     case MSG_INIT:
                         shadowed = (Content) msg.obj;
@@ -526,98 +589,118 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
                             initialize();
                         }
                         break;
-                    case MSG_MOD:
-                        int updateStart = 0, updateEnd = 0;
-                        if (!abort && !isInterrupted()) {
-                            var mod = (TextModification) msg.obj;
-                            int startLine = IntPair.getFirst(mod.start);
-                            int endLine = IntPair.getFirst(mod.end);
+                    // A text edit. Apply it to the shadow document, mark the lines it touched as
+                    // pending, and tokenize them.
+                    case MSG_MOD: {
+                        if (abort || isInterrupted()) break;
+                        var mod = (TextModification) msg.obj;
+                        documentVersion = mod.documentVersion;
+                        int startLine = IntPair.getFirst(mod.start);
+                        int oldEndLine = IntPair.getFirst(mod.oldEnd);
+                        int newEndLine = IntPair.getFirst(mod.newEnd);
+                        if (mod.changedText == null) {
+                            shadowed.delete(startLine, IntPair.getSecond(mod.start),
+                                    oldEndLine, IntPair.getSecond(mod.oldEnd));
+                        } else {
+                            shadowed.insert(startLine, IntPair.getSecond(mod.start), mod.changedText);
+                        }
+                        AsyncIncrementalAnalyzeManager.this.onAnalysisUpdate(
+                                styles, startLine, newEndLine, mod, false);
+                        sendUpdate(styles, startLine, newEndLine);
 
-                            updateStart = startLine;
-                            if (mod.changedText == null) {
-                                shadowed.delete(IntPair.getFirst(mod.start), IntPair.getSecond(mod.start),
-                                        IntPair.getFirst(mod.end), IntPair.getSecond(mod.end));
-                                S state = startLine == 0 ? getInitialState() : states.get(startLine - 1).state;
-                                // Remove states
-                                if (endLine >= startLine + 1) {
-                                    var subList = states.subList(startLine + 1, endLine + 1);
-                                    for (LineTokenizeResult<S, T> stLineTokenizeResult : subList) {
-                                        onAbandonState(stLineTokenizeResult.state);
-                                    }
-                                    subList.clear();
-                                }
-                                var mdf = spans.modify();
-                                for (int i = startLine + 1; i <= endLine; i++) {
-                                    mdf.deleteLineAt(startLine + 1);
-                                }
-                                int line = startLine;
-                                while (line < shadowed.getLineCount()) {
-                                    var res = tokenizeLine(shadowed.getLine(line), state, line);
-                                    mdf.setSpansOnLine(line, res.spans != null ? res.spans : generateSpansForLine(res));
-                                    var old = states.set(line, res.clearSpans());
-                                    if (old != null) {
-                                        onAbandonState(old.state);
-                                    }
-                                    onAddState(res.state);
-                                    if (stateEquals(old == null ? null : old.state, res.state)) {
-                                        break;
-                                    }
-                                    state = res.state;
-                                    line++;
-                                }
-                                updateEnd = line;
-                            } else {
-                                shadowed.insert(IntPair.getFirst(mod.start), IntPair.getSecond(mod.start), mod.changedText);
-                                S state = startLine == 0 ? getInitialState() : states.get(startLine - 1).state;
-                                int line = startLine;
-                                var spans = styles.spans.modify();
-                                // Add Lines
-                                while (line <= endLine) {
-                                    var res = tokenizeLine(shadowed.getLine(line), state, line);
-                                    if (line == startLine) {
-                                        spans.setSpansOnLine(line, res.spans != null ? res.spans : generateSpansForLine(res));
-                                        var old = states.set(line, res.clearSpans());
-                                        if (old != null) {
-                                            onAbandonState(old.state);
-                                        }
-                                    } else {
-                                        spans.addLineAt(line, res.spans != null ? res.spans : generateSpansForLine(res));
-                                        states.add(line, res.clearSpans());
-                                    }
-                                    onAddState(res.state);
-                                    state = res.state;
-                                    line++;
-                                }
-                                // line = end.line + 1, check whether the state equals
-                                boolean flag = true;
-                                while (line < shadowed.getLineCount() && flag) {
-                                    var res = tokenizeLine(shadowed.getLine(line), state, line);
-                                    if (stateEquals(res.state, states.get(line).state)) {
-                                        flag = false;
-                                    }
-                                    spans.setSpansOnLine(line, res.spans != null ? res.spans : generateSpansForLine(res));
-                                    var old = states.set(line, res.clearSpans());
-                                    if (old != null) {
-                                        onAbandonState(old.state);
-                                    }
-                                    onAddState(res.state);
-                                    state = res.state;
-                                    line++;
-                                }
-                                updateEnd = line;
+                        var modifier = spans.modify();
+                        if (oldEndLine > startLine) {
+                            // Lines the edit replaced lose their states. The line ranges below shrink
+                            // to fit, so every removal happens at the same index, pulling the next
+                            // line into its place.
+                            var replaced = states.subList(startLine + 1, oldEndLine + 1);
+                            for (var entry : replaced) {
+                                if (entry != null) onAbandonState(entry.state);
+                            }
+                            replaced.clear();
+                            for (int line = startLine + 1; line <= oldEndLine; line++) {
+                                modifier.deleteLineAt(startLine + 1);
                             }
                         }
-                        // Do not update incomplete code blocks
-                        var blocks = computeBlocks(shadowed, delegate);
-                        if (delegate.isNotCancelled()) {
-                            styles.blocks = blocks;
-                            styles.finishBuilding();
-                            styles.setSuppressSwitch(delegate.suppressSwitch);
+                        // Lines the edit created start out as placeholders. A null state means "not
+                        // tokenized yet"; the pass below replaces it.
+                        for (int line = startLine + 1; line <= newEndLine; line++) {
+                            states.add(line, null);
+                            modifier.addLineAt(line, Collections.singletonList(
+                                    SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL)));
                         }
-                        if (!abort) {
-                            sendUpdate(styles, updateStart, updateEnd);
+                        // Carry the unfinished tokenization frontier across this edit. A frontier
+                        // inside the replaced range collapses onto the edit: its start onto the
+                        // edit's start, its end onto the edit's end. One after the edit shifts by
+                        // the line delta.
+                        int lineDelta = newEndLine - oldEndLine;
+                        if (tokenizeStart >= startLine) {
+                            tokenizeStart = tokenizeStart <= oldEndLine ? startLine : tokenizeStart + lineDelta;
                         }
+                        if (tokenizeEnd >= startLine) {
+                            tokenizeEnd = tokenizeEnd <= oldEndLine ? newEndLine : tokenizeEnd + lineDelta;
+                        }
+                        // The frontier must reach the edit, and it must not converge before the
+                        // previous frontier, whose suffix it had not validated yet.
+                        tokenizeEnd = Math.max(tokenizeEnd, tokenizeStart);
+                        tokenizeStart = tokenizeStart < 0 ? startLine : Math.min(tokenizeStart, startLine);
+                        // Joining lines makes the following line's incoming state depend on this edit.
+                        tokenizeEnd = Math.max(tokenizeEnd, newEndLine + (oldEndLine > startLine ? 1 : 0));
+                        tokenizeAfter = true;
                         break;
+                    }
+                    // An earlier pass yielded before converging; continue from its frontier.
+                    case MSG_TOKENIZE:
+                        tokenizeQueued = false;
+                        tokenizeAfter = tokenizeStart >= 0;
+                        break;
+                }
+                if (tokenizeAfter && !abort && !isInterrupted()) {
+                    int firstLine = tokenizeStart;
+                    int line = firstLine;
+                    S state = line == 0 ? getInitialState() : states.get(line - 1).state;
+                    var modifier = spans.modify();
+                    long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(5);
+                    do {
+                        var result = tokenizeLine(shadowed.getLine(line), state, line);
+                        modifier.setSpansOnLine(line, result.spans != null ? result.spans : generateSpansForLine(result));
+                        var old = states.set(line, result.clearSpans());
+                        // A line before the required frontier cannot prove the states converged.
+                        boolean converged = line >= tokenizeEnd && old != null && stateEquals(old.state, result.state);
+                        if (old != null) onAbandonState(old.state);
+                        onAddState(result.state);
+                        state = result.state;
+                        line++;
+                        if (converged || line == shadowed.getLineCount()) {
+                            tokenizeStart = tokenizeEnd = -1;
+                            break;
+                        }
+                        // Resume from here if the loop condition below decides to yield.
+                        tokenizeStart = line;
+                    } while (!abort && !isInterrupted() && messageQueue.isEmpty() && System.nanoTime() < deadline);
+
+                    if (thread == this) {
+                        AsyncIncrementalAnalyzeManager.this.onAnalysisUpdate(
+                                styles, firstLine, line - 1,
+                                msg.what == MSG_MOD ? (TextModification) msg.obj : null, true);
+                        sendUpdate(styles, firstLine, line - 1);
+                        if (tokenizeStart >= 0 && !tokenizeQueued) {
+                            tokenizeQueued = true;
+                            offerMessage(MSG_TOKENIZE, null);
+                        }
+                    }
+                }
+                // Folding is always a full pass. It waits until tokenization has caught up and
+                // nothing else is queued, so it only ever sees converged states.
+                if (msg.what != MSG_INIT && !abort && thread == this
+                        && tokenizeStart < 0 && messageQueue.isEmpty()) {
+                    var blocks = computeBlocks(shadowed, delegate);
+                    if (delegate.isNotCancelled()) {
+                        styles.blocks = blocks;
+                        styles.finishBuilding();
+                        styles.setSuppressSwitch(delegate.suppressSwitch);
+                        sendUpdate(styles, 0, shadowed.getLineCount() - 1);
+                    }
                 }
                 return true;
             } catch (Exception e) {
@@ -625,6 +708,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
             }
             return false;
         }
+
 
         @Override
         public void run() {

@@ -24,80 +24,58 @@
 
 package io.github.rosemoe.sora.editor.ts
 
-import com.itsaky.androidide.treesitter.TSQueryCursor
-import io.github.rosemoe.sora.lang.brackets.BracketsProvider
+import io.github.rosemoe.sora.lang.brackets.CachedBracketsProvider
 import io.github.rosemoe.sora.lang.brackets.PairedBracket
 import io.github.rosemoe.sora.text.Content
-import java.lang.Math.max
 
-class TsBracketPairs(
+/**
+ * Bracket pair provider backed by the `brackets` tree-sitter query of [languageSpec].
+ *
+ * The query must capture the opening bracket as [OPEN_NAME] and its partner as [CLOSE_NAME].
+ * Pairs are computed on demand and cached by [CachedBracketsProvider].
+ *
+ * @author Rosemoe
+ */
+class TsBracketPairs @JvmOverloads constructor(
     private val safeTree: SafeTsTree,
-    private val languageSpec: TsLanguageSpec
-) : BracketsProvider {
+    private val languageSpec: TsLanguageSpec,
+    private val documentVersion: Long = -1
+) : CachedBracketsProvider() {
+
+    override fun isReadyFor(text: Content): Boolean =
+        (documentVersion == -1L || documentVersion == text.documentVersion) &&
+            safeTree.accessTree { !it.closed }
+
+    override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? =
+        if (isReadyFor(text)) super.getPairedBracketAt(text, index) else null
+
+    override fun queryPairedBracketsForRange(text: Content, leftRange: Long, rightRange: Long): List<PairedBracket>? =
+        if (isReadyFor(text)) super.queryPairedBracketsForRange(text, leftRange, rightRange) else null
 
     companion object {
+        const val OPEN_NAME = "editor.brackets.open"
+        const val CLOSE_NAME = "editor.brackets.close"
 
-        val OPEN_NAME = "editor.brackets.open"
-        val CLOSE_NAME = "editor.brackets.close"
-
+        /** Documents larger than this skip bracket colorization to bound the query cost. */
+        const val BRACKET_PAIR_COLORIZATION_LIMIT = 60000 * 300
     }
 
-    override fun getPairedBracketAt(text: Content, index: Int): PairedBracket? {
-        if (languageSpec.bracketsQuery.canAccess() && languageSpec.bracketsQuery.patternCount > 0) {
-            TSQueryCursor.create().use { cursor ->
-                cursor.setByteRange(max(0, index - 1) * 2, index * 2 + 1)
+    /** Find the pair whose bracket encloses [index]. */
+    override fun computePairedBracketAt(text: Content, index: Int): PairedBracket? =
+        findBracketPairAt(safeTree, languageSpec, text, index)
 
-                return safeTree.accessTree { tree ->
-                    if (tree.closed) return@accessTree null
-                    val rootNode = tree.rootNode
-                    if (!rootNode.canAccess() || rootNode.hasChanges()) {
-                        return@accessTree null
-                    }
-                    cursor.exec(languageSpec.bracketsQuery, rootNode)
-                    var match = cursor.nextMatch()
-                    var matched = false
-                    val pos = IntArray(4)
-                    while (match != null && !matched) {
-                        if (languageSpec.bracketsPredicator.doPredicate(
-                                languageSpec.predicates,
-                                text,
-                                match
-                            )
-                        ) {
-                            pos.fill(-1)
-                            for (capture in match.captures) {
-                                val captureName =
-                                    languageSpec.bracketsQuery.getCaptureNameForId(capture.index)
-                                if (captureName == OPEN_NAME || captureName == CLOSE_NAME) {
-                                    val node = capture.node
-                                    if (index >= node.startByte / 2 && index <= node.endByte / 2) {
-                                        matched = true
-                                    }
-                                    if (captureName == OPEN_NAME) {
-                                        pos[0] = node.startByte
-                                        pos[1] = node.endByte
-                                    } else {
-                                        pos[2] = node.startByte
-                                        pos[3] = node.endByte
-                                    }
-                                }
-                            }
-                            if (matched && pos[0] != -1 && pos[2] != -1) {
-                                return@accessTree PairedBracket(
-                                    pos[0] / 2,
-                                    (pos[1] - pos[0]) / 2,
-                                    pos[2] / 2,
-                                    (pos[3] - pos[2]) / 2
-                                )
-                            }
-                        }
-                        match = cursor.nextMatch()
-                    }
-                    null
-                }
-            }
-        }
-        return null
+    /**
+     * Find every pair overlapping `[leftRange, rightRange]`.
+     *
+     * @return `null` when the language has no bracket query at all
+     */
+    override fun computePairedBracketsForRange(
+        text: Content,
+        leftRange: Long,
+        rightRange: Long
+    ): List<PairedBracket>? {
+        if (text.length > BRACKET_PAIR_COLORIZATION_LIMIT) return emptyList()
+        if (languageSpec.bracketsQuery.patternCount == 0) return null
+        return collectBracketPairsInRange(safeTree, languageSpec, text, leftRange, rightRange)
     }
-
 }

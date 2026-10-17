@@ -180,6 +180,16 @@ public class EditorColorScheme {
     public static final int MINIMAP_VIEWPORT_BORDER = 83;
 
     /**
+     * Rainbow bracket highlighting colors
+     */
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_1 = 84;
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_2 = 85;
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_3 = 86;
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_4 = 87;
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_5 = 88;
+    public static final int BRACKET_HIGHLIGHTING_FOREGROUND_6 = 89;
+
+    /**
      * Min pre-defined color id
      */
     protected static final int START_COLOR_ID = 1;
@@ -187,8 +197,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 83;
-
+    protected static final int END_COLOR_ID = 89;
 
     /**
      * Real color saver
@@ -464,6 +473,22 @@ public class EditorColorScheme {
                 break;
             case TEXT_HIGHLIGHT_BACKGROUND:
                 color = isDark() ? 0xB8575757 : 0x40575757;
+                break;
+            case BRACKET_HIGHLIGHTING_FOREGROUND_1:
+                color = isDark() ? 0xffFFD700 : 0xff0431FA;
+                break;
+            case BRACKET_HIGHLIGHTING_FOREGROUND_2:
+                color = isDark() ? 0xffDA70D6 : 0xff319331;
+                break;
+            case BRACKET_HIGHLIGHTING_FOREGROUND_3:
+                color = isDark() ? 0xff179FFF : 0xff7B3814;
+                break;
+            case BRACKET_HIGHLIGHTING_FOREGROUND_4:
+                color = 0xffFF6347; // Tomato
+                break;
+            case BRACKET_HIGHLIGHTING_FOREGROUND_5:
+            case BRACKET_HIGHLIGHTING_FOREGROUND_6:
+                color = 0; // Unset
         }
         setColor(type, color);
     }

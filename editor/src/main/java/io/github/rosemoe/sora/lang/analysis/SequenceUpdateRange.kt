@@ -40,4 +40,9 @@ class SequenceUpdateRange(val startLine: Int, val endLine: Int = Int.MAX_VALUE) 
 
     }
 
+    override fun intersects(startLine: Int, endLine: Int): Boolean {
+        if (startLine > endLine || this.startLine > this.endLine) return false
+        return startLine <= this.endLine && endLine >= this.startLine
+    }
+
 }

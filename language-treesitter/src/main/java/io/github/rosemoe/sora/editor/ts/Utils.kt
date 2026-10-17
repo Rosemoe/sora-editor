@@ -29,6 +29,7 @@ import com.itsaky.androidide.treesitter.TSPoint
 import com.itsaky.androidide.treesitter.TSQuery
 import com.itsaky.androidide.treesitter.TSQueryError
 import io.github.rosemoe.sora.text.CharPosition
+import io.github.rosemoe.sora.text.Content
 
 /**
  * Convert a [CharPosition] object to a [TSPoint] object
@@ -53,3 +54,24 @@ fun newTSInputEdit(start: CharPosition, oldEnd: CharPosition, newEnd: CharPositi
         oldEnd.toTSPoint(),
         newEnd.toTSPoint()
     )
+
+/**
+ * Char index of a line/column position, clamped to the document.
+ *
+ * Out-of-range positions resolve to the nearest valid one, and a position the indexer still rejects
+ * resolves to the end of the document.
+ */
+internal fun Content.safeCharIndex(line: Int, column: Int): Int {
+    if (line < 0) return 0
+    if (line >= lineCount) return length
+    val safeColumn = when {
+        column < 0 -> 0
+        column > getColumnCount(line) -> getColumnCount(line)
+        else -> column
+    }
+    return try {
+        indexer.getCharIndex(line, safeColumn)
+    } catch (_: IndexOutOfBoundsException) {
+        length
+    }
+}

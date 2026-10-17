@@ -25,6 +25,9 @@ package io.github.rosemoe.sora.lang.brackets;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
+
+import java.util.List;
 
 import io.github.rosemoe.sora.text.Content;
 
@@ -35,6 +38,11 @@ import io.github.rosemoe.sora.text.Content;
  */
 public interface BracketsProvider {
 
+    /** Whether the provider has a snapshot for the document currently being rendered. */
+    default boolean isReadyFor(@NonNull Content text) {
+        return true;
+    }
+
     /**
      * Get left and right brackets position in text
      *
@@ -43,6 +51,22 @@ public interface BracketsProvider {
      * @return Paired positions or null if not matched
      */
     @Nullable
+    @UiThread
     PairedBracket getPairedBracketAt(@NonNull Content text, int index);
+
+
+    @Nullable
+    @UiThread
+    /**
+     * Query paired brackets for the given interval.
+     *
+     * @param text       Text content to inspect
+     * @param leftRange  Packed position (line/column) for the left boundary
+     * @param rightRange Packed position (line/column) for the right boundary
+     * @return Paired bracket list or {@code null} if not supported / no match
+     */
+    default List<PairedBracket> queryPairedBracketsForRange(@NonNull Content text, long leftRange, long rightRange) {
+        return null;
+    }
 
 }

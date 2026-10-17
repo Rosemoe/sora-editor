@@ -36,6 +36,7 @@ class IntSetUpdateRange(val lineSet: IntSet) : StyleUpdateRange {
         lineSet.forEach { element ->
             lines[index++] = element
         }
+        lines.sort()
     }
 
     override fun isInRange(line: Int): Boolean {
@@ -53,6 +54,17 @@ class IntSetUpdateRange(val lineSet: IntSet) : StyleUpdateRange {
             override fun hasNext() = index < lines.size
 
         }
+    }
+
+    override fun intersects(startLine: Int, endLine: Int): Boolean {
+        if (startLine > endLine) return false
+        var lo = 0
+        var hi = lines.size - 1
+        while (lo <= hi) {
+            val mid = (lo + hi) ushr 1
+            if (lines[mid] < startLine) lo = mid + 1 else hi = mid - 1
+        }
+        return lo < lines.size && lines[lo] <= endLine
     }
 
 }

@@ -49,8 +49,11 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         get() = receiver
     val reference: ContentReference?
         get() = contentRef
+    @Volatile
     var thread: TsLooperThread? = null
-    var spanFactory : TsSpanFactory = DefaultSpanFactory()
+    var spanFactory: TsSpanFactory = DefaultSpanFactory()
+
+    internal var bracketPairColorization = false
 
     open var styles = Styles()
 
@@ -64,17 +67,19 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     }
 
     override fun insert(start: CharPosition, end: CharPosition, insertedContent: CharSequence) {
+        val reference = reference ?: return
         thread?.offerMessage(
             MSG_MOD,
             TextModification(
                 start.index,
                 end.index,
                 newTSInputEdit(start, start, end),
-                insertedContent.toString()
+                insertedContent.toString(),
+                reference.reference.documentVersion
             )
         )
         (styles.spans as LineSpansGenerator?)?.apply {
-            lineCount = reference!!.lineCount
+            lineCount = reference.lineCount
             safeTree.accessTreeIfAvailable {
                 it.edit(newTSInputEdit(start, start, end))
             }
@@ -82,17 +87,19 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     }
 
     override fun delete(start: CharPosition, end: CharPosition, deletedContent: CharSequence) {
+        val reference = reference ?: return
         thread?.offerMessage(
             MSG_MOD,
             TextModification(
                 start.index,
                 end.index,
                 newTSInputEdit(start, end, start),
-                null
+                null,
+                reference.reference.documentVersion
             )
         )
         (styles.spans as LineSpansGenerator?)?.apply {
-            lineCount = reference!!.lineCount
+            lineCount = reference.lineCount
             safeTree.accessTreeIfAvailable {
                 it.edit(newTSInputEdit(start, end, start))
             }
@@ -103,11 +110,12 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         destroyPreviousRes()
         styles = Styles()
         val initText = reference?.reference?.toString() ?: ""
-        thread = TsLooperThread().also {
-            it.name = "TsDaemon-${nextThreadId()}"
-            it.offerMessage(MSG_INIT, initText)
-            it.start()
-        }
+        val newThread = TsLooperThread()
+        newThread.name = "TsDaemon-${nextThreadId()}"
+        newThread.offerMessage(MSG_INIT, initText)
+        // Publish before starting: the loop treats `thread != this` as outdated.
+        thread = newThread
+        newThread.start()
     }
 
     override fun destroy() {
@@ -149,6 +157,11 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
     inner class TsLooperThread : Thread() {
 
         private val messageQueue = LinkedBlockingQueue<Message>()
+        // Until the first edit arrives the version is unknown; -1 tells TsBracketPairs to skip the
+        // check rather than name a revision we cannot vouch for.
+        private var documentVersion = contentRef?.reference?.documentVersion ?: -1L
+        // Brackets are published independently of the full locals/folding pass.
+        private var bracketTree: SafeTsTree? = null
 
         @Volatile
         var abort: Boolean = false
@@ -156,7 +169,8 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         private val parser = TSParser.create().also {
             it.language = languageSpec.language
         }
-        var tree: TSTree? = null
+        /** Assigned by MSG_INIT, which is always the first message handled. */
+        lateinit var tree: TSTree
 
         fun offerMessage(what: Int, obj: Any?) {
             val msg = Message.obtain()
@@ -170,33 +184,52 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             messageQueue.offer(msg)
         }
 
+        private fun isOutdated() = abort || isInterrupted || thread != this || messageQueue.isNotEmpty()
+
         fun updateStyles() {
-            runCatching {
-                TsScopedVariables(tree!!, localText, languageSpec) {
-                    messageQueue.isNotEmpty()
-                }
-            }.onSuccess { scopedVariables ->
-                if (thread == this && messageQueue.isEmpty()) {
-                    val oldTree = (styles.spans as LineSpansGenerator?)?.safeTree
-                    val newTree = SafeTsTree(tree!!.copy())
-                    val newSpans = LineSpansGenerator(
-                        newTree,
-                        reference!!.lineCount,
-                        reference!!.reference,
-                        theme,
-                        languageSpec,
-                        scopedVariables,
-                        spanFactory
-                    )
-                    updateCodeBlocks()
-                    currentReceiver?.setStyles(this@TsAnalyzeManager, styles) {
-                        styles.spans = newSpans
-                        oldTree?.close()
-                    }
-                    currentReceiver?.updateBracketProvider(
-                        this@TsAnalyzeManager,
-                        TsBracketPairs(newTree, languageSpec)
-                    )
+            if (isOutdated()) return
+            val content = reference ?: return
+            val newBracketTree = SafeTsTree(tree.copy())
+            val oldBracketTree = bracketTree
+            bracketTree = newBracketTree
+            currentReceiver?.updateBracketProvider(
+                this@TsAnalyzeManager,
+                TsBracketPairs(newBracketTree, languageSpec, documentVersion)
+            )
+            oldBracketTree?.close()
+
+            val scopedVariables = try {
+                TsScopedVariables(tree, localText, languageSpec, ::isOutdated)
+            } catch (_: TsScopedVariables.AnalysisCanceledException) {
+                return
+            }
+            if (isOutdated()) return
+            updateCodeBlocks()
+            if (isOutdated()) return
+            val targetStyles = styles
+            val version = documentVersion
+            val newTree = SafeTsTree(tree.copy())
+            val newSpans = LineSpansGenerator(
+                newTree,
+                tree.rootNode.endPoint.row + 1,
+                content.reference,
+                theme,
+                languageSpec,
+                scopedVariables,
+                spanFactory
+            )
+            val receiver = currentReceiver
+            if (receiver == null) {
+                newTree.close()
+                return
+            }
+            receiver.setStyles(this@TsAnalyzeManager, targetStyles) {
+                if (thread != this || reference?.reference?.documentVersion != version) {
+                    newTree.close()
+                } else {
+                    val oldTree = (targetStyles.spans as LineSpansGenerator?)?.safeTree
+                    targetStyles.spans = newSpans
+                    oldTree?.close()
                 }
             }
         }
@@ -207,9 +240,10 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
             }
             val blocks = mutableListOf<CodeBlock>()
             TSQueryCursor.create().use {
-                it.exec(languageSpec.blocksQuery, tree!!.rootNode)
+                it.exec(languageSpec.blocksQuery, tree.rootNode)
                 var match = it.nextMatch()
                 while (match != null) {
+                    if (isOutdated()) return
                     if (languageSpec.blocksPredicator.doPredicate(
                             languageSpec.predicates,
                             localText,
@@ -244,6 +278,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
                     match = it.nextMatch()
                 }
             }
+            if (isOutdated()) return
             // sequence should be preferred here in order to avoid allocating multiple lists and sets
             val distinct = blocks.asSequence().distinct().toMutableList()
             styles.blocks = distinct
@@ -253,64 +288,47 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         override fun run() {
             try {
                 while (!abort && !isInterrupted) {
-                    val msg = messageQueue.take()
-                    if (!handleMessage(msg)) {
-                        break
-                    }
-                    msg.recycle()
-                }
-            } catch (e: InterruptedException) {
-                // ignored
-            }
-            releaseThreadResources()
-        }
-
-        fun handleMessage(msg: Message): Boolean {
-            try {
-                when (msg.what) {
-                    MSG_INIT -> {
-                        localText.append(msg.obj!! as String)
-                        if (!abort && !isInterrupted) {
-                            tree = parser.parseString(localText)
-                            updateStyles()
-                        }
-                    }
-
-                    MSG_MOD -> {
-                        if (!abort && !isInterrupted) {
-                            val modification = msg.obj!! as TextModification
-                            val newText = modification.changedText
-                            val t = tree!!
-                            t.edit(modification.tsEdition)
-                            if (newText == null) {
-                                localText.delete(modification.start, modification.end)
-                            } else {
-                                if (modification.start == localText.length) {
-                                    localText.append(newText)
+                    var msg: Message = messageQueue.take()
+                    while (true) {
+                        when (msg.what) {
+                            MSG_INIT -> localText.append(msg.obj as String)
+                            MSG_MOD -> {
+                                val modification = msg.obj as TextModification
+                                tree.edit(modification.tsEdition)
+                                val newText = modification.changedText
+                                if (newText == null) {
+                                    localText.delete(modification.start, modification.end)
                                 } else {
                                     localText.insert(modification.start, newText)
                                 }
+                                documentVersion = modification.documentVersion
                             }
-                            tree = parser.parseString(t, localText)
-                            t.close()
-                            updateStyles()
                         }
+                        msg.recycle()
+                        if (abort || isInterrupted) return
+                        // Drain everything that arrived while the last edit was applied, so the
+                        // queued edits share one reparse instead of one reparse per keystroke.
+                        msg = messageQueue.poll() ?: break
                     }
+                    // Reusing unchanged subtrees, so a reparse per drained batch is cheap.
+                    val oldTree = tree
+                    tree = parser.parseString(oldTree, localText)
+                    oldTree.close()
+                    updateStyles()
                 }
-                return true
+            } catch (e: InterruptedException) {
+                // ignored
             } catch (e: Exception) {
-                Log.w(
-                    "TsAnalyzeManager",
-                    "Thread $name exited with an error",
-                    e
-                )
+                Log.w("TsAnalyzeManager", "Thread $name exited with an error", e)
+            } finally {
+                releaseThreadResources()
             }
-            return false
         }
 
         fun releaseThreadResources() {
             parser.close()
-            tree?.close()
+            if (this::tree.isInitialized) tree.close()
+            bracketTree?.close()
             localText.close()
         }
 
@@ -323,6 +341,7 @@ open class TsAnalyzeManager(val languageSpec: TsLanguageSpec, var theme: TsTheme
         /**
          * null for deletion
          */
-        val changedText: String?
+        val changedText: String?,
+        val documentVersion: Long
     )
 }
