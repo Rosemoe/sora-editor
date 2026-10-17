@@ -20,69 +20,112 @@
  *
  *     Please contact Rosemoe by email 2073412493@qq.com if you need
  *     additional information or have any questions
- */
+ ******************************************************************************/
 package io.github.rosemoe.sora.lang.folding;
 
-import java.util.List;
-
-import io.github.rosemoe.sora.util.IntPair;
+import androidx.annotation.NonNull;
 
 /**
- * Indicates a folding region
+ * An immutable, line based region of the source code that can be folded (collapsed).
+ * <p>
+ * When the region is collapsed, the first line (the header, {@link #getStartLine()}) stays
+ * visible while all lines from {@code startLine + 1} to {@link #getEndLine()} (inclusive)
+ * are removed from the screen.
+ * <p>
+ * Two regions are equal when they span the same lines, so the folding state of a region can be
+ * tracked in a set even though regions are recreated when the analyze results are refreshed.
+ *
+ * @author nullij
+ * @see <a href="https://github.com/nullij">https://github.com/nullij</a>
  */
-public class FoldingRegion {
+public class FoldingRegion implements Comparable<FoldingRegion> {
 
-    private long start;
-    private long end;
-    private boolean collapsed;
-    private List<FoldingRegion> children;
+    private final int startLine;
+    private final int endLine;
 
-    public FoldingRegion(int startLine, int startColumn, int endLine, int endColumn) {
-        this(IntPair.pack(startLine, startColumn), IntPair.pack(endLine, endColumn));
-        if (startLine > endLine || (startLine == endLine && startColumn > endColumn)) {
-            throw new IllegalArgumentException("start > end");
+    /**
+     * Create a region spanning the given lines (both inclusive)
+     *
+     * @param startLine The header line of the region
+     * @param endLine   The last line of the region, must not be smaller than {@code startLine}
+     */
+    public FoldingRegion(int startLine, int endLine) {
+        if (startLine < 0 || endLine < startLine) {
+            throw new IllegalArgumentException("Illegal folding region: " + startLine + ".." + endLine);
         }
+        this.startLine = startLine;
+        this.endLine = endLine;
     }
 
-    FoldingRegion(long start, long end) {
-        this.start = start;
-        this.end = end;
-    }
-
-    public void setCollapsed(boolean collapsed) {
-        this.collapsed = collapsed;
-    }
-
-    public boolean isCollapsed() {
-        return collapsed;
-    }
-
+    /**
+     * First line of the region. It is the only line that stays visible when the region is collapsed.
+     */
     public int getStartLine() {
-        return IntPair.getFirst(start);
+        return startLine;
     }
 
-    public int getStartColumn() {
-        return IntPair.getSecond(start);
-    }
-
+    /**
+     * Last line of the region (inclusive). It is hidden when the region is collapsed.
+     */
     public int getEndLine() {
-        return IntPair.getFirst(end);
+        return endLine;
     }
 
-    public int getEndColumn() {
-        return IntPair.getSecond(end);
+    /**
+     * Number of lines that are hidden when this region is collapsed
+     */
+    public int getHiddenLineCount() {
+        return Math.max(0, endLine - startLine);
     }
 
-    public FoldingRegion createChild(int startLine, int startColumn, int endLine, int endColumn) {
-        if (startLine < getStartLine() || (startLine == getStartLine() && startColumn < getStartColumn())) {
-            throw new IllegalArgumentException("child start is before parent start");
+    /**
+     * Whether the region hides anything when collapsed. Single line regions can not be folded.
+     */
+    public boolean isFoldable() {
+        return endLine > startLine;
+    }
+
+    /**
+     * Whether the given line is inside this region (header included)
+     */
+    public boolean contains(int line) {
+        return line >= startLine && line <= endLine;
+    }
+
+    /**
+     * Whether the given line is hidden when this region is collapsed
+     */
+    public boolean containsHiddenLine(int line) {
+        return line > startLine && line <= endLine;
+    }
+
+    @Override
+    public int compareTo(@NonNull FoldingRegion other) {
+        int res = Integer.compare(startLine, other.startLine);
+        return res != 0 ? res : Integer.compare(endLine, other.endLine);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
         }
-        if (endLine > getEndLine() || (endLine == getEndLine() && endColumn > getEndColumn())) {
-            throw new IllegalArgumentException("child end is beyond parent end");
+        if (!(obj instanceof FoldingRegion)) {
+            return false;
         }
-        var child = new FoldingRegion(startLine, startColumn, endLine, endColumn);
-        children.add(child);
-        return child;
+        var other = (FoldingRegion) obj;
+        return startLine == other.startLine && endLine == other.endLine;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * startLine + endLine;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "FoldingRegion{" + startLine + ".." + endLine + '}';
     }
 
 }

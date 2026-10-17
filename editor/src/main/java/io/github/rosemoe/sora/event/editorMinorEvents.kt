@@ -29,12 +29,15 @@ import android.view.ContextMenu
 import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import io.github.rosemoe.sora.lang.Language
+import io.github.rosemoe.sora.lang.debugging.Breakpoint
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
 import io.github.rosemoe.sora.lang.styling.Span
 import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.TextRange
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.action.ActionContext
+import io.github.rosemoe.sora.widget.action.EditorAction
 
 /**
  * Editor [Language] changed
@@ -171,3 +174,41 @@ class PublishDiagnosticsEvent(
     val oldDiagnostics: List<DiagnosticRegion>,
     val newDiagnosticsEvent: List<DiagnosticRegion>
 ): Event(editor)
+
+/**
+ * Trigger when the collapsed state of code folding changed, which means that the set of
+ * lines displayed on screen has changed.
+ *
+ * @author nullij
+ */
+class FoldingChangeEvent(editor: CodeEditor) : Event(editor)
+
+/**
+ * Trigger when a breakpoint is added, removed or updated.
+ *
+ * @property breakpoint The breakpoint after the change, or null when it was removed
+ * @property added Whether the breakpoint exists on the line after the change
+ *
+ * @author nullij
+ */
+class BreakpointChangeEvent(
+    editor: CodeEditor,
+    val breakpoint: Breakpoint?,
+    val added: Boolean
+) : Event(editor)
+
+/**
+ * Trigger before an [EditorAction] is executed.
+ * Intercept the event with [io.github.rosemoe.sora.event.InterceptTarget.TARGET_EDITOR] to prevent
+ * the editor from performing the action, e.g. when your app handles it in another way.
+ *
+ * @property action The action about to be performed
+ * @property context Describes where the action was triggered from
+ *
+ * @author nullij
+ */
+class ActionPerformEvent(
+    editor: CodeEditor,
+    val action: EditorAction,
+    val context: ActionContext
+) : Event(editor)
