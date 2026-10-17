@@ -99,3 +99,13 @@ additional information or have any questions
 Thanks to [JetBrains](https://www.jetbrains.com/?from=CodeEditor) for allocating free open-source
 licences for IDEs such as [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=CodeEditor).   
 [<img src=".github/jetbrains-variant-3.png" width="200"/>](https://www.jetbrains.com/?from=CodeEditor)
+
+
+1. fucking WordWrap is OFF
+2. the appear but misplaced, e.g: it shows here
+```java
+public class Numbers { [InlayHint of RED shows here]
+
+    final static String RED = "#f44336";
+}
+```
