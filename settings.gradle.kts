@@ -54,5 +54,6 @@ include(
     ":language-textmate",
     ":editor-lsp",
     ":language-treesitter",
+    ":zero-Symbol-input-view",
     ":oniguruma-native"
 )
