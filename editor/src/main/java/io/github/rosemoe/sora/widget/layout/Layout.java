@@ -174,6 +174,14 @@ public interface Layout extends ContentListener {
      */
     void invalidateLines(StyleUpdateRange range);
 
+    /**
+     * Called by the editor when the set of lines hidden by code folding changed.
+     * Implementations that cache derived tables must mark them as out of date here.
+     */
+    default void onFoldingRegionsChanged() {
+        // Intentionally empty
+    }
+
     class VisualLocation {
 
         public final int line;

@@ -72,7 +72,18 @@ public class WordwrapLayout extends AbstractLayout {
     private final float miniGraphWidth;
     private final boolean antiWordBreaking;
     private final boolean supportRtlRow;
+    /**
+     * Rows of all lines. Line numbers are maintained here even when the lines are hidden.
+     */
     private List<RowRegion> rowTable;
+    /**
+     * Rows that are actually displayed. It aliases {@link #rowTable} while no folding is active
+     * and is a filtered copy otherwise. Rebuilt lazily when {@link #visibleDirty} is set.
+     *
+     * @see #display()
+     */
+    private List<RowRegion> visibleTable;
+    private boolean visibleDirty;
 
     public WordwrapLayout(@NonNull CodeEditor editor, @NonNull Content text, boolean antiWordBreaking, boolean supportRtlRow, @Nullable WordwrapLayout oldLayout, boolean clearCache) {
         super(editor, text);
@@ -82,10 +93,49 @@ public class WordwrapLayout extends AbstractLayout {
         if (clearCache) {
             rowTable.clear();
         }
+        visibleDirty = true;
         miniGraphWidth = (editor.getNonPrintablePaintingFlags() & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0 ?
                 editor.getRenderer().getMiniGraphWidth() : 0f;
         width = editor.getWidth() - (int) (editor.measureTextRegionOffset() + editor.getTextPaint().measureText("a")) - (int) miniGraphWidth * 2;
         breakAllLines();
+    }
+
+    /**
+     * Rows that are displayed on screen, i.e. rows of the lines that are not hidden by folding
+     */
+    private List<RowRegion> display() {
+        if (visibleDirty || visibleTable == null) {
+            rebuildVisible();
+        }
+        return visibleTable;
+    }
+
+    private void rebuildVisible() {
+        if (rowTable == null) {
+            visibleTable = null;
+            visibleDirty = false;
+            return;
+        }
+        var lineMap = getFoldedLineMap();
+        if (lineMap.isEmpty()) {
+            // No folding active, keep identity with the maintenance table
+            visibleTable = rowTable;
+        } else {
+            var filtered = new ArrayList<RowRegion>(rowTable.size());
+            for (int i = 0; i < rowTable.size(); i++) {
+                var region = rowTable.get(i);
+                if (!lineMap.isHidden(region.line)) {
+                    filtered.add(region);
+                }
+            }
+            visibleTable = filtered;
+        }
+        visibleDirty = false;
+    }
+
+    @Override
+    public void onFoldingRegionsChanged() {
+        visibleDirty = true;
     }
 
     private void breakAllLines() {
@@ -113,6 +163,7 @@ public class WordwrapLayout extends AbstractLayout {
                     for (WordwrapResult wordwrapResult : r2) {
                         rowTable.addAll(wordwrapResult.regions);
                     }
+                    visibleDirty = true;
                     editor.setLayoutBusy(false);
                     editor.getEventHandler().scrollBy(0, 0);
                 });
@@ -126,17 +177,20 @@ public class WordwrapLayout extends AbstractLayout {
         }
     }
 
-    private int findRow(int line) {
+    /**
+     * Find the first row of the given line in the given table
+     */
+    private int findRowIn(@NonNull List<RowRegion> table, int line) {
         int index;
         // Binary find line
-        int left = 0, right = rowTable.size();
+        int left = 0, right = table.size();
         while (left <= right) {
             var mid = (left + right) / 2;
-            if (mid < 0 || mid >= rowTable.size()) {
-                left = Math.max(0, Math.min(rowTable.size() - 1, mid));
+            if (mid < 0 || mid >= table.size()) {
+                left = Math.max(0, Math.min(table.size() - 1, mid));
                 break;
             }
-            int value = rowTable.get(mid).line;
+            int value = table.get(mid).line;
             if (value < line) {
                 left = mid + 1;
             } else if (value > line) {
@@ -147,15 +201,33 @@ public class WordwrapLayout extends AbstractLayout {
             }
         }
         index = left;
-        while (index > 0 && rowTable.get(index).startColumn > 0) {
+        if (table.isEmpty()) {
+            return 0;
+        }
+        index = Math.min(index, table.size() - 1);
+        while (index > 0 && table.get(index).startColumn > 0) {
             index--;
         }
         return index;
     }
 
+    private int findRow(int line) {
+        return findRowIn(rowTable, line);
+    }
+
+    /**
+     * Find the displayed row that contains the given position
+     */
     public int findRow(int line, int column) {
-        int row = findRow(line);
-        while (rowTable.get(row).endColumn <= column && row + 1 < rowTable.size() && rowTable.get(row + 1).line == line) {
+        return findRowIn(display(), line, column);
+    }
+
+    private int findRowIn(@NonNull List<RowRegion> table, int line, int column) {
+        if (table.isEmpty()) {
+            return 0;
+        }
+        int row = findRowIn(table, line);
+        while (row < table.size() && table.get(row).endColumn <= column && row + 1 < table.size() && table.get(row + 1).line == line) {
             row++;
         }
         return row;
@@ -183,6 +255,7 @@ public class WordwrapLayout extends AbstractLayout {
             newRegions.addAll(breakLine(i, text.getLine(i), null));
         }
         rowTable.addAll(insertPosition, newRegions);
+        visibleDirty = true;
     }
 
     /**
@@ -263,33 +336,46 @@ public class WordwrapLayout extends AbstractLayout {
     public void destroyLayout() {
         super.destroyLayout();
         rowTable = null;
+        visibleTable = null;
     }
 
     @NonNull
     @Override
     public Row getRowAt(int rowIndex) {
         if (rowTable.isEmpty()) {
+            var line = getFoldedLineMap().displayToLine(rowIndex);
             var r = new Row();
             r.startColumn = 0;
-            r.endColumn = text.getColumnCount(rowIndex);
+            r.endColumn = text.getColumnCount(line);
             r.isLeadingRow = true;
             r.isTrailingRow = true;
-            r.lineIndex = rowIndex;
-            r.inlayHints = getInlayHints(rowIndex);
+            r.lineIndex = line;
+            r.inlayHints = getInlayHints(line);
             return r;
         }
-        var region = rowTable.get(rowIndex);
-        var isLeadingRow = rowIndex <= 0 || rowTable.get(rowIndex - 1).line != region.line;
-        var isTrailingRow = rowIndex + 1 >= rowTable.size() || rowTable.get(rowIndex + 1).line != region.line;
-        return rowTable.get(rowIndex).toRow(isLeadingRow, isTrailingRow, width);
+        var table = display();
+        if (rowIndex >= table.size()) {
+            rowIndex = table.size() - 1;
+        }
+        if (rowIndex < 0) {
+            rowIndex = 0;
+        }
+        var region = table.get(rowIndex);
+        var isLeadingRow = rowIndex <= 0 || table.get(rowIndex - 1).line != region.line;
+        var isTrailingRow = rowIndex + 1 >= table.size() || table.get(rowIndex + 1).line != region.line;
+        return region.toRow(isLeadingRow, isTrailingRow, width);
     }
 
     @Override
     public int getLineNumberForRow(int row) {
         if (rowTable.isEmpty()) {
-            return Math.max(0, Math.min(row, text.getLineCount() - 1));
+            return getFoldedLineMap().displayToLine(row);
         }
-        return row >= rowTable.size() ? rowTable.get(rowTable.size() - 1).line : rowTable.get(row).line;
+        var table = display();
+        if (table.isEmpty()) {
+            return getFoldedLineMap().displayToLine(row);
+        }
+        return row >= table.size() ? table.get(table.size() - 1).line : table.get(row).line;
     }
 
     @NonNull
@@ -301,19 +387,25 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public long getUpPosition(int line, int column) {
         if (rowTable.isEmpty()) {
-            if (line - 1 < 0) {
+            var lineMap = getFoldedLineMap();
+            int target = line - 1;
+            while (target >= 0 && lineMap.isHidden(target)) {
+                target--;
+            }
+            if (target < 0) {
                 return IntPair.pack(0, 0);
             }
-            int c_column = text.getColumnCount(line - 1);
+            int c_column = text.getColumnCount(target);
             if (column > c_column) {
                 column = c_column;
             }
-            return IntPair.pack(line - 1, column);
+            return IntPair.pack(target, column);
         }
-        int row = findRow(line, column);
+        var table = display();
+        int row = findRowIn(table, line, column);
         if (row > 0) {
-            var offset = column - rowTable.get(row).startColumn;
-            var lastRow = rowTable.get(row - 1);
+            var offset = column - table.get(row).startColumn;
+            var lastRow = table.get(row - 1);
             var max = lastRow.endColumn - lastRow.startColumn;
             offset = Math.min(offset, max);
             return IntPair.pack(lastRow.line, lastRow.startColumn + offset);
@@ -324,21 +416,27 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public long getDownPosition(int line, int column) {
         if (rowTable.isEmpty()) {
-            int c_line = text.getLineCount();
-            if (line + 1 >= c_line) {
+            int lineCount = text.getLineCount();
+            var lineMap = getFoldedLineMap();
+            int target = line + 1;
+            while (target < lineCount && lineMap.isHidden(target)) {
+                target++;
+            }
+            if (target >= lineCount) {
                 return IntPair.pack(line, text.getColumnCount(line));
             } else {
-                int c_column = text.getColumnCount(line + 1);
+                int c_column = text.getColumnCount(target);
                 if (column > c_column) {
                     column = c_column;
                 }
-                return IntPair.pack(line + 1, column);
+                return IntPair.pack(target, column);
             }
         }
-        int row = findRow(line, column);
-        if (row + 1 < rowTable.size()) {
-            var offset = column - rowTable.get(row).startColumn;
-            var nextRow = rowTable.get(row + 1);
+        var table = display();
+        int row = findRowIn(table, line, column);
+        if (row + 1 < table.size()) {
+            var offset = column - table.get(row).startColumn;
+            var nextRow = table.get(row + 1);
             var max = nextRow.endColumn - nextRow.startColumn;
             offset = Math.min(offset, max);
             return IntPair.pack(nextRow.line, nextRow.startColumn + offset);
@@ -355,9 +453,9 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public int getLayoutHeight() {
         if (rowTable.isEmpty()) {
-            return editor.getRowHeight() * text.getLineCount();
+            return editor.getRowHeight() * getFoldedLineMap().getVisibleLineCount();
         }
-        return rowTable.size() * editor.getRowHeight();
+        return display().size() * editor.getRowHeight();
     }
 
     @Override
@@ -365,18 +463,19 @@ public class WordwrapLayout extends AbstractLayout {
         var pos = editor.getText().getIndexer().getCharPosition(index);
         var line = pos.line;
         if (rowTable.isEmpty()) {
-            return line;
+            return getFoldedLineMap().lineToDisplay(line);
         }
         var column = pos.column;
-        int row = findRow(line);
-        if (row < rowTable.size()) {
-            var region = rowTable.get(row);
+        var table = display();
+        int row = findRowIn(table, line);
+        if (row < table.size()) {
+            var region = table.get(row);
             if (region.line != line) {
                 return 0;
             }
-            while (region.startColumn < column && row + 1 < rowTable.size()) {
+            while (region.startColumn < column && row + 1 < table.size()) {
                 row++;
-                region = rowTable.get(row);
+                region = table.get(row);
                 if (region.line != line || region.startColumn > column) {
                     row--;
                     break;
@@ -400,15 +499,16 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public VisualLocation getVisualPositionForLayoutOffset(float offsetX, float offsetY) {
         if (rowTable.isEmpty()) {
-            int lineCount = text.getLineCount();
-            int line = Math.min(lineCount - 1, Math.max((int) (offsetY / editor.getRowHeight()), 0));
-            var tr = editor.getRenderer().createTextRow(line);
+            int row = (int) (offsetY / editor.getRowHeight());
+            int line = getFoldedLineMap().displayToLine(row);
+            var tr = editor.getRenderer().createTextRow(row);
             var pos = tr.getElementPositionForCursorOffset(offsetX);
             return new VisualLocation(line, pos.textOffset, pos.element, pos.isInElementBounds);
         }
+        var table = display();
         int row = (int) (offsetY / editor.getRowHeight());
-        row = Math.max(0, Math.min(row, rowTable.size() - 1));
-        RowRegion region = rowTable.get(row);
+        row = Math.max(0, Math.min(row, table.size() - 1));
+        RowRegion region = table.get(row);
         if (region.startColumn != 0) {
             offsetX -= miniGraphWidth;
         }
@@ -424,31 +524,34 @@ public class WordwrapLayout extends AbstractLayout {
         if (dest == null || dest.length < 2) {
             dest = new float[2];
         }
+        var lineMap = getFoldedLineMap();
+        var visibleLine = lineMap.clampToVisible(line);
         if (rowTable.isEmpty()) {
-            dest[0] = editor.getRowBottom(line);
-            var tr = editor.getRenderer().createTextRow(line);
-            dest[1] = tr.getCursorOffsetForIndex(column);
+            dest[0] = editor.getRowBottom(lineMap.lineToDisplay(visibleLine));
+            var tr = editor.getRenderer().createTextRow(lineMap.lineToDisplay(visibleLine));
+            dest[1] = tr.getCursorOffsetForIndex(Math.min(column, text.getColumnCount(visibleLine)));
             return dest;
         }
-        int row = findRow(line);
-        if (row < rowTable.size()) {
-            RowRegion region = rowTable.get(row);
-            if (region.line != line) {
+        var table = display();
+        int row = findRowIn(table, visibleLine);
+        if (row < table.size()) {
+            RowRegion region = table.get(row);
+            if (region.line != visibleLine) {
                 dest[0] = dest[1] = 0;
                 return dest;
             }
-            while (region.startColumn < column && row + 1 < rowTable.size()) {
+            while (region.startColumn < column && row + 1 < table.size()) {
                 row++;
-                region = rowTable.get(row);
-                if (region.line != line || region.startColumn > column) {
+                region = table.get(row);
+                if (region.line != visibleLine || region.startColumn > column) {
                     row--;
-                    region = rowTable.get(row);
+                    region = table.get(row);
                     break;
                 }
             }
             dest[0] = editor.getRowBottom(row);
             var tr = editor.getRenderer().createTextRow(row);
-            dest[1] = tr.getCursorOffsetForIndex(column);
+            dest[1] = tr.getCursorOffsetForIndex(Math.min(column, region.endColumn));
             if (region.startColumn != 0) {
                 dest[1] += miniGraphWidth;
             }
@@ -464,9 +567,13 @@ public class WordwrapLayout extends AbstractLayout {
         if (rowTable.isEmpty()) {
             return 1;
         }
-        int row = findRow(line);
+        if (getFoldedLineMap().isHidden(line)) {
+            return 0;
+        }
+        var table = display();
+        int row = findRowIn(table, line);
         int count = 0;
-        while (row < rowTable.size() && rowTable.get(row).line == line) {
+        while (row < table.size() && table.get(row).line == line) {
             count++;
             row++;
         }
@@ -477,13 +584,14 @@ public class WordwrapLayout extends AbstractLayout {
      * Get soft breaks on the given line
      */
     public List<Integer> getSoftBreaksForLine(int line) {
-        if (rowTable.isEmpty()) {
+        if (rowTable.isEmpty() || getFoldedLineMap().isHidden(line)) {
             return Collections.emptyList();
         }
-        int row = findRow(line);
+        var table = display();
+        int row = findRowIn(table, line);
         var list = new ArrayList<Integer>();
-        while (row < rowTable.size() && rowTable.get(row).line == line) {
-            var column = rowTable.get(row).startColumn;
+        while (row < table.size() && table.get(row).line == line) {
+            var column = table.get(row).startColumn;
             if (column != 0) {
                 list.add(column);
             }
@@ -495,9 +603,9 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public int getRowCount() {
         if (rowTable.isEmpty()) {
-            return text.getLineCount();
+            return getFoldedLineMap().getVisibleLineCount();
         }
-        return rowTable.size();
+        return display().size();
     }
 
     static class RowRegion {
@@ -578,13 +686,14 @@ public class WordwrapLayout extends AbstractLayout {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            RowRegion region = rowTable.get(currentRow);
+            var table = display();
+            RowRegion region = table.get(currentRow);
             result.lineIndex = region.line;
             result.startColumn = region.startColumn;
             result.endColumn = region.endColumn;
             result.inlayHints = region.inlayHints == null ? Collections.emptyList() : region.inlayHints;
-            result.isLeadingRow = currentRow <= 0 || rowTable.get(currentRow - 1).line != region.line;
-            result.isTrailingRow = currentRow + 1 >= rowTable.size() || rowTable.get(currentRow + 1).line != region.line;
+            result.isLeadingRow = currentRow <= 0 || table.get(currentRow - 1).line != region.line;
+            result.isTrailingRow = currentRow + 1 >= table.size() || table.get(currentRow + 1).line != region.line;
             result.renderTranslateX = region.getRenderTranslateX(width);
             currentRow++;
             return result;
@@ -592,7 +701,8 @@ public class WordwrapLayout extends AbstractLayout {
 
         @Override
         public boolean hasNext() {
-            return currentRow >= 0 && currentRow < rowTable.size();
+            var table = display();
+            return currentRow >= 0 && currentRow < table.size();
         }
 
         @Override

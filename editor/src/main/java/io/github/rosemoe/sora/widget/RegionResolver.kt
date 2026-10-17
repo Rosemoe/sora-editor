@@ -34,6 +34,16 @@ const val REGION_DIVIDER_MARGIN = 3
 const val REGION_DIVIDER = 4
 const val REGION_TEXT = 5
 
+/**
+ * Column right of the line numbers that shows the code folding indicators
+ */
+const val REGION_FOLD = 6
+
+/**
+ * Column left of the line numbers that shows the breakpoint markers
+ */
+const val REGION_BREAKPOINT = 7
+
 const val IN_BOUND = 0
 const val OUT_BOUND = 1
 
@@ -42,19 +52,32 @@ fun CodeEditor.resolveTouchRegion(event: MotionEvent) = resolveTouchRegion(event
 fun CodeEditor.resolveTouchRegion(event: MotionEvent, pointerIndex: Int = -1): Long {
     val x = (if (pointerIndex == -1) event.x else event.getX(pointerIndex)) + offsetX
     val y = (if (pointerIndex == -1) event.y else event.getY(pointerIndex)) + offsetY
+    val foldWidth = measureFoldIndicatorWidth()
+    val breakpointWidth = measureBreakpointIndicatorWidth()
     val lineNumberWidth = measureLineNumber()
-    val iconWidth = if (renderer.hasSideHintIcons()) rowHeight else 0
+    val iconWidth = measureSideIconWidth()
     val textOffset = measureTextRegionOffset()
+    // A pinned gutter stays on screen while the content scrolls below it
+    val gutterStart = if (isLineNumberEnabled && isLineNumberPinned && !isWordwrap) offsetX.toFloat() else 0f
+    val localX = x - gutterStart
+    val breakpointEnd = breakpointWidth
+    val lineNumberStart = breakpointEnd
+    val lineNumberEnd = lineNumberStart + lineNumberWidth
+    val foldStart = lineNumberEnd
+    val foldEnd = foldStart + foldWidth
+    val iconEnd = foldEnd + iconWidth
+    val dividerStart = iconEnd + dividerMarginLeft
+    val dividerEnd = dividerStart + dividerWidth
+    val gutterEnd = dividerEnd + dividerMarginRight
     val region = when {
         x < 0f -> REGION_OUTBOUND
-        x in 0f..lineNumberWidth -> REGION_LINE_NUMBER
-        x in lineNumberWidth..lineNumberWidth + iconWidth -> REGION_SIDE_ICON
-        x in lineNumberWidth + iconWidth..lineNumberWidth + iconWidth + dividerMarginLeft
-                || x in (lineNumberWidth + iconWidth + dividerMarginLeft + dividerWidth)..(lineNumberWidth + iconWidth + dividerMarginLeft + dividerMarginRight + dividerWidth)
-        -> REGION_DIVIDER_MARGIN
-
-        x in lineNumberWidth + iconWidth + dividerMarginLeft..lineNumberWidth + iconWidth + dividerMarginLeft + dividerWidth -> REGION_DIVIDER
-        x in textOffset..(scrollMaxX + width).toFloat() -> REGION_TEXT
+        breakpointWidth > 0f && localX in 0f..breakpointEnd -> REGION_BREAKPOINT
+        localX in lineNumberStart..lineNumberEnd -> REGION_LINE_NUMBER
+        foldWidth > 0f && localX in foldStart..foldEnd -> REGION_FOLD
+        localX in foldEnd..iconEnd -> REGION_SIDE_ICON
+        localX in iconEnd..dividerStart || localX in dividerEnd..gutterEnd -> REGION_DIVIDER_MARGIN
+        localX in dividerStart..dividerEnd -> REGION_DIVIDER
+        x >= maxOf(textOffset, gutterEnd) && x <= scrollMaxX + width -> REGION_TEXT
         else -> if (isWordwrap && x in 0f..width.toFloat()) REGION_TEXT else REGION_OUTBOUND
     }
     val bound = if (y >= 0 && y <= scrollMaxY + height / 2) {
