@@ -382,6 +382,9 @@ public class Content implements CharSequence {
     }
 
     private void insertInternal(int line, int column, CharSequence text) {
+        if (isInLineSeparator(line, column)) {
+            column = lines.get(line).length();
+        }
         checkLineAndColumn(line, column, CHECK_TYPE_CURSOR);
         if (text == null) {
             throw new IllegalArgumentException("text can not be null");
@@ -480,11 +483,19 @@ public class Content implements CharSequence {
     }
 
     private void deleteInternal(int startLine, int columnOnStartLine, int endLine, int columnOnEndLine) {
-        checkLineAndColumn(endLine, columnOnEndLine, CHECK_TYPE_CURSOR);
-        checkLineAndColumn(startLine, columnOnStartLine, CHECK_TYPE_CURSOR);
         if (startLine == endLine && columnOnStartLine == columnOnEndLine) {
             return;
         }
+        // A range with either end inside a line separator deletes the whole separator
+        if (isInLineSeparator(endLine, columnOnEndLine)) {
+            endLine++;
+            columnOnEndLine = 0;
+        }
+        if (isInLineSeparator(startLine, columnOnStartLine)) {
+            columnOnStartLine = lines.get(startLine).length();
+        }
+        checkLineAndColumn(endLine, columnOnEndLine, CHECK_TYPE_CURSOR);
+        checkLineAndColumn(startLine, columnOnStartLine, CHECK_TYPE_CURSOR);
         var endLineObj = lines.get(endLine);
         if (columnOnEndLine > endLineObj.length() && endLine + 1 < getLineCount()) {
             // Expected to delete the whole newline
@@ -583,6 +594,12 @@ public class Content implements CharSequence {
         documentVersion.getAndIncrement();
         try {
             this.dispatchBeforeReplace();
+            // An insertion inside a line separator moves out of it by itself, but a deletion that
+            // starts there changes the line first, so the start is moved out before it
+            if ((startLine != endLine || columnOnStartLine != columnOnEndLine)
+                    && isInLineSeparator(startLine, columnOnStartLine)) {
+                columnOnStartLine = lines.get(startLine).length();
+            }
             deleteInternal(startLine, columnOnStartLine, endLine, columnOnEndLine);
             insertInternal(startLine, columnOnStartLine, text);
         } finally {
@@ -1110,6 +1127,22 @@ public class Content implements CharSequence {
         if (line >= getLineCount() || line < 0) {
             throw new StringIndexOutOfBoundsException("Line " + line + " out of bounds. line count:" + getLineCount());
         }
+    }
+
+    /**
+     * Check whether the position is inside the line separator of the line, which is only possible
+     * between the '\r' and the '\n' of a CRLF. Converting a text index to a position gives such
+     * a position, for example an index an input method sends, but text can not be edited there:
+     * an insertion there goes before the separator, and a deletion that starts or ends there takes
+     * the whole separator.
+     *
+     * @param line   The line of the position
+     * @param column The column of the position
+     */
+    public boolean isInLineSeparator(int line, int column) {
+        checkLine(line);
+        var text = lines.get(line);
+        return column > text.length() && column < text.length() + text.getLineSeparator().getLength();
     }
 
     /**

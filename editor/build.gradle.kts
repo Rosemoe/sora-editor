@@ -49,6 +49,9 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+
+    // Robolectric tests that create a CodeEditor need its drawables
+    testOptions.unitTests.isIncludeAndroidResources = true
 }
 
 dependencies {
