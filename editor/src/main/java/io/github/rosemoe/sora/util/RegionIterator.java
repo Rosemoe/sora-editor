@@ -150,7 +150,7 @@ public class RegionIterator {
         int getPointCount();
 
         /**
-         * Get get dividing point at given index
+         * Get dividing point at given index
          * @param index Index of point
          * @return Dividing index in region
          */
