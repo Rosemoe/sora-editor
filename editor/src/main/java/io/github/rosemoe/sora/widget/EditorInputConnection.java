@@ -28,6 +28,7 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.SpannedString;
 import android.text.TextUtils;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
@@ -46,6 +47,7 @@ import androidx.annotation.RequiresApi;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.event.ImePrivateCommandEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
+import io.github.rosemoe.sora.lang.analysis.SequenceUpdateRange;
 import io.github.rosemoe.sora.text.CharPosition;
 import io.github.rosemoe.sora.text.ComposingText;
 import io.github.rosemoe.sora.text.Content;
@@ -91,7 +93,7 @@ class EditorInputConnection extends BaseInputConnection {
 
     protected void markInvalid() {
         connectionInvalid = true;
-        composingText.reset();
+        resetComposingText();
         resetBatchEdit();
         editor.invalidate();
     }
@@ -101,7 +103,7 @@ class EditorInputConnection extends BaseInputConnection {
      */
     protected void reset() {
         resetBatchEdit();
-        composingText.reset();
+        resetComposingText();
         connectionInvalid = false;
         imeConsumingInput = false;
     }
@@ -145,7 +147,7 @@ class EditorInputConnection extends BaseInputConnection {
     public synchronized void closeConnection() {
         super.closeConnection();
         resetBatchEdit();
-        composingText.reset();
+        resetComposingText();
         editor.onCloseConnection();
     }
 
@@ -285,7 +287,7 @@ class EditorInputConnection extends BaseInputConnection {
                 var commitText = text.toString();
                 if (this.composingText.endIndex == getCursor().getLeft() && !getCursor().isSelected() && commitText.startsWith(composingText) && commitText.length() > composingText.length()) {
                     text = commitText.substring(composingText.length());
-                    this.composingText.reset();
+                    resetComposingText();
                 } else {
                     deleteComposingText();
                 }
@@ -313,7 +315,7 @@ class EditorInputConnection extends BaseInputConnection {
         } catch (IndexOutOfBoundsException e) {
             e.printStackTrace();
         }
-        composingText.reset();
+        resetComposingText();
     }
 
     @Override
@@ -420,11 +422,11 @@ class EditorInputConnection extends BaseInputConnection {
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
         if (DEBUG)
             logger.d("setComposingText, text = " + text + ", pos = " + newCursorPosition);
-        if (!editor.isEditable() || connectionInvalid || !editor.acceptsComposingText()) {
+        if (!editor.isEditable() || connectionInvalid || !editor.acceptsComposingText() || text == null) {
             return false;
         }
         if (editor.getProps().disallowSuggestions) {
-            composingText.reset();
+            resetComposingText();
             commitText(text, 0);
             //editor.restartInput();
             return false;
@@ -432,6 +434,7 @@ class EditorInputConnection extends BaseInputConnection {
         if (TextUtils.indexOf(text, '\n') != -1) {
             return false;
         }
+        invalidateComposingBackground();
         if (!composingText.isComposing()) {
             // Create composing info
             composingText.preSetComposing = true;
@@ -457,7 +460,23 @@ class EditorInputConnection extends BaseInputConnection {
             finishComposingText();
             return true;
         }
+        composingText.text = text instanceof Spanned ? SpannedString.valueOf(text) : text.toString();
+        invalidateComposingBackground();
         return true;
+    }
+
+    private void invalidateComposingBackground() {
+        if (composingText.text instanceof Spanned && composingText.startIndex >= 0
+                && composingText.startIndex <= editor.getText().length()) {
+            var position = editor.getText().getIndexer().getCharPosition(composingText.startIndex);
+            editor.getRenderContext().updateForRange(new SequenceUpdateRange(position.line, position.line));
+            editor.invalidate();
+        }
+    }
+
+    private void resetComposingText() {
+        invalidateComposingBackground();
+        composingText.reset();
     }
 
     private void setComposingTextCompat(@NonNull String text) {
@@ -486,7 +505,7 @@ class EditorInputConnection extends BaseInputConnection {
         if (editor.getProps().disallowSuggestions) {
             return false;
         }
-        composingText.reset();
+        resetComposingText();
         endBatchEdit();
         editor.updateCursor();
         editor.invalidate();
@@ -554,6 +573,7 @@ class EditorInputConnection extends BaseInputConnection {
             if (start >= end) {
                 return false;
             }
+            invalidateComposingBackground();
             composingText.set(start, end);
             editor.invalidate();
         } catch (IndexOutOfBoundsException e) {

@@ -23,26 +23,40 @@
  */
 package io.github.rosemoe.sora.text;
 
+import androidx.annotation.Nullable;
+
 import io.github.rosemoe.sora.annotations.UnsupportedUserUsage;
 
 @UnsupportedUserUsage
 public class ComposingText {
 
-    public int startIndex, endIndex;
+    public int startIndex = -1, endIndex = -1;
     public boolean preSetComposing;
+    /**
+     * The original composing text, including any IME decorations.
+     */
+    @Nullable
+    public CharSequence text;
 
     public void set(int start, int end) {
+        if (start != startIndex || end != endIndex) {
+            text = null;
+        }
         this.startIndex = start;
         this.endIndex = end;
     }
 
     public void adjustLength(int length) {
+        if (endIndex - startIndex != length) {
+            text = null;
+        }
         this.endIndex = startIndex + length;
     }
 
     public void reset() {
         this.startIndex = this.endIndex = -1;
         preSetComposing = false;
+        text = null;
     }
 
     public boolean isComposing() {
@@ -52,6 +66,7 @@ public class ComposingText {
     public void shiftOnInsert(int insertStart, int insertEnd) {
         var length = insertEnd - insertStart;
         if (startIndex <= insertStart && endIndex >= insertStart) {
+            text = null;
             endIndex += length;
         }
         // Type 2, text is inserted before a diagnostic
@@ -75,6 +90,7 @@ public class ComposingText {
             }
         } else {
             // Has shared region
+            text = null;
             var sharedLength = sharedEnd - sharedStart;
             endIndex -= sharedLength;
             if (startIndex > deleteStart) {

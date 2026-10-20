@@ -27,6 +27,8 @@ import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.text.GetChars;
+import android.text.Spanned;
+import android.text.style.BackgroundColorSpan;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -40,11 +42,13 @@ import java.util.List;
 
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
+import io.github.rosemoe.sora.lang.styling.SpanMerger;
 import io.github.rosemoe.sora.lang.styling.TextStyle;
 import io.github.rosemoe.sora.lang.styling.inlayHint.CharacterSide;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.lang.styling.span.SpanExtAttrs;
 import io.github.rosemoe.sora.lang.styling.span.SpanExternalRenderer;
+import io.github.rosemoe.sora.lang.styling.span.SpanConstColorResolver;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.FunctionCharacters;
 import io.github.rosemoe.sora.text.bidi.Directions;
@@ -119,16 +123,90 @@ public class TextRow {
                     int start, int end, @Nullable List<Span> spans, @Nullable List<InlayHint> inlineElements,
                     @NonNull Directions directions, @NonNull Paint paint,
                     @Nullable TextAdvancesCache measureCache, @NonNull TextRowParams params) {
+        set(text, start, end, spans, inlineElements, directions, paint, measureCache, params, null, 0);
+    }
+
+    /**
+     * Set the row with optional composing decorations for its logical line.
+     *
+     * @param composingText            the composing text on this logical line, or {@code null}
+     * @param composingTextStartColumn the composing text's start column in this logical line
+     */
+    public void set(@NonNull ContentLine text,
+                    int start, int end, @Nullable List<Span> spans, @Nullable List<InlayHint> inlineElements,
+                    @NonNull Directions directions, @NonNull Paint paint,
+                    @Nullable TextAdvancesCache measureCache, @NonNull TextRowParams params,
+                    @Nullable CharSequence composingText, int composingTextStartColumn) {
         this.text = text;
         textStart = start;
         textEnd = end;
-        this.spans = spans;
+        this.spans = mergeComposingBackgrounds(spans, start, end, composingText, composingTextStartColumn);
         this.inlineElements = inlineElements;
         this.directions = directions;
         this.paint = paint;
         this.params = params;
         this.measureCache = measureCache;
         this.inlayHintRenderParams = params.toInlayHintRenderParams();
+    }
+
+    private static List<Span> mergeComposingBackgrounds(@Nullable List<Span> lower, int start, int end,
+                                                        @Nullable CharSequence composingText, int offset) {
+        if (!(composingText instanceof Spanned composing)) {
+            return lower;
+        }
+        int composingStart = Math.max(0, start - offset);
+        int composingEnd = Math.min(composing.length(), end - offset);
+        if (composingStart >= composingEnd) {
+            return lower;
+        }
+        BackgroundColorSpan[] backgrounds = composing.getSpans(composingStart, composingEnd, BackgroundColorSpan.class);
+        if (backgrounds.length == 0) {
+            return lower;
+        }
+        List<Integer> boundaries = new ArrayList<>(backgrounds.length * 2);
+        for (var background : backgrounds) {
+            int from = Math.max(composingStart, composing.getSpanStart(background));
+            int to = Math.min(composingEnd, composing.getSpanEnd(background));
+            if (from < to && background.getBackgroundColor() != 0) {
+                boundaries.add(from);
+                boundaries.add(to);
+            }
+        }
+        if (boundaries.isEmpty()) {
+            return lower;
+        }
+        Collections.sort(boundaries);
+        List<Span> upper = new ArrayList<>(boundaries.size());
+        int previousBoundary = -1;
+        int previousColor = 0;
+        for (int boundary : boundaries) {
+            if (boundary == previousBoundary) {
+                continue;
+            }
+            previousBoundary = boundary;
+            int color = 0;
+            // Follow Spanned's ordering: the last applicable background wins.
+            for (var background : backgrounds) {
+                if (boundary < composingEnd && composing.getSpanStart(background) <= boundary && boundary < composing.getSpanEnd(background)
+                        && background.getBackgroundColor() != 0) {
+                    color = background.getBackgroundColor();
+                }
+            }
+            if (color != previousColor) {
+                Span span = color == 0 ? SpanFactory.obtainNoExt(offset + boundary, 0)
+                        : SpanFactory.obtain(offset + boundary, 0);
+                if (color != 0) {
+                    span.setSpanExt(SpanExtAttrs.EXT_COLOR_RESOLVER, new SpanConstColorResolver(0, color));
+                }
+                upper.add(span);
+                previousColor = color;
+            }
+        }
+        if (upper.isEmpty()) {
+            return lower;
+        }
+        return SpanMerger.merge(lower == null || lower.isEmpty()
+                ? List.of(SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL)) : lower, upper);
     }
 
     /**
