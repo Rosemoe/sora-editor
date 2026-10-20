@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -64,7 +65,12 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
     private final static int MSG_MOD = MSG_BASE + 2;
     private static int sThreadId = 0;
     private LooperThread thread;
-    private volatile long runCount;
+    /**
+     * Not guarded by {@code this}: subclasses such as TextMateAnalyzer synchronize
+     * {@code tokenizeLine} on the manager, so taking the same monitor here made every edit on the
+     * UI thread wait for the analysis thread to finish tokenizing its current line.
+     */
+    private final AtomicLong runCount = new AtomicLong();
     private final boolean useShallowCopy;
 
     private static boolean useShallowCopyByDefault = false;
@@ -185,8 +191,8 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
 
     }
 
-    private synchronized void increaseRunCount() {
-        runCount++;
+    private void increaseRunCount() {
+        runCount.incrementAndGet();
     }
 
     @Override
@@ -455,7 +461,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
         }
 
         public boolean isCancelled() {
-            return thread.myRunCount != runCount || thread.abort || thread.isInterrupted();
+            return thread.myRunCount != runCount.get() || thread.abort || thread.isInterrupted();
         }
 
         public boolean isNotCancelled() {
@@ -517,7 +523,7 @@ public abstract class AsyncIncrementalAnalyzeManager<S, T> extends BaseAnalyzeMa
 
         public boolean handleMessage(@NonNull Message msg) {
             try {
-                myRunCount = runCount;
+                myRunCount = runCount.get();
                 delegate.reset();
                 switch (msg.what) {
                     case MSG_INIT:
