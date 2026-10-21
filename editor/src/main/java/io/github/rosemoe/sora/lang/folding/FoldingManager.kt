@@ -424,7 +424,7 @@ class FoldingManager(val editor: CodeEditor) {
             val blocks = editor.styles?.blocks
             if (blocks != null) {
                 for (block in blocks) {
-                    if (block.endLine > block.startLine) {
+                    if (block.startLine >= 0 && block.endLine > block.startLine) {
                         var endLine = block.endLine
                         if (!block.toBottomOfEndLine && startsWithClosingDelimiter(endLine)) {
                             endLine--
@@ -476,6 +476,7 @@ class FoldingManager(val editor: CodeEditor) {
                 continue
             }
         }
+        provided.removeAll { it.startLine < 0 || it.endLine < it.startLine }
         providerRegionsCache = provided
         return provided
     }
