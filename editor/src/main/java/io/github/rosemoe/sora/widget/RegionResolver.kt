@@ -52,38 +52,59 @@ fun CodeEditor.resolveTouchRegion(event: MotionEvent) = resolveTouchRegion(event
 fun CodeEditor.resolveTouchRegion(event: MotionEvent, pointerIndex: Int = -1): Long {
     val x = (if (pointerIndex == -1) event.x else event.getX(pointerIndex)) + offsetX
     val y = (if (pointerIndex == -1) event.y else event.getY(pointerIndex)) + offsetY
+    return IntPair.pack(resolveTouchRegionX(x), resolveTouchBound(y))
+}
+
+private fun CodeEditor.resolveTouchRegionX(x: Float): Int {
+    if (x < 0f) {
+        return REGION_OUTBOUND
+    }
     val foldWidth = measureFoldIndicatorWidth()
     val breakpointWidth = measureBreakpointIndicatorWidth()
     val lineNumberWidth = measureLineNumber()
     val iconWidth = measureSideIconWidth()
     val textOffset = measureTextRegionOffset()
-    // A pinned gutter stays on screen while the content scrolls below it
-    val gutterStart = if (isLineNumberEnabled && isLineNumberPinned && !isWordwrap) offsetX.toFloat() else 0f
-    val localX = x - gutterStart
-    val breakpointEnd = breakpointWidth
-    val lineNumberStart = breakpointEnd
-    val lineNumberEnd = lineNumberStart + lineNumberWidth
-    val foldStart = lineNumberEnd
-    val foldEnd = foldStart + foldWidth
+    val localX = x - gutterScreenStart()
+    val gutterRegion = resolveGutterRegion(localX, breakpointWidth, lineNumberWidth, foldWidth, iconWidth)
+    if (gutterRegion != null) {
+        return gutterRegion
+    }
+    val gutterEnd = breakpointWidth + lineNumberWidth + foldWidth + iconWidth +
+            dividerMarginLeft + dividerWidth + dividerMarginRight
+    return when {
+        x >= maxOf(textOffset, gutterEnd) && x <= scrollMaxX + width -> REGION_TEXT
+        isWordwrap && x in 0f..width.toFloat() -> REGION_TEXT
+        else -> REGION_OUTBOUND
+    }
+}
+
+private fun CodeEditor.resolveGutterRegion(
+    localX: Float,
+    breakpointWidth: Float,
+    lineNumberWidth: Float,
+    foldWidth: Float,
+    iconWidth: Float
+): Int? {
+    val lineNumberEnd = breakpointWidth + lineNumberWidth
+    val foldEnd = lineNumberEnd + foldWidth
     val iconEnd = foldEnd + iconWidth
     val dividerStart = iconEnd + dividerMarginLeft
     val dividerEnd = dividerStart + dividerWidth
     val gutterEnd = dividerEnd + dividerMarginRight
-    val region = when {
-        x < 0f -> REGION_OUTBOUND
-        breakpointWidth > 0f && localX in 0f..breakpointEnd -> REGION_BREAKPOINT
-        localX in lineNumberStart..lineNumberEnd -> REGION_LINE_NUMBER
-        foldWidth > 0f && localX in foldStart..foldEnd -> REGION_FOLD
+    return when {
+        breakpointWidth > 0f && localX in 0f..breakpointWidth -> REGION_BREAKPOINT
+        localX in breakpointWidth..lineNumberEnd -> REGION_LINE_NUMBER
+        foldWidth > 0f && localX in lineNumberEnd..foldEnd -> REGION_FOLD
         localX in foldEnd..iconEnd -> REGION_SIDE_ICON
         localX in iconEnd..dividerStart || localX in dividerEnd..gutterEnd -> REGION_DIVIDER_MARGIN
         localX in dividerStart..dividerEnd -> REGION_DIVIDER
-        x >= maxOf(textOffset, gutterEnd) && x <= scrollMaxX + width -> REGION_TEXT
-        else -> if (isWordwrap && x in 0f..width.toFloat()) REGION_TEXT else REGION_OUTBOUND
+        else -> null
     }
-    val bound = if (y >= 0 && y <= scrollMaxY + height / 2) {
-        IN_BOUND
-    } else {
-        OUT_BOUND
-    }
-    return IntPair.pack(region, bound)
 }
+
+// A pinned gutter stays on screen while the content scrolls below it
+private fun CodeEditor.gutterScreenStart(): Float =
+    if (isLineNumberEnabled && isLineNumberPinned && !isWordwrap) offsetX.toFloat() else 0f
+
+private fun CodeEditor.resolveTouchBound(y: Float): Int =
+    if (y >= 0 && y <= scrollMaxY + height / 2) IN_BOUND else OUT_BOUND

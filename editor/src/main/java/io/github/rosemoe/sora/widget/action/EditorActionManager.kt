@@ -143,7 +143,7 @@ class EditorActionManager(val editor: CodeEditor) {
             return false
         }
         val event = ActionPerformEvent(editor, action, context)
-        if ((editor.dispatchEvent(event) and InterceptTarget.TARGET_EDITOR) != 0) {
+        if (editor.dispatchEvent(event) and InterceptTarget.TARGET_EDITOR != 0) {
             return false
         }
         action.perform(context)

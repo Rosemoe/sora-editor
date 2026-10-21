@@ -104,6 +104,7 @@ import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SubscriptionReceipt;
 import io.github.rosemoe.sora.event.TextSizeChangeEvent;
 import io.github.rosemoe.sora.graphics.Paint;
+import io.github.rosemoe.sora.graphics.inlayHint.FoldEllipsisInlayHintRenderer;
 import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRenderer;
 import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRendererProvider;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
@@ -112,6 +113,7 @@ import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
 import io.github.rosemoe.sora.lang.debugging.BreakpointContainer;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticProvider;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
+import io.github.rosemoe.sora.lang.folding.FoldEllipsisInlayHint;
 import io.github.rosemoe.sora.lang.folding.FoldingManager;
 import io.github.rosemoe.sora.lang.folding.FoldingProvider;
 import io.github.rosemoe.sora.lang.format.Formatter;
@@ -541,13 +543,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
     /**
      * Get the width of the code folding indicator column in the gutter.
-     * The column is 0 when {@link #isCodeFoldingEnabled()} or line numbers are off.
+     * The column is 0 when {@link #isCodeFoldingEnabled()} or line numbers are off,
+     * or when the current content has no foldable regions at all, so flat files
+     * (e.g. properties files) do not get an empty fold indicator strip.
      *
      * @return The width in pixels
      * @see #setCodeFoldingEnabled(boolean)
      */
     public float measureFoldIndicatorWidth() {
-        return codeFoldingEnabled && isLineNumberEnabled()
+        return codeFoldingEnabled && isLineNumberEnabled() && foldingManager.hasFoldableRegions()
                 ? getRowHeight() * (props.foldIndicatorSizeFactor + 2f * props.foldIndicatorPadding) : 0f;
     }
 
@@ -636,6 +640,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         renderFunctionCharacters = true;
         renderContext = new RenderContext(this);
         renderer = onCreateRenderer();
+        inlayHintRendererMap.put(FoldEllipsisInlayHint.TYPE_NAME, FoldEllipsisInlayHintRenderer.DefaultInstance);
 
         styleDelegate = new EditorStyleDelegate(this);
 

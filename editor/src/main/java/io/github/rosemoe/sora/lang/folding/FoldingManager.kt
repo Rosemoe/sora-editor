@@ -79,6 +79,13 @@ class FoldingManager(val editor: CodeEditor) {
         get() = collapsed.toList()
 
     /**
+     * Whether the current content has at least one foldable region, either from a
+     * [FoldingProvider] or from the language code blocks. The gutter only reserves
+     * the fold indicator column while this is true.
+     */
+    fun hasFoldableRegions(): Boolean = ensureRegions().isNotEmpty()
+
+    /**
      * Whether at least one region is collapsed
      */
     val hasCollapsedRegions: Boolean

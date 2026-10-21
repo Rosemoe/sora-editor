@@ -52,6 +52,7 @@ import io.github.rosemoe.sora.event.ScrollEvent;
 import io.github.rosemoe.sora.event.SelectionChangeEvent;
 import io.github.rosemoe.sora.event.SideIconClickEvent;
 import io.github.rosemoe.sora.graphics.RectUtils;
+import io.github.rosemoe.sora.lang.folding.FoldEllipsisInlayHint;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.StylesUtils;
 import io.github.rosemoe.sora.lang.styling.line.LineSideIcon;
@@ -63,6 +64,7 @@ import io.github.rosemoe.sora.widget.action.ActionContext;
 import io.github.rosemoe.sora.widget.action.ActionTrigger;
 import io.github.rosemoe.sora.widget.action.EditorActionManager;
 import io.github.rosemoe.sora.widget.component.Magnifier;
+import io.github.rosemoe.sora.widget.layout.Layout;
 import io.github.rosemoe.sora.widget.layout.RowElementTypes;
 import io.github.rosemoe.sora.widget.style.SelectionHandleStyle;
 import kotlin.jvm.functions.Function5;
@@ -854,55 +856,84 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         int line = visualPosition.line;
         int column = visualPosition.column;
         editor.performClick();
-        if (region == RegionResolverKt.REGION_SIDE_ICON) {
-            int row = (int) (e.getY() + editor.getOffsetX()) / editor.getRowHeight();
-            row = Math.max(0, Math.min(row, editor.getLayout().getRowCount() - 1));
-            var inf = editor.getLayout().getRowAt(row);
-            if (inf.isLeadingRow) {
-                var style = editor.getRenderer().getLineStyle(inf.lineIndex, LineSideIcon.class);
-                if (style != null) {
-                    if ((editor.dispatchEvent(new SideIconClickEvent(editor, style)) & InterceptTarget.TARGET_EDITOR) != 0) {
-                        return true;
-                    }
-                }
-                var actionId = editor.getActionManager().getActionIdBoundToLine(inf.lineIndex);
-                if (actionId != null) {
-                    var iconPosition = editor.getText().getIndexer().getCharPosition(inf.lineIndex, 0);
-                    editor.getActionManager().perform(actionId,
-                            new ActionContext(editor, iconPosition, ActionTrigger.GUTTER));
-                    return true;
-                }
-            }
+        if (region == RegionResolverKt.REGION_SIDE_ICON && handleSideIconTap(e)) {
+            return true;
         }
         var position = editor.getText().getIndexer().getCharPosition(line, column);
-        if (visualPosition.element != null && visualPosition.element.type == RowElementTypes.INLAY_HINT
-                && visualPosition.element.inlayHint != null && visualPosition.isInElementBounds) {
-            if ((editor.dispatchEvent(new InlayHintClickEvent(editor, visualPosition.element.inlayHint, position)) & InterceptTarget.TARGET_EDITOR) != 0) {
-                return true;
-            }
+        if (handleInlayHintTap(visualPosition, position)) {
+            return true;
         }
         if ((dispatchEditorMotionEvent(ClickEvent::new, position, e, region, regionBound) & InterceptTarget.TARGET_EDITOR) != 0) {
             return true;
         }
         if (region == RegionResolverKt.REGION_FOLD) {
-            if (editor.isCodeFoldingEnabled()) {
-                editor.getActionManager().perform(
-                        EditorActionManager.ACTION_FOLD_TOGGLE,
-                        new ActionContext(editor, position, ActionTrigger.GUTTER));
-            }
+            performFoldToggle(position);
             return true;
         }
         if (region == RegionResolverKt.REGION_BREAKPOINT) {
-            if (editor.isBreakpointMarkerEnabled()) {
-                editor.getActionManager().perform(
-                        EditorActionManager.ACTION_BREAKPOINT_TOGGLE,
-                        new ActionContext(editor, position, ActionTrigger.GUTTER));
-            }
+            performBreakpointToggle(position);
             return true;
         }
         editor.showSoftInput();
         notifyLater();
-        var lnAction = editor.getProps().actionWhenLineNumberClicked;
+        handleTextOrLineNumberTap(region, line, column);
+        return true;
+    }
+
+    private boolean handleSideIconTap(@NonNull MotionEvent e) {
+        int row = (int) (e.getY() + editor.getOffsetX()) / editor.getRowHeight();
+        row = Math.max(0, Math.min(row, editor.getLayout().getRowCount() - 1));
+        var inf = editor.getLayout().getRowAt(row);
+        if (!inf.isLeadingRow) {
+            return false;
+        }
+        var style = editor.getRenderer().getLineStyle(inf.lineIndex, LineSideIcon.class);
+        if (style != null && (editor.dispatchEvent(new SideIconClickEvent(editor, style)) & InterceptTarget.TARGET_EDITOR) != 0) {
+            return true;
+        }
+        var actionId = editor.getActionManager().getActionIdBoundToLine(inf.lineIndex);
+        if (actionId != null) {
+            var iconPosition = editor.getText().getIndexer().getCharPosition(inf.lineIndex, 0);
+            editor.getActionManager().perform(actionId,
+                    new ActionContext(editor, iconPosition, ActionTrigger.GUTTER));
+            return true;
+        }
+        return false;
+    }
+
+    private boolean handleInlayHintTap(@NonNull Layout.VisualLocation visualPosition, CharPosition position) {
+        var element = visualPosition.element;
+        if (element == null || element.type != RowElementTypes.INLAY_HINT
+                || element.inlayHint == null || !visualPosition.isInElementBounds) {
+            return false;
+        }
+        if ((editor.dispatchEvent(new InlayHintClickEvent(editor, element.inlayHint, position)) & InterceptTarget.TARGET_EDITOR) != 0) {
+            return true;
+        }
+        if (element.inlayHint instanceof FoldEllipsisInlayHint) {
+            performFoldToggle(position);
+            return true;
+        }
+        return false;
+    }
+
+    private void performFoldToggle(CharPosition position) {
+        if (editor.isCodeFoldingEnabled()) {
+            editor.getActionManager().perform(
+                    EditorActionManager.ACTION_FOLD_TOGGLE,
+                    new ActionContext(editor, position, ActionTrigger.GUTTER));
+        }
+    }
+
+    private void performBreakpointToggle(CharPosition position) {
+        if (editor.isBreakpointMarkerEnabled()) {
+            editor.getActionManager().perform(
+                    EditorActionManager.ACTION_BREAKPOINT_TOGGLE,
+                    new ActionContext(editor, position, ActionTrigger.GUTTER));
+        }
+    }
+
+    private void handleTextOrLineNumberTap(int region, int line, int column) {
         if (region == RegionResolverKt.REGION_TEXT) {
             if (editor.isInLongSelect()) {
                 var cursor = editor.getCursor();
@@ -912,19 +943,22 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
                 editor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
             }
         } else if (region == RegionResolverKt.REGION_LINE_NUMBER) {
-            switch (lnAction) {
-                case DirectAccessProps.LN_ACTION_SELECT_LINE:
-                    editor.setSelectionRegion(line, 0, line, editor.getText().getColumnCount(line), false, SelectionChangeEvent.CAUSE_TAP);
-                    break;
-                case DirectAccessProps.LN_ACTION_PLACE_SELECTION_HOME:
-                    editor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
-                    break;
-                case DirectAccessProps.LN_ACTION_NOTHING:
-                default:
-                    // do nothing
-            }
+            handleLineNumberTap(line, column);
         }
-        return true;
+    }
+
+    private void handleLineNumberTap(int line, int column) {
+        switch (editor.getProps().actionWhenLineNumberClicked) {
+            case DirectAccessProps.LN_ACTION_SELECT_LINE:
+                editor.setSelectionRegion(line, 0, line, editor.getText().getColumnCount(line), false, SelectionChangeEvent.CAUSE_TAP);
+                break;
+            case DirectAccessProps.LN_ACTION_PLACE_SELECTION_HOME:
+                editor.setSelection(line, column, SelectionChangeEvent.CAUSE_TAP);
+                break;
+            case DirectAccessProps.LN_ACTION_NOTHING:
+            default:
+                // do nothing
+        }
     }
 
     @Override

@@ -142,7 +142,7 @@ class FoldedLineMap {
                 break
             }
             val end = ends[i]
-            count += (minOf(end, line - 1) - start + 1)
+            count += minOf(end, line - 1) - start + 1
         }
         return count
     }
@@ -206,7 +206,7 @@ class FoldedLineMap {
         var left = 0
         var right = starts.size - 1
         while (left <= right) {
-            val mid = (left + right) ushr 1
+            val mid = left + right ushr 1
             val start = starts[mid]
             val end = ends[mid]
             when {

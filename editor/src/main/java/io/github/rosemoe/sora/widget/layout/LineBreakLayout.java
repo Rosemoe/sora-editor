@@ -28,8 +28,10 @@ import android.util.SparseArray;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -166,6 +168,30 @@ public class LineBreakLayout extends AbstractLayout {
             var line = itr.nextInt();
             widthMaintainer.set(line, measureLineAndUpdateInlineWidths(line));
         }
+    }
+
+    private final Set<Integer> foldHeaderLines = new HashSet<>();
+
+    @Override
+    public void onFoldingRegionsChanged() {
+        // The fold ellipsis chip changes the inlay hint set of the header lines, so the
+        // cached line widths of the affected lines have to be measured again
+        var newHeaders = new HashSet<Integer>();
+        for (var region : editor.getFoldingManager().getCollapsedRegions()) {
+            newHeaders.add(region.getStartLine());
+        }
+        for (var line : foldHeaderLines) {
+            if (line < text.getLineCount()) {
+                widthMaintainer.set(line, measureLineAndUpdateInlineWidths(line));
+            }
+        }
+        for (var line : newHeaders) {
+            if (line < text.getLineCount()) {
+                widthMaintainer.set(line, measureLineAndUpdateInlineWidths(line));
+            }
+        }
+        foldHeaderLines.clear();
+        foldHeaderLines.addAll(newHeaders);
     }
 
     @Override

@@ -422,8 +422,14 @@ public class EditorRenderer {
             spans = EmptyReader.getInstance();
         }
         TextRow tr = new TextRow();
-        var inlayHints = editor.getInlayHints();
-        List<InlayHint> lineInlays = inlayHints == null ? Collections.emptyList() : inlayHints.getForLine(line);
+        var layout = editor.layout;
+        List<InlayHint> lineInlays;
+        if (layout != null) {
+            lineInlays = layout.getInlayHints(line);
+        } else {
+            var inlayHints = editor.getInlayHints();
+            lineInlays = inlayHints == null ? Collections.emptyList() : inlayHints.getForLine(line);
+        }
         var cache = editor.getRenderContext().getCache().queryMeasureCache(line);
         var widths = cache != null && cache.getUpdateTimestamp() >= displayTimestamp ? cache.getWidths() : null;
         widths = widths != null && widths.getSize() > lineBuf.length() ? widths : null;
