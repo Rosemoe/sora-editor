@@ -23,6 +23,8 @@
  ******************************************************************************/
 package io.github.rosemoe.sora.app
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.DialogInterface
 import android.graphics.Typeface
 import android.net.Uri
@@ -51,8 +53,11 @@ import io.github.rosemoe.sora.app.lsp.LspTestActivity
 import io.github.rosemoe.sora.app.lsp.LspTestJavaActivity
 import io.github.rosemoe.sora.app.tests.TestActivity
 import io.github.rosemoe.sora.app.tests.paged.PagedEditActivity
+import io.github.rosemoe.sora.event.ActionPerformEvent
+import io.github.rosemoe.sora.event.BreakpointChangeEvent
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorKeyEvent
+import io.github.rosemoe.sora.event.FoldingChangeEvent
 import io.github.rosemoe.sora.event.InlayHintClickEvent
 import io.github.rosemoe.sora.event.KeyBindingEvent
 import io.github.rosemoe.sora.event.PublishSearchResultEvent
@@ -66,6 +71,9 @@ import io.github.rosemoe.sora.lang.JavaLanguageSpec
 import io.github.rosemoe.sora.lang.TsLanguageJava
 import io.github.rosemoe.sora.lang.analysis.AsyncIncrementalAnalyzeManager
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
+import io.github.rosemoe.sora.lang.folding.FoldingProvider
+import io.github.rosemoe.sora.lang.folding.FoldingRegion
+import io.github.rosemoe.sora.lang.folding.ImportFoldingProvider
 import io.github.rosemoe.sora.lang.styling.color.ConstColor
 import io.github.rosemoe.sora.lang.styling.inlayHint.ColorInlayHint
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintProvider
@@ -96,6 +104,9 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.EditorSearcher.SearchOptions
 import io.github.rosemoe.sora.widget.SelectionMovement
+import io.github.rosemoe.sora.widget.action.ActionTrigger
+import io.github.rosemoe.sora.widget.action.EditorAction
+import io.github.rosemoe.sora.widget.action.EditorActionManager
 import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.component.Magnifier
 import io.github.rosemoe.sora.widget.ext.EditorSpanInteractionHandler
@@ -131,6 +142,14 @@ class MainActivity : AppCompatActivity() {
 
         private const val TAG = "MainActivity"
         const val LOG_FILE = "crash-journal.log"
+
+        /** Ids of the custom actions that this demo app registers on the editor */
+        const val ACTION_RUN = "app.run"
+        const val ACTION_RUN_SELECTION = "app.run.selection"
+        const val ACTION_COPY_LINE = "app.copyLine"
+
+        /** Minimum number of consecutive comment lines that the demo folding provider folds */
+        private const val MIN_COMMENT_RUN = 3
 
         /**
          * Symbols to be displayed in symbol input view
@@ -271,6 +290,9 @@ class MainActivity : AppCompatActivity() {
                 .setEnabledAnimation(true)
         }
 
+        // Code folding, breakpoints and custom actions
+        setupFoldingAndActions()
+
         // Load textmate themes and grammars
         setupTextmate()
 
@@ -324,6 +346,124 @@ class MainActivity : AppCompatActivity() {
 
         switchThemeIfRequired(this, binding.editor)
         computeSearchOptions()
+    }
+
+    /**
+     * Demo setup of code folding, breakpoints and the custom action system
+     */
+    private fun setupFoldingAndActions() {
+        val editor = binding.editor
+        editor.setCodeFoldingEnabled(true)
+        editor.setBreakpointMarkerEnabled(true)
+        // Extra foldable regions on top of the code blocks of the language
+        editor.registerFoldingProvider(createCommentFoldingProvider())
+        // Fold contiguous runs of import statements
+        editor.registerFoldingProvider(ImportFoldingProvider())
+        // Make the built-in folding and debug actions visible in the context menu
+        listOf(
+            EditorActionManager.ACTION_FOLD_TOGGLE,
+            EditorActionManager.ACTION_FOLD_ALL,
+            EditorActionManager.ACTION_FOLD_EXPAND_ALL,
+            EditorActionManager.ACTION_BREAKPOINT_TOGGLE,
+            EditorActionManager.ACTION_BREAKPOINT_CLEAR_ALL
+        ).forEach { id -> editor.findAction(id)?.showInContextMenu = true }
+        // Custom actions of this app
+        editor.registerAction(
+            EditorAction.of(
+                ACTION_RUN,
+                "Run",
+                EditorAction.GROUP_RUN,
+                showInContextMenu = true,
+                iconRes = io.github.rosemoe.sora.R.drawable.ic_play
+            ) { context ->
+                val line = context.line
+                toast("Run line ${line + 1}: ${editor.text.getLine(line)}")
+            }
+        )
+        editor.registerAction(
+            EditorAction(
+                id = ACTION_RUN_SELECTION,
+                title = "Run selection",
+                group = EditorAction.GROUP_RUN,
+                showInContextMenu = true,
+                handler = { context -> toast("Run selection: ${context.selectedText}") },
+                enabledPredicate = { context -> context.hasSelection }
+            )
+        )
+        editor.registerAction(
+            EditorAction(
+                id = ACTION_COPY_LINE,
+                title = "Copy line",
+                group = EditorAction.GROUP_EDIT,
+                showInContextMenu = true,
+                handler = { context ->
+                    val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(
+                        ClipData.newPlainText("line", editor.text.getLine(context.line))
+                    )
+                    toast("Line ${context.line + 1} copied")
+                }
+            )
+        )
+        editor.actionManager.bindIconForLine(0, ACTION_RUN)
+        editor.subscribeAlways<FoldingChangeEvent> {
+            Log.d(
+                TAG,
+                "Folding changed: hidden lines = ${editor.foldingManager.foldedLineMap.hiddenLines}"
+            )
+        }
+        editor.subscribeAlways<BreakpointChangeEvent> {
+            Log.d(TAG, "Breakpoint changed: ${it.breakpoint}, added = ${it.added}")
+        }
+        editor.subscribeAlways<ActionPerformEvent> {
+            Log.d(TAG, "Action performed: ${it.action.id} from ${it.context.trigger}")
+        }
+    }
+
+    /**
+     * Folding provider of the demo: every run of at least [MIN_COMMENT_RUN] consecutive comment
+     * lines becomes a foldable region, independently of the language of the document
+     */
+    private fun createCommentFoldingProvider() = FoldingProvider { editor, out ->
+        val text = editor.text
+        val lineCount = text.lineCount
+        var runStart = -1
+        for (line in 0 until lineCount) {
+            if (isCommentLine(text.getLine(line))) {
+                if (runStart < 0) {
+                    runStart = line
+                }
+            } else {
+                appendCommentRun(runStart, line - 1, out)
+                runStart = -1
+            }
+        }
+        appendCommentRun(runStart, lineCount - 1, out)
+    }
+
+    private fun isCommentLine(line: CharSequence): Boolean {
+        val trimmed = line.toString().trim()
+        return trimmed.startsWith("//") || trimmed.startsWith("#") ||
+            trimmed.startsWith("/*") || trimmed.startsWith("*") ||
+            trimmed.startsWith("--")
+    }
+
+    private fun appendCommentRun(start: Int, end: Int, out: MutableList<FoldingRegion>) {
+        if (start >= 0 && end >= start + MIN_COMMENT_RUN - 1) {
+            out.add(FoldingRegion(start, end))
+        }
+    }
+
+    /**
+     * Shows every action that is currently registered on the editor
+     */
+    private fun showActionList() {
+        val actions = binding.editor.actions
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Registered actions")
+            .setItems(actions.map { "${it.id} - ${it.title}" }.toTypedArray(), null)
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     /**
@@ -589,9 +729,19 @@ class MainActivity : AppCompatActivity() {
                 demoInlayHintProvider?.let { binding.editor.unregisterInlayHintProvider(it) }
                 if ("big_sample" !in name) {
                     demoInlayHintProvider = InlayHintProvider { container ->
-                        container.add(ColorInlayHint(10, 30, ConstColor("#f44336")))
-                        container.add(TextInlayHint(29, 7, "^DigitTens"))
-                        container.add(TextInlayHint(100, 1, "^Numbers"))
+                        val content = binding.editor.text
+                        for (i in 0 until content.lineCount) {
+                            val line = content.getLine(i)
+                            val col = content.getColumnCount(i)
+                            when {
+                                "String RED =" in line ->
+                                    container.add(ColorInlayHint(i, col, ConstColor("#f44336")))
+                                "char [] DigitTens" in line ->
+                                    container.add(TextInlayHint(i, col, "^DigitTens"))
+                                "public class Numbers" in line ->
+                                    container.add(TextInlayHint(i, col, "^Numbers"))
+                            }
+                        }
                     }
                     binding.editor.registerInlayHintProvider(demoInlayHintProvider!!)
                 } else {
@@ -815,6 +965,55 @@ class MainActivity : AppCompatActivity() {
                 editor.isDisableSoftKbdIfHardKbdAvailable =
                     !editor.isDisableSoftKbdIfHardKbdAvailable
                 item.isChecked = editor.isDisableSoftKbdIfHardKbdAvailable
+            }
+
+            R.id.code_folding -> {
+                item.isChecked = !item.isChecked
+                editor.setCodeFoldingEnabled(item.isChecked)
+            }
+
+            R.id.breakpoint_markers -> {
+                item.isChecked = !item.isChecked
+                editor.setBreakpointMarkerEnabled(item.isChecked)
+            }
+
+            R.id.fold_all -> editor.performAction(
+                EditorActionManager.ACTION_FOLD_ALL,
+                ActionTrigger.TOOLBAR
+            )
+
+            R.id.expand_all -> editor.performAction(
+                EditorActionManager.ACTION_FOLD_EXPAND_ALL,
+                ActionTrigger.TOOLBAR
+            )
+
+            R.id.toggle_breakpoint -> editor.performAction(
+                EditorActionManager.ACTION_BREAKPOINT_TOGGLE,
+                ActionTrigger.TOOLBAR
+            )
+
+            R.id.clear_breakpoints -> editor.performAction(
+                EditorActionManager.ACTION_BREAKPOINT_CLEAR_ALL,
+                ActionTrigger.TOOLBAR
+            )
+
+            R.id.action_run -> editor.performAction(ACTION_RUN, ActionTrigger.TOOLBAR)
+            R.id.action_run_selection -> editor.performAction(
+                ACTION_RUN_SELECTION,
+                ActionTrigger.TOOLBAR
+            )
+
+            R.id.action_copy_line -> editor.performAction(ACTION_COPY_LINE, ActionTrigger.TOOLBAR)
+            R.id.action_list -> showActionList()
+            R.id.toggle_run_icon -> {
+                val actionManager = editor.actionManager
+                if (actionManager.getActionIdBoundToLine(0) != null) {
+                    actionManager.unbindIconForLine(0)
+                    toast("Run icon removed from first line")
+                } else {
+                    actionManager.bindIconForLine(0, ACTION_RUN)
+                    toast("Run icon bound to first line")
+                }
             }
 
             R.id.switch_typeface -> chooseTypeface()
