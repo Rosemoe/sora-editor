@@ -129,6 +129,11 @@ class FoldingManager(val editor: CodeEditor) {
     fun invalidateCodeBlockRegions() {
         regionsCache = null
         startIndex = null
+        if (reconcileCollapsed()) {
+            updateLineMap()
+            editor.layout?.onFoldingRegionsChanged()
+            dispatchCollapsedChanged()
+        }
     }
 
     /**
@@ -333,6 +338,7 @@ class FoldingManager(val editor: CodeEditor) {
         changed = changed || newCollapsed.size != collapsed.size
         collapsed.clear()
         collapsed.addAll(newCollapsed)
+        changed = reconcileCollapsed() || changed
         updateLineMap()
         editor.layout?.onFoldingRegionsChanged()
         if (changed) {
@@ -387,6 +393,7 @@ class FoldingManager(val editor: CodeEditor) {
         changed = changed || newCollapsed.size != collapsed.size
         collapsed.clear()
         collapsed.addAll(newCollapsed)
+        changed = reconcileCollapsed() || changed
         updateLineMap()
         editor.layout?.onFoldingRegionsChanged()
         if (changed) {
@@ -500,6 +507,48 @@ class FoldingManager(val editor: CodeEditor) {
         editor.layout?.onFoldingRegionsChanged()
         dispatchCollapsedChanged()
         editor.invalidate()
+    }
+
+    /**
+     * Re-anchor the collapsed state to the regions computed for the current content.
+     * Analyze results and folding providers change a region's extent after an edit (an
+     * import block that grows, a code block shortened by the analyzer) while the collapsed
+     * set still refers to the old extent. Without this the row map keeps hiding lines of a
+     * region the fold icon no longer reports as collapsed, and the fold can never be
+     * expanded again. Entries are matched by their header line, preferring an exact range
+     * and otherwise the region with the closest end; entries whose region no longer exists
+     * are dropped.
+     *
+     * @return whether the collapsed set changed
+     */
+    private fun reconcileCollapsed(): Boolean {
+        if (collapsed.isEmpty()) {
+            return false
+        }
+        val fresh = ensureRegions()
+        val updated = LinkedHashSet<FoldingRegion>()
+        var changed = false
+        for (region in collapsed) {
+            val match = fresh.firstOrNull { it == region }
+                    ?: fresh.filter { it.startLine == region.startLine }
+                        .minByOrNull { Math.abs(it.endLine - region.endLine) }
+            if (match == null) {
+                changed = true
+            } else {
+                updated.add(match)
+                if (match != region) {
+                    changed = true
+                }
+            }
+        }
+        if (updated.size != collapsed.size) {
+            changed = true
+        }
+        if (changed) {
+            collapsed.clear()
+            collapsed.addAll(updated)
+        }
+        return changed
     }
 
     private fun dispatchCollapsedChanged() {
