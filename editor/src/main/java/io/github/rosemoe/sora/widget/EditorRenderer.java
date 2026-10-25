@@ -1914,9 +1914,12 @@ public class EditorRenderer {
                 int visEndRow = Math.min(lastVisRow, endRow);
                 for (int i = visStartRow; i <= visEndRow; i++) {
                     var row = editor.getLayout().getRowAt(i);
+                    if (row.lineIndex < start.line || row.lineIndex > end.line) {
+                        continue;
+                    }
                     var tr = createTextRow(i);
-                    int startColumn = i == startRow ? start.column : row.startColumn;
-                    int endColumn = i == endRow ? end.column : row.endColumn;
+                    int startColumn = (i == startRow && row.lineIndex == start.line) ? start.column : row.startColumn;
+                    int endColumn = (i == endRow && row.lineIndex == end.line) ? end.column : row.endColumn;
                     float finalOffset;
                     if (editor.isWordwrap() && !row.isLeadingRow && (editor.getNonPrintablePaintingFlags() & CodeEditor.FLAG_DRAW_SOFT_WRAP) != 0) {
                         finalOffset = offset + row.renderTranslateX + getMiniGraphWidth();
