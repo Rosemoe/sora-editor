@@ -1,7 +1,7 @@
 [versions]
 agp = "9.4.1"
 kotlin = "2.4.21"
-tsBinding = "4.3.2"
+tsBinding = "4.3.3"
 lsp4j = "1.0.0"
 androidxAnnotation = "1.11.0"
 
