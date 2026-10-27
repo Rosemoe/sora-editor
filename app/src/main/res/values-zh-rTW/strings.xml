@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?><!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~    sora-editor - the awesome code editor for Android
+  ~    https://github.com/Rosemoe/sora-editor
+  ~    Copyright (C) 2020-2024  Rosemoe
+  ~
+  ~     This library is free software; you can redistribute it and/or
+  ~     modify it under the terms of the GNU Lesser General Public
+  ~     License as published by the Free Software Foundation; either
+  ~     version 2.1 of the License, or (at your option) any later version.
+  ~
+  ~     This library is distributed in the hope that it will be useful,
+  ~     but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  ~     Lesser General Public License for more details.
+  ~
+  ~     You should have received a copy of the GNU Lesser General Public
+  ~     License along with this library; if not, write to the Free Software
+  ~     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+  ~     USA
+  ~
+  ~     Please contact Rosemoe by email 2073412493@qq.com if you need
+  ~     additional information or have any questions
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+<resources>
+    <string name="open_debug_logs">開啟除錯日誌</string>
+    <string name="layout_tv_prev">上個</string>
+    <string name="layout_tv_next">下個</string>
+    <string name="layout_tv_replace">替換</string>
+    <string name="layout_tv_replaceAll">全部</string>
+    <string name="text_to_search">查詢文字</string>
+    <string name="replacement">替換到的文字</string>
+    <string name="cursor_actions">游標操作</string>
+    <string name="go_to_end">到全文末尾</string>
+    <string name="move_up">上移</string>
+    <string name="move_down">下移</string>
+    <string name="move_left">左移</string>
+    <string name="move_right">右移</string>
+    <string name="home">行首</string>
+    <string name="end">行末</string>
+    <string name="text_actions">文字操作</string>
+    <string name="switch_color_scheme">顏色風格</string>
+    <string name="undo">復原</string>
+    <string name="redo">重做</string>
+    <string name="search_text">搜尋文字</string>
+    <string name="action_mode">標題列模式</string>
+    <string name="search_panel">搜尋面板</string>
+    <string name="code_navigation">程式碼導航</string>
+    <string name="switch_language">調節程式語言</string>
+    <string name="switch_typeface">更換字型</string>
+    <string name="format">格式化</string>
+    <string name="app_name">Sora-editor Demo</string>
+    <string name="code_navi">程式碼導航</string>
+    <string name="navi_err_msg">程式碼導航沒有準備好或者該語言不支援</string>
+    <string name="color_scheme">顏色風格</string>
+    <string name="err_crash">應用程式已發生錯誤，錯誤日誌已儲存至應用私有資料夾的crash-journal.log</string>
+    <string name="wordwrap">自動換行</string>
+    <string name="show_crash_log">開啟崩潰日誌</string>
+    <string name="clear_crash_log">清除崩潰日誌</string>
+    <string name="line_number_visibility">顯示行號</string>
+    <string name="pin_line_number">固定顯示行號</string>
+    <string name="feature_switches">功能開關</string>
+    <string name="magnifier">放大鏡</string>
+    <string name="open_completion_window_animation">自動補全視窗動畫</string>
+    <string name="use_icu_library">使用ICU</string>
+    <string name="open_new_activity">開啟新介面</string>
+    <string name="open_lsp_activity">開啟LSP測試介面</string>
+    <string name="not_supported">此項操作不受支援</string>
+    <string name="dialog_api_warning_msg">LSP只能在Android O或更新的系統上執行</string>
+    <string name="line_info_panel_position">行號面板位置</string>
+    <string name="fixed">固定</string>
+    <string name="follow_scrollbar">跟隨捲軸</string>
+    <string name="top">上方</string>
+    <string name="bottom">下方</string>
+    <string name="left">左側</string>
+    <string name="right">右側</string>
+    <string name="center">中間</string>
+    <string name="top_left">左上方</string>
+    <string name="top_right">右上方</string>
+    <string name="bottom_left">左下方</string>
+    <string name="bottom_right">右下方</string>
+    <string name="open_debug_document">開啟View.java</string>
+    <string name="debug">測試</string>
+    <string name="layout_tv_search_options">選項</string>
+    <string name="search_option_regex">正規表示式</string>
+    <string name="search_option_whole_word">全詞匹配</string>
+    <string name="search_option_match_case">區分大小寫</string>
+    <string name="enable_soft_keyboard">啟用軟鍵盤</string>
+    <string name="hide_soft_kbd_if_hard_kbd_available">物理鍵盤連線時隱藏軟鍵盤</string>
+    <string name="deleting_log_success">日誌已刪除。</string>
+    <string name="tip_side_icon">點選了側邊按鈕</string>
+    <string name="tip_inlay_hint">點選了嵌入提示</string>
+    <string name="dialog_lsp_entry_title">選擇LSP活動</string>
+    <string name="dialog_lsp_entry_msg">是否要開啟以Kotlin編寫的LSP介面？</string>
+    <string name="choice_yes">是</string>
+    <string name="choice_no">否</string>
+</resources>
