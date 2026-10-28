@@ -1,25 +1,22 @@
 plugins {
     id("com.android.library")
-    alias(libs.plugins.org.jetbrains.kotlin.plugin.compose)
+    id("com.vanniktech.maven.publish.base")
 }
 
 android {
-    buildFeatures { compose = true }
     namespace = "android.zero.studio.widget.editor.symbolinput"
 }
 
 dependencies {
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.google.material)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.google.gson)
-    implementation(libs.androidx.viewpager)
-    implementation(libs.androidx.recyclerview)
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.1")
 
-    implementation(libs.common.editor)
+    implementation(projects.editor)
     api(libs.androidx.annotation)
+    implementation(projects.languageJava)
+    implementation(projects.languageTextmate)
 
 }
