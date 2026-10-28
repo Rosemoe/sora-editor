@@ -1,7 +1,9 @@
 package android.zero.studio.widget.editor.symbolinput
 
 /**
- * SymbolDefaults 的核心实现。
+ * 默认符号数据提供器。
+ *
+ * 用于在首次启动或数据损坏时构建可用的回退分组集合。
  *
  * @author android_zero
  * @github msmt2018/zero-Symbol-input-view
@@ -9,7 +11,7 @@ package android.zero.studio.widget.editor.symbolinput
 object SymbolDefaults {
 
     /**
-     * 执行 createFallbackGroups 方法。
+     * 创建内置默认分组。
      */
     fun createFallbackGroups(): MutableList<SymbolGroup> {
         return mutableListOf(
@@ -60,7 +62,7 @@ object SymbolDefaults {
     }
 
     /**
-     * 执行 deepCopy 方法。
+     * 对分组数据执行深拷贝，避免引用共享带来的副作用。
      */
     fun deepCopy(groups: List<SymbolGroup>): MutableList<SymbolGroup> {
         return groups.map { group ->

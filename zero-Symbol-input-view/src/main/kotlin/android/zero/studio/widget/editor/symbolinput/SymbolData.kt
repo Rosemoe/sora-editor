@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 
 // 符号分组数据模型
 /**
- * SymbolGroup 的核心实现。
+ * 符号分组模型。
  *
  * @author android_zero
  * @github msmt2018/zero-Symbol-input-view
@@ -17,7 +17,7 @@ data class SymbolGroup(
 
 // 具体符号属性数据模型
 /**
- * SymbolItem 的核心实现。
+ * 符号项模型。
  *
  * @author android_zero
  * @github msmt2018/zero-Symbol-input-view
@@ -31,7 +31,7 @@ data class SymbolItem(
 )
 
 /**
- * SymbolUiSettings 的核心实现。
+ * 符号输入 UI 配置模型。
  *
  * @author android_zero
  * @github msmt2018/zero-Symbol-input-view

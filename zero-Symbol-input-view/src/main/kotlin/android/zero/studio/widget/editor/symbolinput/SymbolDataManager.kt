@@ -5,7 +5,9 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
 /**
- * SymbolDataManager 的核心实现。
+ * 符号数据与配置管理器。
+ *
+ * 提供分组数据的读取/保存、UI 设置读取/持久化以及偏好项变更判定能力。
  *
  * @author android_zero
  * @github msmt2018/zero-Symbol-input-view
@@ -51,8 +53,8 @@ object SymbolDataManager {
         }
     }
 
-/**
-     * 保存用户修改后的数据
+    /**
+     * 保存用户修改后的分组数据到本地持久化存储。
      */
     fun saveData(context: Context, data: List<SymbolGroup>) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -60,7 +62,7 @@ object SymbolDataManager {
     }
 
     /**
-     * 执行 getUiSettings 方法。
+     * 读取并构建当前 UI 配置。
      */
     fun getUiSettings(context: Context): SymbolUiSettings {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -78,7 +80,7 @@ object SymbolDataManager {
     }
 
     /**
-     * 执行 saveUiSettings 方法。
+     * 持久化 UI 配置。
      */
     fun saveUiSettings(context: Context, settings: SymbolUiSettings) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -129,7 +131,7 @@ object SymbolDataManager {
 
 
     /**
-     * 执行 shouldTriggerUiRefresh 方法。
+     * 判断某个首选项键是否会影响符号输入控件 UI，需要触发刷新。
      */
     fun shouldTriggerUiRefresh(key: String?): Boolean {
         if (key.isNullOrEmpty()) return false

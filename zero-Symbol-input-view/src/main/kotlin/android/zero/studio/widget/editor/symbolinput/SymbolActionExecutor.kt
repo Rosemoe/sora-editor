@@ -4,7 +4,10 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.SelectionMovement
 
 /**
- * SymbolActionExecutor 的核心实现。
+ * 符号动作执行器。
+ *
+ * 负责将符号面板中的动作编号映射为具体编辑器行为，
+ * 包括文本插入、光标移动、编辑命令和扩展动作。
  *
  * @author android_zero
  * @github msmt2018/zero-Symbol-input-view
@@ -12,7 +15,12 @@ import io.github.rosemoe.sora.widget.SelectionMovement
 object SymbolActionExecutor {
 
     /**
-     * 执行 execute 方法。
+     * 根据动作编号执行对应编辑操作。
+     *
+     * @param editor 当前绑定的编辑器实例。
+     * @param actionId 动作编号。
+     * @param text 动作附带文本（可空）。
+     * @param onOpenManager 打开管理器回调。
      */
     fun execute(editor: CodeEditor, actionId: Int, text: String?, onOpenManager: (() -> Unit)?) {
         if (!editor.isEditable && actionId in listOf(0, 3, 4, 7, 8, 9, 11, 29, 30, 32)) return
@@ -56,7 +64,9 @@ object SymbolActionExecutor {
     }
 
     /**
-     * 执行 insertTextWithMacro 方法。
+     * 执行带宏替换能力的文本插入。
+     *
+     * 支持 `$S/$E/$T/$$` 语义并维护插入后的光标区间。
      */
     private fun insertTextWithMacro(editor: CodeEditor, text: String) {
         val selectedText = if (editor.cursor.isSelected) {

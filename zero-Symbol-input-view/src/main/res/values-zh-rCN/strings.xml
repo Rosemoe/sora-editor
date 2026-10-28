@@ -121,4 +121,6 @@
     <string name="dialog_title_rename_group">重命名分组</string>
     <string name="dialog_confirm_delete_group">确认永久删除该分组和其内全部符号？</string>
     <string name="symbol_macro_help">$$ 表示$ \n $S 设置开始选中的位置 \n $E 设置结束选中的位置 \n $T 表示当前选中文本 \n 示例：{$S$T$E}</string>
+    <string name="symbol_collapse">收起符号面板</string>
+    <string name="symbol_expand">展开符号面板</string>
 </resources>

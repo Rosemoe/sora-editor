@@ -127,4 +127,6 @@
     <string name="dialog_title_rename_group">Rename Group</string>
     <string name="dialog_confirm_delete_group">Delete this group and all symbols permanently?</string>
     <string name="symbol_macro_help">$$ means $ \n $S sets the selection start position \n $E sets the selection end position \n $T means current selected text \n Example: {$S$T$E}</string>
+    <string name="symbol_collapse">Collapse symbols</string>
+    <string name="symbol_expand">Expand symbols</string>
 </resources>
