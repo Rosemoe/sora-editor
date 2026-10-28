@@ -28,10 +28,15 @@ import io.github.rosemoe.sora.lsp.client.languageserver.ServerInitializeListener
 import io.github.rosemoe.sora.lsp.client.languageserver.ServerStatus
 import io.github.rosemoe.sora.lsp.events.AsyncEventListener
 import org.eclipse.lsp4j.InitializeResult
+import org.eclipse.lsp4j.LogTraceParams
 import org.eclipse.lsp4j.MessageParams
+import org.eclipse.lsp4j.ProgressParams
+import org.eclipse.lsp4j.WorkDoneProgressCreateParams
+import org.eclipse.lsp4j.jsonrpc.Endpoint
 import org.eclipse.lsp4j.jsonrpc.MessageConsumer
 import org.eclipse.lsp4j.jsonrpc.messages.Message
 import org.eclipse.lsp4j.services.LanguageServer
+import java.util.concurrent.CompletableFuture
 import java.util.function.BooleanSupplier
 import java.util.function.Function
 
@@ -41,9 +46,10 @@ import java.util.function.Function
 class EventHandler internal constructor(
     internal val listener: EventListener,
     private val isRunning: BooleanSupplier
-) :
-    Function<MessageConsumer, MessageConsumer> {
+) : Function<MessageConsumer, MessageConsumer> {
+
     private var languageServer: LanguageServer? = null
+
     override fun apply(messageConsumer: MessageConsumer): MessageConsumer {
         return MessageConsumer { message: Message ->
             if (isRunning.asBoolean) {
@@ -56,13 +62,27 @@ class EventHandler internal constructor(
         this.languageServer = languageServer
     }
 
-    interface EventListener : ServerInitializeListener {
+    interface EventListener : ServerInitializeListener, Endpoint {
         override fun initialize(server: LanguageServer?, result: InitializeResult) {}
         fun onStatusChange(newStatus: ServerStatus, oldStatus: ServerStatus) {}
         fun onHandlerException(exception: Exception) {}
         fun onEventException(eventListener: AsyncEventListener, exception: Exception) {}
-        fun onShowMessage(messageParams: MessageParams?) {}
-        fun onLogMessage(messageParams: MessageParams?) {}
+        fun onShowMessage(messageParams: MessageParams) {}
+        fun onLogMessage(messageParams: MessageParams) {}
+        fun onProgress(params: ProgressParams) {}
+        fun onLogTrace(params: LogTraceParams) {}
+        fun onWorkDoneProgressCreate(params: WorkDoneProgressCreateParams) {}
+
+        override fun notify(method: String, parameter: Any?) {}
+        override fun request(method: String, parameter: Any?): CompletableFuture<*>? {
+            val future = CompletableFuture<Any>()
+            future.completeExceptionally(
+                UnsupportedOperationException(
+                    "Unsupported request: $method"
+                )
+            )
+            return future
+        }
 
         companion object {
             val DEFAULT: EventListener = object : EventListener {}

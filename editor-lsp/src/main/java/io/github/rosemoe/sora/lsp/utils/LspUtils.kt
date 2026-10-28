@@ -120,7 +120,7 @@ fun Range.asTextRange(): TextRange {
 fun LspEditor.createDidOpenTextDocumentParams(): DidOpenTextDocumentParams {
     val params = DidOpenTextDocumentParams()
     params.textDocument = TextDocumentItem(
-        this.uri.toFileUri(), this.fileExt, getVersion(this.uri), editorContent
+        this.uri.toFileUri(), this.languageId ?: this.fileExt, getVersion(this.uri), editorContent
     )
     return params
 }

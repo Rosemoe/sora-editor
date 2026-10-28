@@ -111,31 +111,57 @@ class LspCompletionItem(
     }
 
     override fun performCompletion(editor: CodeEditor, text: Content, position: CharPosition) {
-        var textEdit = TextEdit()
+        val defaultRange = createRange(
+             createPosition(
+                 position.line,
+                 position.column - prefixLength
+             ),
+             position.asLspPosition()
+         )
 
-        textEdit.range = createRange(
-            createPosition(
-                position.line,
-                position.column - prefixLength
-            ), position.asLspPosition()
-        )
+        val textEdit = when {
+            completionItem.textEdit?.isLeft == true -> {
+                completionItem.textEdit.left
+            }
 
+            completionItem.textEdit?.isRight == true -> {
+                TextEdit(
+                    completionItem.textEdit.right.insert,
+                    completionItem.textEdit.right.newText
+                )
+            }
 
-        if (completionItem.insertText != null) {
-            textEdit.newText = completionItem.insertText
-        }
+            else -> {
+                TextEdit().apply {
+                    range = defaultRange
+                    newText = completionItem.insertText ?: completionItem.label
+                }.also {
+                    // Fix overlap issue, e.g.:
+                    // console.lo| <- cursor
+                    // If label or insertText is console.log it would otherwise result in console.console.log
+                    val lineText = text.getLine(it.range.start.line).toString()
+                    val startChar = it.range.start.character
 
-        if (completionItem.textEdit != null && completionItem.textEdit.isLeft) {
-            textEdit = completionItem.textEdit.left
-        } else if (completionItem.textEdit?.isRight == true) {
-            textEdit = TextEdit(
-                completionItem.textEdit.right.insert,
-                completionItem.textEdit.right.newText
-            )
-        }
+                    val textBefore = if (startChar in 0..lineText.length) {
+                        lineText.substring(0, startChar)
+                    } else {
+                        ""
+                    }
+                    val newText = it.newText
+                    var overlapLength = 0
+                    val maxOverlap = kotlin.math.min(textBefore.length, newText.length)
 
-        if (textEdit.newText == null && completionItem.label != null) {
-            textEdit.newText = completionItem.label
+                    for (i in 1..maxOverlap) {
+                        val suffix = textBefore.substring(textBefore.length - i)
+                        if (newText.startsWith(suffix)) {
+                            overlapLength = i
+                        }
+                    }
+                    if (overlapLength > 0) {
+                        it.range.start.character = startChar - overlapLength
+                    }
+                }
+            }
         }
 
         run {

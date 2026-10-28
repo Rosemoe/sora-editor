@@ -31,7 +31,7 @@ import io.github.rosemoe.sora.app.BaseEditorActivity
 import io.github.rosemoe.sora.app.switchThemeIfRequired
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticDetail
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticRegion
-import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer
+
 import io.github.rosemoe.sora.lang.diagnostic.Quickfix
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 
@@ -48,7 +48,7 @@ class TestActivity : BaseEditorActivity() {
         val text = generateText()
         editor.setText(text)
 
-        editor.diagnostics = DiagnosticsContainer().also {
+        editor.registerDiagnosticProvider {
             it.addDiagnostic(
                 DiagnosticRegion(
                     37, 50, DiagnosticRegion.SEVERITY_ERROR, 0L, DiagnosticDetail(

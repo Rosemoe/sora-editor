@@ -220,10 +220,10 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
             }
             int metadata = lineTokens.getTokens()[2 * i + 1];
             int foreground = EncodedTokenAttributes.getForeground(metadata);
+            int background = EncodedTokenAttributes.getBackground(metadata);
             int fontStyle = EncodedTokenAttributes.getFontStyle(metadata);
             var tokenType = EncodedTokenAttributes.getTokenType(metadata);
             if (language.collectIdentifiers) {
-
                 if (tokenType == StandardTokenType.Other) {
                     var end = i + 1 == tokensLength ? lineC.length() : StringUtils.convertUnicodeOffsetToUtf16(line, lineTokens.getTokens()[2 * (i + 1)], surrogate);
                     if (end > startIndex && MyCharacter.isJavaIdentifierStart(line.charAt(startIndex))) {
@@ -240,10 +240,12 @@ public class TextMateAnalyzer extends AsyncIncrementalAnalyzeManager<MyState, Sp
                     }
                 }
             }
+
+            int backgroundColorId = theme.getDefaults().backgroundId == background ? 0 : background + 255;
             boolean needUnderline = (fontStyle & FontStyle.Underline) != 0;
             Span span = needUnderline
-                ? SpanFactory.obtain(startIndex, TextStyle.makeStyle(foreground + 255, 0, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false))
-                : SpanFactory.obtainNoExt(startIndex, TextStyle.makeStyle(foreground + 255, 0, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false));
+                    ? SpanFactory.obtain(startIndex, TextStyle.makeStyle(foreground + 255, backgroundColorId, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false))
+                    : SpanFactory.obtainNoExt(startIndex, TextStyle.makeStyle(foreground + 255, backgroundColorId, (fontStyle & FontStyle.Bold) != 0, (fontStyle & FontStyle.Italic) != 0, false));
 
             span.setExtra(tokenType);
 

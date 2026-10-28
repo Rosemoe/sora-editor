@@ -35,6 +35,12 @@ import io.github.rosemoe.sora.lsp.events.diagnostics.publishDiagnostics
 import io.github.rosemoe.sora.lsp.events.document.documentClose
 import io.github.rosemoe.sora.lsp.events.document.documentOpen
 import io.github.rosemoe.sora.lsp.events.document.documentSave
+import io.github.rosemoe.sora.lsp.events.navigation.definition
+import io.github.rosemoe.sora.lsp.events.navigation.references
+import io.github.rosemoe.sora.lsp.events.progress.cancelProgress
+import io.github.rosemoe.sora.lsp.events.rename.prepareRename
+import io.github.rosemoe.sora.lsp.events.rename.rename
+import io.github.rosemoe.sora.lsp.events.workspace.setTrace
 import io.github.rosemoe.sora.lsp.requests.Timeout
 import io.github.rosemoe.sora.lsp.requests.Timeouts
 import io.github.rosemoe.sora.lsp.utils.FileUri
@@ -52,19 +58,28 @@ import org.eclipse.lsp4j.Command
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.DocumentHighlight
 import org.eclipse.lsp4j.Hover
+import org.eclipse.lsp4j.Location
+import org.eclipse.lsp4j.LocationLink
+import org.eclipse.lsp4j.Position
+import org.eclipse.lsp4j.PrepareRenameDefaultBehavior
+import org.eclipse.lsp4j.PrepareRenameResult
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.TextDocumentSyncKind
+import org.eclipse.lsp4j.WorkspaceEdit
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import org.eclipse.lsp4j.jsonrpc.messages.Either3
 import java.lang.ref.WeakReference
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeoutException
 
 class LspEditor(
     val project: LspProject,
     val uri: FileUri,
+    val languageId: String? = null
 ) {
     private val delegate = LspEditorDelegate(this)
-    private val uiDelegate = LspEditorUIDelegate(this)
+    internal val uiDelegate = LspEditorUIDelegate(this)
 
     private var _currentEditor: WeakReference<CodeEditor?> = WeakReference(null)
 
@@ -136,7 +151,7 @@ class LspEditor(
 
     val languageServerWrapper: LanguageServerWrapper
         get() = delegate.getPrimaryWrapper()
-            ?: throw IllegalStateException("No language server wrapper for extension $fileExt")
+            ?: throw IllegalStateException("No language server wrapper for language ${languageId ?: fileExt}")
 
     var diagnostics
         get() = project.diagnosticsContainer.getDiagnostics(uri)
@@ -255,7 +270,7 @@ class LspEditor(
         var isConnected = false
 
         var start = System.currentTimeMillis()
-        val retryTime = Timeout[Timeouts.INIT]
+        val retryTime = Timeout[Timeouts.INIT, this]
         val maxRetryTime: Long = start + retryTime
 
         while (start < maxRetryTime) {
@@ -330,6 +345,146 @@ class LspEditor(
     @WorkerThread
     fun saveDocumentBlocking() = runBlocking {
         saveDocument()
+    }
+
+    /**
+     * Request the definition of the symbol at the given position
+     */
+    suspend fun requestDefinition(position: Position?): Either<List<Location>, List<LocationLink>>? {
+        return eventManager.emitAsync(EventType.definition) {
+            put(position)
+        }.getOrNull("result")
+    }
+
+    /**
+     * Request the definition of the symbol at the given position
+     */
+    suspend fun requestDefinition(position: CharPosition): Either<List<Location>, List<LocationLink>>? {
+        return eventManager.emitAsync(EventType.definition) {
+            put(position)
+        }.getOrNull("result")
+    }
+
+    /**
+     * Request the definition of the symbol at the current cursor position
+     */
+    suspend fun requestDefinition(): Either<List<Location>, List<LocationLink>>? {
+        return eventManager.emitAsync(EventType.definition).getOrNull("result")
+    }
+
+    /**
+     * Request the references of the symbol at the given position
+     */
+    suspend fun requestReferences(position: Position?, includeDeclaration: Boolean = true): List<Location?>? {
+        return eventManager.emitAsync(EventType.references) {
+            put(position)
+            put("includeDeclaration", includeDeclaration)
+        }.getOrNull("result")
+    }
+
+    /**
+     * Request the references of the symbol at the given position
+     */
+    suspend fun requestReferences(position: CharPosition, includeDeclaration: Boolean = true): List<Location?>? {
+        return eventManager.emitAsync(EventType.references) {
+            put(position)
+            put("includeDeclaration", includeDeclaration)
+        }.getOrNull("result")
+    }
+
+    /**
+     * Request the references of the symbol at the current cursor position
+     */
+    suspend fun requestReferences(includeDeclaration: Boolean = true): List<Location?>? {
+        return eventManager.emitAsync(EventType.references) {
+            put("includeDeclaration", includeDeclaration)
+        }.getOrNull("result")
+    }
+
+    /**
+     * Request the prepare rename of the symbol at the given position
+     */
+    suspend fun requestPrepareRename(position: Position?): Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>? {
+        return eventManager.emitAsync(EventType.prepareRename) {
+            put(position)
+        }.getOrNull("result")
+    }
+
+    /**
+     * Request the prepare rename of the symbol at the given position
+     */
+    suspend fun requestPrepareRename(position: CharPosition): Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>? {
+        return eventManager.emitAsync(EventType.prepareRename) {
+            put(position)
+        }.getOrNull("result")
+    }
+
+    /**
+     * Request the prepare rename of the symbol at the current cursor position
+     */
+    suspend fun requestPrepareRename(): Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>? {
+        return eventManager.emitAsync(EventType.prepareRename).getOrNull("result")
+    }
+
+    /**
+     * Request the rename of the symbol at the given position
+     */
+    suspend fun requestRename(newName: String, position: Position?): WorkspaceEdit? {
+        return eventManager.emitAsync(EventType.rename) {
+            put("newName", newName)
+            put(position)
+        }.getOrNull("result")
+    }
+
+    /**
+     * Request the rename of the symbol at the given position
+     */
+    suspend fun requestRename(newName: String, position: CharPosition): WorkspaceEdit? {
+        return eventManager.emitAsync(EventType.rename) {
+            put("newName", newName)
+            put(position)
+        }.getOrNull("result")
+    }
+
+    /**
+     * Request the rename of the symbol at the current cursor position
+     */
+    suspend fun requestRename(newName: String): WorkspaceEdit? {
+        return eventManager.emitAsync(EventType.rename) {
+            put("newName", newName)
+        }.getOrNull("result")
+    }
+
+    /**
+     * Cancel a progress operation on the server
+     */
+    suspend fun cancelProgress(token: Either<String, Int>) {
+        eventManager.emitAsync(EventType.cancelProgress) {
+            put("token", token)
+        }
+    }
+
+    /**
+     * Set the trace setting of the server
+     */
+    suspend fun setTrace(value: String) {
+        eventManager.emitAsync(EventType.setTrace) {
+            put("value", value)
+        }
+    }
+
+    /**
+     * Send a custom notification to the server
+     */
+    fun notify(method: String, parameter: Any?) {
+        requestManager.notify(method, parameter)
+    }
+
+    /**
+     * Send a custom request to the server
+     */
+    fun request(method: String, parameter: Any?): CompletableFuture<*> {
+        return requestManager.request(method, parameter)
     }
 
     fun onDiagnosticsUpdate() {

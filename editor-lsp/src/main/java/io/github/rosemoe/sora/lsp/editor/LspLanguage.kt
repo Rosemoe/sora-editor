@@ -109,7 +109,7 @@ class LspLanguage(var editor: LspEditor) : Language {
 
         if (documentChangeFuture?.isDone == false || documentChangeFuture?.isCompletedExceptionally == false || documentChangeFuture?.isCancelled == false) {
             runCatching {
-                documentChangeFuture.get(Timeout[Timeouts.WILLSAVE].toLong(), TimeUnit.MILLISECONDS)
+                documentChangeFuture.get(Timeout[Timeouts.WILLSAVE, editor].toLong(), TimeUnit.MILLISECONDS)
             }
         }
 
@@ -137,7 +137,7 @@ class LspLanguage(var editor: LspEditor) : Language {
                 }.exceptionally { throwable: Throwable ->
                     publisher.cancel()
                     throw CompletionCancelledException(throwable.message)
-                }.get(Timeout[Timeouts.COMPLETION].toLong(), TimeUnit.MILLISECONDS)
+                }.get(Timeout[Timeouts.COMPLETION, editor].toLong(), TimeUnit.MILLISECONDS)
         } catch (e: InterruptedException) {
             return
         }

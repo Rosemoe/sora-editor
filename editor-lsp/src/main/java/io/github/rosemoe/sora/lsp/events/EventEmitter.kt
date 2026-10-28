@@ -50,7 +50,8 @@ class EventEmitter {
 
     fun <T : EventListener> getEventListener(clazz: Class<T>): T? {
         return listeners.flatMap { it.value }
-            .find { it::class.java == clazz } as? T?
+            .find { it::class.java == clazz }
+            ?.let { clazz.cast(it) }
     }
 
     fun <T : EventListener> removeListener(listenerClass: Class<T>) {
@@ -246,7 +247,7 @@ inline fun <reified T : Any> EventContext.get(): T {
 }
 
 inline fun <reified T : EventListener> EventEmitter.getEventListener(): T? {
-    return getEventListener(T::class.java) as T?
+    return getEventListener(T::class.java)
 }
 
 object EventType

@@ -178,7 +178,7 @@ public final class Registry {
                 grammarSource = this._options.getGrammarSource(scopeNameWithoutContributor);
         }
         if (grammarSource == null) {
-            LOGGER.i("No grammar source for scope [{0}]", scopeName);
+            LOGGER.d("No grammar source for scope [%s]", scopeName);
             return false;
         }
         try {

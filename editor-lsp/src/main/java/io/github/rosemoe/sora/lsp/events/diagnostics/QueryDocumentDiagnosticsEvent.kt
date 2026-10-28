@@ -38,7 +38,7 @@ import java.util.concurrent.CompletableFuture
 class QueryDocumentDiagnosticsEvent : AsyncEventListener() {
     override val eventName = EventType.queryDocumentDiagnostics
 
-    var future: CompletableFuture<Void>? = null
+    var future: CompletableFuture<*>? = null
 
     override suspend fun doHandleAsync(context: EventContext) {
         val editor = context.get<LspEditor>("lsp-editor")
@@ -51,7 +51,7 @@ class QueryDocumentDiagnosticsEvent : AsyncEventListener() {
                 // break if server don't support this capability
             ) ?: return
 
-        this.future = future.thenAccept { }
+        this.future = future
 
 
         // If return null, create an empty report

@@ -109,13 +109,18 @@ import io.github.rosemoe.sora.graphics.inlayHint.InlayHintRendererProvider;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.lang.Language;
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
+import io.github.rosemoe.sora.lang.diagnostic.DiagnosticProvider;
 import io.github.rosemoe.sora.lang.diagnostic.DiagnosticsContainer;
 import io.github.rosemoe.sora.lang.format.Formatter;
+import io.github.rosemoe.sora.lang.format.FormatterProvider;
 import io.github.rosemoe.sora.lang.styling.CodeBlock;
+import io.github.rosemoe.sora.lang.styling.ExtraStylesProvider;
 import io.github.rosemoe.sora.lang.styling.HighlightTextContainer;
+import io.github.rosemoe.sora.lang.styling.HighlightTextProvider;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.SpanFactory;
 import io.github.rosemoe.sora.lang.styling.Styles;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintProvider;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHintsContainer;
 import io.github.rosemoe.sora.lang.styling.inlayHint.IntSetUpdateRange;
 import io.github.rosemoe.sora.text.CharPosition;
@@ -147,6 +152,7 @@ import io.github.rosemoe.sora.widget.component.EditorContextMenuCreator;
 import io.github.rosemoe.sora.widget.component.EditorDiagnosticTooltipWindow;
 import io.github.rosemoe.sora.widget.component.EditorTextActionWindow;
 import io.github.rosemoe.sora.widget.component.Magnifier;
+import io.github.rosemoe.sora.widget.internal.util.SpansUtils;
 import io.github.rosemoe.sora.widget.layout.Layout;
 import io.github.rosemoe.sora.widget.layout.LineBreakLayout;
 import io.github.rosemoe.sora.widget.layout.ViewMeasureHelper;
@@ -264,8 +270,11 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     protected EditorTextActionWindow textActionWindow;
     protected EditorDiagnosticTooltipWindow diagnosticTooltip;
     protected EditorContextMenuCreator contextMenuCreator;
-    protected List<Span> defaultSpans = new ArrayList<>(2);
     protected EditorStyleDelegate styleDelegate;
+    private final List<ExtraStylesProvider> extraStylesProviders = new ArrayList<>();
+    private final List<InlayHintProvider> inlayHintProviders = new ArrayList<>();
+    private final List<DiagnosticProvider> diagnosticProviders = new ArrayList<>();
+    private final List<HighlightTextProvider> highlightTextProviders = new ArrayList<>();
     int startedActionMode;
     protected CharPosition selectionAnchor;
     EditorInputConnection inputConnection;
@@ -338,6 +347,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     private LineNumberTipTextProvider lineNumberTipTextProvider;
     private String formatTip;
     private Language editorLanguage;
+    private FormatterProvider formatterProvider;
     private DiagnosticIndicatorStyle diagnosticStyle = DiagnosticIndicatorStyle.WAVY_LINE;
     private long lastMakeVisible = 0;
     private EditorAutoCompletion completionWindow;
@@ -661,6 +671,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // Config scale detector
         scaleDetector.setQuickScaleEnabled(false);
         snippetController = new SnippetController(this);
+
+        registerInlayHintProvider(styleDelegate);
+        registerDiagnosticProvider(styleDelegate);
+        registerHighlightTextProvider(styleDelegate);
     }
 
     /**
@@ -958,7 +972,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         // Destroy old one
         var old = editorLanguage;
         if (old != null) {
-            var formatter = old.getFormatter();
+            var formatter = getFormatter();
             formatter.setReceiver(null);
             formatter.destroy();
             old.getAnalyzeManager().setReceiver(null);
@@ -1002,10 +1016,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
 
         // reset inlay hints (partially re-layout required)
         if (this.inlayHints != null) {
-            setInlayHints(null);
+            internalSetInlayHints(null);
         }
         if (this.highlightTextContainer != null) {
-            setHighlightTexts(null);
+            internalSetHighlightTexts(null);
         }
     }
 
@@ -1041,7 +1055,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                     || keyCode == KeyEvent.KEYCODE_X || keyCode == KeyEvent.KEYCODE_V
                     || keyCode == KeyEvent.KEYCODE_U || keyCode == KeyEvent.KEYCODE_R
                     || keyCode == KeyEvent.KEYCODE_D || keyCode == KeyEvent.KEYCODE_W
-                    || keyCode == KeyEvent.KEYCODE_ENTER;
+                    || keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_SPACE;
         }
 
 
@@ -1665,17 +1679,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     @NonNull
     public List<Span> getSpansForLine(int line) {
         var spanMap = textStyles == null ? null : textStyles.spans;
-        if (defaultSpans.isEmpty()) {
-            defaultSpans.add(SpanFactory.obtainNoExt(0, EditorColorScheme.TEXT_NORMAL));
-        }
-        try {
-            if (spanMap != null) {
-                return spanMap.read().getSpansOnLine(line);
-            } else {
-                return defaultSpans;
-            }
-        } catch (Exception e) {
-            return defaultSpans;
+        if (spanMap != null) {
+            return SpansUtils.getSpansOnLine(spanMap.read(), line);
+        } else {
+            return SpansUtils.getDefaultLineSpans();
         }
     }
 
@@ -2490,7 +2497,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (isFormatting()) {
             return false;
         }
-        var formatter = editorLanguage.getFormatter();
+        var formatter = getFormatter();
         formatter.setReceiver(this);
         var formatContent = text.copyText(false);
         formatContent.setUndoEnabled(false);
@@ -2516,13 +2523,25 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         if (isFormatting()) {
             return false;
         }
-        var formatter = editorLanguage.getFormatter();
+        var formatter = getFormatter();
         formatter.setReceiver(this);
         var formatContent = text.copyText(false);
         formatContent.setUndoEnabled(false);
         formatter.formatRegion(formatContent, new TextRange(start, end), getCursorRange());
         postInvalidate();
         return true;
+    }
+
+    @NonNull
+    private Formatter getFormatter() {
+        Formatter formatter = null;
+        if (formatterProvider != null) {
+            formatter = formatterProvider.getFormatter(this);
+        }
+        if (formatter == null) {
+            formatter = editorLanguage.getFormatter();
+        }
+        return formatter;
     }
 
     /**
@@ -3686,6 +3705,33 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         onSelectionChanged(cause);
     }
 
+    public void setFormatterProvider(@Nullable FormatterProvider provider) {
+        this.formatterProvider = provider;
+    }
+
+    @Nullable
+    public FormatterProvider getFormatterProvider() {
+        return formatterProvider;
+    }
+
+    public void registerExtraStylesProvider(@NonNull ExtraStylesProvider provider) {
+        if (!extraStylesProviders.contains(provider)) {
+            extraStylesProviders.add(provider);
+            invalidate();
+        }
+    }
+
+    public void unregisterExtraStylesProvider(@NonNull ExtraStylesProvider provider) {
+        if (extraStylesProviders.remove(provider)) {
+            invalidate();
+        }
+    }
+
+    @NonNull
+    public List<ExtraStylesProvider> getExtraStylesProviders() {
+        return extraStylesProviders;
+    }
+
     /**
      * Get system clipboard manager used by editor
      */
@@ -4111,7 +4157,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return whether the editor is currently formatting
      */
     public boolean isFormatting() {
-        return editorLanguage.getFormatter().isRunning();
+        return getFormatter().isRunning();
     }
 
     /**
@@ -4281,8 +4327,35 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         return diagnostics;
     }
 
-    @UiThread
-    public void setDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
+
+    public void registerDiagnosticProvider(@NonNull DiagnosticProvider provider) {
+        synchronized (diagnosticProviders) {
+            if (!diagnosticProviders.contains(provider)) {
+                diagnosticProviders.add(provider);
+                invalidateDiagnostics();
+            }
+        }
+    }
+
+    public void unregisterDiagnosticProvider(@NonNull DiagnosticProvider provider) {
+        synchronized (diagnosticProviders) {
+            if (diagnosticProviders.remove(provider)) {
+                invalidateDiagnostics();
+            }
+        }
+    }
+
+    public void invalidateDiagnostics() {
+        synchronized (diagnosticProviders) {
+            var merged = new DiagnosticsContainer(false);
+            for (var provider : diagnosticProviders) {
+                provider.provideDiagnostics(merged);
+            }
+            internalSetDiagnostics(merged.getRegions().isEmpty() ? null : merged);
+        }
+    }
+
+    private void internalSetDiagnostics(@Nullable DiagnosticsContainer diagnostics) {
         if (this.diagnostics != null) {
             this.diagnostics.detachEditor();
         }
@@ -4295,7 +4368,39 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         invalidate();
     }
 
-    public void setInlayHints(@Nullable InlayHintsContainer inlayHints) {
+    @Nullable
+    public InlayHintsContainer getInlayHints() {
+        return inlayHints;
+    }
+
+    public void registerInlayHintProvider(@NonNull InlayHintProvider provider) {
+        synchronized (inlayHintProviders) {
+            if (!inlayHintProviders.contains(provider)) {
+                inlayHintProviders.add(provider);
+                invalidateInlayHints();
+            }
+        }
+    }
+
+    public void unregisterInlayHintProvider(@NonNull InlayHintProvider provider) {
+        synchronized (inlayHintProviders) {
+            if (inlayHintProviders.remove(provider)) {
+                invalidateInlayHints();
+            }
+        }
+    }
+
+    public void invalidateInlayHints() {
+        synchronized (inlayHintProviders) {
+            var merged = new InlayHintsContainer();
+            for (var provider : inlayHintProviders) {
+                provider.provideInlayHints(merged);
+            }
+            internalSetInlayHints(merged.isEmpty() ? null : merged);
+        }
+    }
+
+    private void internalSetInlayHints(@Nullable InlayHintsContainer inlayHints) {
         var affectedLines = new MutableIntSet();
         var oldInlayHints = this.inlayHints;
         if (oldInlayHints != null) {
@@ -4315,12 +4420,38 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
     }
 
     @Nullable
-    public InlayHintsContainer getInlayHints() {
-        return inlayHints;
+    public HighlightTextContainer getHighlightTexts() {
+        return highlightTextContainer;
     }
 
-    @UiThread
-    public void setHighlightTexts(@Nullable HighlightTextContainer highlightTexts) {
+    public void registerHighlightTextProvider(@NonNull HighlightTextProvider provider) {
+        synchronized (highlightTextProviders) {
+            if (!highlightTextProviders.contains(provider)) {
+                highlightTextProviders.add(provider);
+                invalidateHighlightTexts();
+            }
+        }
+    }
+
+    public void unregisterHighlightTextProvider(@NonNull HighlightTextProvider provider) {
+        synchronized (highlightTextProviders) {
+            if (highlightTextProviders.remove(provider)) {
+                invalidateHighlightTexts();
+            }
+        }
+    }
+
+    public void invalidateHighlightTexts() {
+        synchronized (highlightTextProviders) {
+            var merged = new HighlightTextContainer();
+            for (var provider : highlightTextProviders) {
+                provider.provideHighlightTexts(merged);
+            }
+            internalSetHighlightTexts(merged.isEmpty() ? null : merged);
+        }
+    }
+
+    private void internalSetHighlightTexts(@Nullable HighlightTextContainer highlightTexts) {
         var affectedLines = new MutableIntSet();
         var oldHighlights = this.highlightTextContainer;
         if (oldHighlights != null) {
@@ -4336,13 +4467,6 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
                 affectedLines.add(line);
             }
         }
-        if (affectedLines._size == 0) {
-            return;
-        }
-        if (layout == null || renderContext == null) {
-            invalidate();
-            return;
-        }
         var range = new IntSetUpdateRange(affectedLines);
         if (!layoutBusy) {
             layout.invalidateLines(range);
@@ -4350,13 +4474,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             createLayout();
         }
         renderContext.invalidateRenderNodes();
-        invalidate();
     }
 
-    @Nullable
-    public HighlightTextContainer getHighlightTexts() {
-        return highlightTextContainer;
-    }
 
     /**
      * Hide auto complete window if shown
@@ -4602,7 +4721,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         released = true;
         if (editorLanguage != null) {
             editorLanguage.getAnalyzeManager().destroy();
-            var formatter = editorLanguage.getFormatter();
+            var formatter = getFormatter();
             formatter.setReceiver(null);
             formatter.destroy();
             editorLanguage.destroy();

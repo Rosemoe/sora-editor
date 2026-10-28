@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.github.rosemoe.sora.graphics.Paint;
 import io.github.rosemoe.sora.graphics.TextRow;
@@ -73,6 +74,10 @@ public class WordwrapLayout extends AbstractLayout {
     private final boolean antiWordBreaking;
     private final boolean supportRtlRow;
     private List<RowRegion> rowTable;
+    /**
+     * Bumped on every text edit, so results of an async break that started before the edit are discarded
+     */
+    private final AtomicInteger editCount = new AtomicInteger(0);
 
     public WordwrapLayout(@NonNull CodeEditor editor, @NonNull Content text, boolean antiWordBreaking, boolean supportRtlRow, @Nullable WordwrapLayout oldLayout, boolean clearCache) {
         super(editor, text);
@@ -89,6 +94,7 @@ public class WordwrapLayout extends AbstractLayout {
     }
 
     private void breakAllLines() {
+        var editCountLocal = editCount.get();
         var taskCount = Math.min(SUBTASK_COUNT, (int) Math.ceil((float) text.getLineCount() / MIN_LINE_COUNT_FOR_SUBTASK));
         var sizeEachTask = text.getLineCount() / taskCount;
         var monitor = new TaskMonitor(taskCount, (results, cancelledCount) -> {
@@ -96,13 +102,21 @@ public class WordwrapLayout extends AbstractLayout {
             if (editor != null) {
                 List<WordwrapResult> r2 = new ArrayList<>();
                 for (Object result : results) {
-                    r2.add((WordwrapResult) result);
+                    // Cancelled tasks leave no result, and the edit check below then re-breaks
+                    if (result != null) {
+                        r2.add((WordwrapResult) result);
+                    }
                 }
                 Collections.sort(r2);
                 editor.postInLifecycle(() -> {
                     if (WordwrapLayout.this.editor != editor) {
                         // This layout could have been abandoned when waiting for Runnable execution
                         // See #307
+                        return;
+                    }
+                    if (editCountLocal != editCount.get()) {
+                        // Text was edited while breaking, so the results may not match it anymore
+                        breakAllLines();
                         return;
                     }
                     if (rowTable != null) {
@@ -122,7 +136,7 @@ public class WordwrapLayout extends AbstractLayout {
         for (int i = 0; i < taskCount; i++) {
             var start = sizeEachTask * i;
             var end = i + 1 == taskCount ? (text.getLineCount() - 1) : (sizeEachTask * (i + 1) - 1);
-            submitTask(new WordwrapAnalyzeTask(monitor, i, start, end));
+            submitTask(new WordwrapAnalyzeTask(monitor, i, start, end, editCountLocal));
         }
     }
 
@@ -225,6 +239,7 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public void afterInsert(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn, @NonNull CharSequence insertedContent) {
         super.afterInsert(content, startLine, startColumn, endLine, endColumn, insertedContent);
+        editCount.incrementAndGet();
         // Update line numbers
         int delta = endLine - startLine;
         if (delta != 0) {
@@ -239,6 +254,7 @@ public class WordwrapLayout extends AbstractLayout {
     @Override
     public void afterDelete(@NonNull Content content, int startLine, int startColumn, int endLine, int endColumn, @NonNull CharSequence deletedContent) {
         super.afterDelete(content, startLine, startColumn, endLine, endColumn, deletedContent);
+        editCount.incrementAndGet();
         int delta = endLine - startLine;
         if (delta != 0) {
             int startRow = findRow(startLine);
@@ -603,14 +619,15 @@ public class WordwrapLayout extends AbstractLayout {
 
     private class WordwrapAnalyzeTask extends LayoutTask<WordwrapResult> {
 
-        private final int start, end, id;
+        private final int start, end, id, editCountLocal;
         private final Paint paint;
 
-        WordwrapAnalyzeTask(TaskMonitor monitor, int id, int start, int end) {
+        WordwrapAnalyzeTask(TaskMonitor monitor, int id, int start, int end, int editCountLocal) {
             super(monitor);
             this.start = start;
             this.id = id;
             this.end = end;
+            this.editCountLocal = editCountLocal;
             paint = new Paint(editor.isRenderFunctionCharacters());
             paint.set(editor.getTextPaint());
             paint.onAttributeUpdate();
@@ -626,6 +643,11 @@ public class WordwrapLayout extends AbstractLayout {
                 }
             });
             return new WordwrapResult(id, list);
+        }
+
+        @Override
+        protected boolean shouldRun() {
+            return super.shouldRun() && editCount.get() == editCountLocal;
         }
     }
 

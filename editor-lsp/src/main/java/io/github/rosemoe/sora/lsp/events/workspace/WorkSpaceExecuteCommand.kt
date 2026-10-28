@@ -40,7 +40,7 @@ class WorkSpaceExecuteCommand : AsyncEventListener() {
 
     override val isAsync = true
 
-    var future: CompletableFuture<Void>? = null
+    var future: CompletableFuture<*>? = null
 
     override suspend fun doHandleAsync(context: EventContext) {
         val command = context.get<String>("command")
@@ -51,11 +51,11 @@ class WorkSpaceExecuteCommand : AsyncEventListener() {
         val executeCommandParams = ExecuteCommandParams(command, args)
         val future = requestManager.executeCommand(executeCommandParams)
 
-        this@WorkSpaceExecuteCommand.future = future?.thenAccept { }
+        this@WorkSpaceExecuteCommand.future = future
 
         val result: Any?
 
-        withTimeout(Timeout[Timeouts.EXECUTE_COMMAND].toLong()) {
+        withTimeout(Timeout[Timeouts.EXECUTE_COMMAND, editor].toLong()) {
             result =
                 future?.await()
         }

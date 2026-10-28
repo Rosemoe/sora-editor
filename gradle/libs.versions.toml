@@ -1,32 +1,32 @@
 [versions]
-agp = "9.1.0"
-kotlin = "2.3.10"
+agp = "9.4.1"
+kotlin = "2.4.21"
 tsBinding = "4.3.2"
 lsp4j = "1.0.0"
-androidxAnnotation = "1.9.1"
+androidxAnnotation = "1.11.0"
 
 [libraries]
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
-androidx-collection = { module = "androidx.collection:collection", version = "1.5.0" }
-androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version = "2.2.1" }
-androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.17.0" }
-androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.1" }
+androidx-collection = { module = "androidx.collection:collection", version = "1.7.0" }
+androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version = "2.2.2" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.19.1" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.8.0" }
 androidx-test-junit = { module = "androidx.test.ext:junit", version = "1.3.0" }
 androidx-test-espresso = { module = "androidx.test.espresso:espresso-core", version = "3.7.0" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
-kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version = "1.10.2" }
+kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version = "1.11.0" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.9.4" }
-material = { module = "com.google.android.material:material", version = "1.13.0" }
+lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.11.0" }
+material = { module = "com.google.android.material:material", version = "1.14.0" }
 tree-sitter-java = { module = "com.itsaky.androidide.treesitter:tree-sitter-java", version.ref = "tsBinding" }
 tree-sitter = { module = "com.itsaky.androidide.treesitter:android-tree-sitter", version.ref = "tsBinding" }
 lsp4j = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4j" }
 leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version = "2.14" }
 junit = { module = "junit:junit", version = "4.13.2" }
-gson = { module = "com.google.code.gson:gson", version = "2.13.2" }
+gson = { module = "com.google.code.gson:gson", version = "2.14.0" }
 jcodings = { module = "org.jruby.jcodings:jcodings", version = "1.0.64" }
 joni = { module = "org.jruby.joni:joni", version = "2.2.7" }
-snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version = "3.0.1" }
+snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version = "3.2" }
 moshi = { module = "com.squareup.moshi:moshi", version = "1.15.2" }
 jdt-annotation = { module = "org.eclipse.jdt:org.eclipse.jdt.annotation", version = "2.4.100" }
 monarch-code = { module = "io.github.dingyi222666.monarch:monarch", version = "1.0.3" }
@@ -36,11 +36,11 @@ regex-onig = { module = "io.github.dingyi222666.regex-lib:regex-lib-oniguruma", 
 regex-re2j = { module = "io.github.dingyi222666.regex-lib:regex-lib-re2j", version = "1.0.2" }
 
 tests-google-truth = { module = "com.google.truth:truth", version = "1.4.5" }
-tests-robolectric = { module = "org.robolectric:robolectric", version = "4.16.1" }
+tests-robolectric = { module = "org.robolectric:robolectric", version = "4.17" }
 
 kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-publish = { id = "com.vanniktech.maven.publish.base", version = "0.36.0" }
+publish = { id = "com.vanniktech.maven.publish.base", version = "0.37.0" }

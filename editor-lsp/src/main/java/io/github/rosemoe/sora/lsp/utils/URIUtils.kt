@@ -30,7 +30,7 @@ import kotlin.io.path.pathString
 import kotlin.io.path.toPath
 
 fun FileUri.toFileUri(): String {
-    return "file://${this.path}"
+    return toUri().toString()
 }
 
 fun String.toFileUri(): FileUri {
@@ -50,10 +50,10 @@ value class FileUri(
     val path: String
 ) {
     fun toFile(): File {
-        return File(toUri())
+        return File(path)
     }
 
     fun toUri(): URI {
-        return URI(this.toFileUri())
+        return toFile().toURI()
     }
 }

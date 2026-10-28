@@ -47,37 +47,45 @@ public class CharSequenceIterator implements CharacterIterator {
         return current();
     }
 
+    // next(), previous() and last() follow the CharacterIterator contract - DONE
+    // at the ends, index clamped to [begin, end]. previous() used to return the first character
+    // again at index 0 instead of DONE, which sends java.text.BreakIterator.preceding() into an
+    // endless loop, so word wrap never finished laying out and the editor stayed busy.
     @Override
     public char last() {
-        index = src.length() - 1;
-        if (index < 0) {
-            index = 0;
-        }
+        index = Math.max(0, src.length() - 1);
         return current();
     }
 
     @Override
     public char current() {
-        return index == getEndIndex() ? CharacterIterator.DONE : src.charAt(index);
+        return index >= 0 && index < getEndIndex() ? src.charAt(index) : CharacterIterator.DONE;
     }
 
     @Override
     public char next() {
-        index++;
-        return current();
+        if (index < getEndIndex() - 1) {
+            index++;
+            return src.charAt(index);
+        }
+        index = getEndIndex();
+        return CharacterIterator.DONE;
     }
 
     @Override
     public char previous() {
-        index--;
-        if (index < 0) {
-            index = 0;
+        if (index <= getBeginIndex()) {
+            return CharacterIterator.DONE;
         }
-        return current();
+        index--;
+        return src.charAt(index);
     }
 
     @Override
     public char setIndex(int i) {
+        if (i < getBeginIndex() || i > getEndIndex()) {
+            throw new IllegalArgumentException("Invalid index " + i);
+        }
         index = i;
         return current();
     }

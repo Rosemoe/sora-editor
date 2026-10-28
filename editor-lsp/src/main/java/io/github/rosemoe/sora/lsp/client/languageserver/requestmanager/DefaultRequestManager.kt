@@ -73,17 +73,20 @@ import org.eclipse.lsp4j.InlayHint
 import org.eclipse.lsp4j.InlayHintParams
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.LocationLink
+import org.eclipse.lsp4j.LogTraceParams
 import org.eclipse.lsp4j.MessageActionItem
 import org.eclipse.lsp4j.MessageParams
 import org.eclipse.lsp4j.PrepareRenameDefaultBehavior
 import org.eclipse.lsp4j.PrepareRenameParams
 import org.eclipse.lsp4j.PrepareRenameResult
+import org.eclipse.lsp4j.ProgressParams
 import org.eclipse.lsp4j.PublishDiagnosticsParams
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.ReferenceParams
 import org.eclipse.lsp4j.RegistrationParams
 import org.eclipse.lsp4j.RenameParams
 import org.eclipse.lsp4j.ServerCapabilities
+import org.eclipse.lsp4j.SetTraceParams
 import org.eclipse.lsp4j.ShowMessageRequestParams
 import org.eclipse.lsp4j.SignatureHelp
 import org.eclipse.lsp4j.SignatureHelpParams
@@ -94,9 +97,12 @@ import org.eclipse.lsp4j.TextEdit
 import org.eclipse.lsp4j.TypeDefinitionParams
 import org.eclipse.lsp4j.UnregistrationParams
 import org.eclipse.lsp4j.WillSaveTextDocumentParams
+import org.eclipse.lsp4j.WorkDoneProgressCancelParams
+import org.eclipse.lsp4j.WorkDoneProgressCreateParams
 import org.eclipse.lsp4j.WorkspaceEdit
 import org.eclipse.lsp4j.WorkspaceSymbol
 import org.eclipse.lsp4j.WorkspaceSymbolParams
+import org.eclipse.lsp4j.jsonrpc.Endpoint
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.jsonrpc.messages.Either3
 import org.eclipse.lsp4j.services.LanguageClient
@@ -163,6 +169,67 @@ class DefaultRequestManager(
 
     override fun publishDiagnostics(publishDiagnosticsParams: PublishDiagnosticsParams) {
         client.publishDiagnostics(publishDiagnosticsParams)
+    }
+
+    override fun logTrace(params: LogTraceParams) {
+        client.logTrace(params)
+    }
+
+    override fun setTrace(params: SetTraceParams) {
+        if (checkStatus()) {
+            try {
+                server.setTrace(params)
+            } catch (e: Exception) {
+                crashed(e)
+            }
+        }
+    }
+
+    override fun notifyProgress(params: ProgressParams) {
+        client.notifyProgress(params)
+    }
+
+    override fun createProgress(params: WorkDoneProgressCreateParams): CompletableFuture<Void> {
+        return client.createProgress(params)
+    }
+
+    override fun cancelProgress(params: WorkDoneProgressCancelParams) {
+        if (checkStatus()) {
+            try {
+                server.cancelProgress(params)
+            } catch (e: Exception) {
+                crashed(e)
+            }
+        }
+    }
+
+    override fun notify(method: String, parameter: Any?) {
+        if (checkStatus()) {
+            try {
+                (server as? Endpoint)?.notify(method, parameter)
+            } catch (e: Exception) {
+                crashed(e)
+            }
+        }
+    }
+
+    override fun request(method: String, parameter: Any?): CompletableFuture<*> {
+        return if (checkStatus()) {
+            try {
+                (server as? Endpoint)?.request(method, parameter) ?: CompletableFuture<Any>().apply {
+                    completeExceptionally(UnsupportedOperationException("Unsupported request: $method"))
+                }
+            } catch (e: Exception) {
+                crashed(e)
+                CompletableFuture<Any>().apply {
+                    completeExceptionally(e)
+                }
+            }
+        } else {
+            CompletableFuture<Any>().apply {
+                completeExceptionally(UnsupportedOperationException("Server not initialized"))
+            }
+        }
     }
 
     // Server

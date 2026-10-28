@@ -34,20 +34,24 @@ import io.github.rosemoe.sora.lsp.utils.toFileUri
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams
 import org.eclipse.lsp4j.ApplyWorkspaceEditResponse
 import org.eclipse.lsp4j.ConfigurationParams
+import org.eclipse.lsp4j.LogTraceParams
 import org.eclipse.lsp4j.MessageActionItem
 import org.eclipse.lsp4j.MessageParams
+import org.eclipse.lsp4j.ProgressParams
 import org.eclipse.lsp4j.PublishDiagnosticsParams
 import org.eclipse.lsp4j.RegistrationParams
 import org.eclipse.lsp4j.ShowMessageRequestParams
 import org.eclipse.lsp4j.UnregistrationParams
+import org.eclipse.lsp4j.WorkDoneProgressCreateParams
 import org.eclipse.lsp4j.WorkspaceFolder
+import org.eclipse.lsp4j.jsonrpc.Endpoint
 import org.eclipse.lsp4j.services.LanguageClient
 import java.net.URI
 import java.util.concurrent.CompletableFuture
 
 
 open class DefaultLanguageClient(protected val context: ClientContext) :
-    LanguageClient {
+    LanguageClient, Endpoint {
 
     override fun applyEdit(params: ApplyWorkspaceEditParams): CompletableFuture<ApplyWorkspaceEditResponse> {
         val project = context.project ?: return CompletableFuture.completedFuture(null)
@@ -132,6 +136,29 @@ open class DefaultLanguageClient(protected val context: ClientContext) :
 
     override fun logMessage(messageParams: MessageParams) {
         context.eventListener.onLogMessage(messageParams)
+    }
+
+    override fun createProgress(params: WorkDoneProgressCreateParams): CompletableFuture<Void> {
+        context.eventListener.onWorkDoneProgressCreate(params)
+        return CompletableFuture.completedFuture(null)
+    }
+
+    override fun notifyProgress(params: ProgressParams) {
+        context.eventListener.onProgress(params)
+    }
+
+    override fun logTrace(params: LogTraceParams) {
+        context.eventListener.onLogTrace(params)
+    }
+
+    override fun notify(method: String, parameter: Any?) {
+        context.eventListener.notify(method, parameter)
+    }
+
+    override fun request(method: String, parameter: Any?): CompletableFuture<*> {
+        return context.eventListener.request(method, parameter) ?: CompletableFuture<Any>().apply {
+            completeExceptionally(UnsupportedOperationException("Unsupported request: $method"))
+        }
     }
 
     companion object {
