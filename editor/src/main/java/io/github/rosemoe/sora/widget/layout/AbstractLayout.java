@@ -26,12 +26,15 @@ package io.github.rosemoe.sora.widget.layout;
 import androidx.annotation.NonNull;
 import androidx.collection.ObjectFloatMap;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import io.github.rosemoe.sora.lang.folding.FoldEllipsisInlayHint;
+import io.github.rosemoe.sora.lang.folding.FoldedLineMap;
 import io.github.rosemoe.sora.lang.styling.Span;
 import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.text.Content;
@@ -70,12 +73,32 @@ public abstract class AbstractLayout implements Layout {
     }
 
     @NonNull
-    protected List<InlayHint> getInlayHints(int line) {
+    @Override
+    public List<InlayHint> getInlayHints(int line) {
         var inlayHints = editor.getInlayHints();
-        if (inlayHints != null) {
-            return inlayHints.getForLine(line);
+        List<InlayHint> hints = inlayHints != null ? inlayHints.getForLine(line) : Collections.emptyList();
+        if (editor.isCodeFoldingEnabled()) {
+            var foldingManager = editor.getFoldingManager();
+            var region = foldingManager.regionAt(line);
+            if (region != null && foldingManager.isCollapsed(region)) {
+                // Append the fold ellipsis chip after the other hints of the header line
+                var merged = new ArrayList<InlayHint>(hints.size() + 1);
+                merged.addAll(hints);
+                merged.add(new FoldEllipsisInlayHint(line, text.getColumnCount(line)));
+                return merged;
+            }
         }
-        return Collections.emptyList();
+        return hints;
+    }
+
+    /**
+     * Mapping between logical lines and the rows that are displayed when code folding is active.
+     * The instance is owned by the editor and updated in place, so it is safe to keep a
+     * reference to it while the layout is alive.
+     */
+    @NonNull
+    protected FoldedLineMap getFoldedLineMap() {
+        return editor.getFoldingManager().getFoldedLineMap();
     }
 
     @Override
