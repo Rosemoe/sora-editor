@@ -536,23 +536,28 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public float measureTextRegionOffset() {
         return isLineNumberEnabled() ?
-                measureFoldIndicatorWidth() + measureBreakpointIndicatorWidth() + measureLineNumber() + dividerMarginLeft + dividerMarginRight + dividerWidth +
-                        measureSideIconWidth() :
+                measureBreakpointIndicatorWidth() + measureLineNumber() + measureSideIconWidth() + measureFoldIndicatorWidth() + dividerMarginLeft + dividerMarginRight + dividerWidth :
                 dpUnit * 5;
     }
 
     /**
-     * Get the width of the code folding indicator column in the gutter.
-     * The column is 0 when {@link #isCodeFoldingEnabled()} or line numbers are off,
-     * or when the current content has no foldable regions at all, so flat files
-     * (e.g. properties files) do not get an empty fold indicator strip.
+     * Get the width of the code folding indicator column. The column sits right of the
+     * side icon column, so the marks hug the code while the action icons stay at the edge
+     * of the line numbers. The width is `rowHeight * (size factor of the active style +
+     * foldIndicatorPadding)` - the padding is clearance at the start of the column only,
+     * since the marks are not at the end (the text keeps its divider margins). The width
+     * is 0 when {@link #isCodeFoldingEnabled()} or line numbers
+     * are off, or when the current content has no foldable regions at all, so flat files
+     * (e.g. properties files) get no empty fold strip.
      *
      * @return The width in pixels
      * @see #setCodeFoldingEnabled(boolean)
      */
     public float measureFoldIndicatorWidth() {
+        float sizeFactor = props.foldIndicatorStyle == DirectAccessProps.FOLD_STYLE_MARK
+                ? props.foldMarkSizeFactor : props.foldIconSizeFactor;
         return codeFoldingEnabled && isLineNumberEnabled() && foldingManager.hasFoldableRegions()
-                ? getRowHeight() * (props.foldIndicatorSizeFactor + 2f * props.foldIndicatorPadding) : 0f;
+                ? getRowHeight() * (sizeFactor + props.foldIndicatorPadding) : 0f;
     }
 
     /**
@@ -694,7 +699,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         diagnosticTooltip = new EditorDiagnosticTooltipWindow(this);
         contextMenuCreator = new EditorContextMenuCreator(this);
         codeFoldingEnabled = true;
-        breakpointMarkerEnabled = true;
+        breakpointMarkerEnabled = false;
         // Created before the first setText() because layouts query them while being created
         foldingManager = new FoldingManager(this);
         breakpoints = new BreakpointContainer(this);

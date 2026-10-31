@@ -38,6 +38,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.PopupMenu
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
@@ -101,6 +102,7 @@ import io.github.rosemoe.sora.utils.codePointStringAt
 import io.github.rosemoe.sora.utils.escapeCodePointIfNecessary
 import io.github.rosemoe.sora.utils.toast
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.DirectAccessProps
 import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.EditorSearcher.SearchOptions
 import io.github.rosemoe.sora.widget.SelectionMovement
@@ -200,6 +202,34 @@ class MainActivity : AppCompatActivity() {
             btnReplaceAll.setOnClickListener(::replaceAll)
             searchOptions.setOnClickListener(::showSearchOptions)
         }
+
+        // Sliders for the fold mark size and the start clearance in the strip
+        binding.foldPaddingSlider.progress = (binding.editor.props.foldIndicatorPadding * 100).toInt()
+        syncFoldStyleControls()
+        updateFoldPaddingLabel(binding.foldPaddingSlider.progress)
+        binding.foldSizeSlider.setOnSeekBarChangeListener(seekBarListener { progress ->
+            val props = binding.editor.props
+            val value = progress / 100f
+            if (props.foldIndicatorStyle == DirectAccessProps.FOLD_STYLE_MARK) {
+                props.foldMarkSizeFactor = value
+            } else {
+                props.foldIconSizeFactor = value
+            }
+            updateFoldSizeLabel(progress)
+            binding.editor.invalidate()
+        })
+        binding.foldPaddingSlider.setOnSeekBarChangeListener(seekBarListener { progress ->
+            binding.editor.props.foldIndicatorPadding = progress / 100f
+            updateFoldPaddingLabel(progress)
+            binding.editor.invalidate()
+        })
+        binding.foldAlphaSlider.progress = (binding.editor.props.foldIconAlpha * 100).toInt()
+        updateFoldAlphaLabel(binding.foldAlphaSlider.progress)
+        binding.foldAlphaSlider.setOnSeekBarChangeListener(seekBarListener { progress ->
+            binding.editor.props.foldIconAlpha = progress / 100f
+            updateFoldAlphaLabel(progress)
+            binding.editor.invalidate()
+        })
 
         // Configure symbol input view
         val inputView = binding.symbolInput
@@ -351,10 +381,48 @@ class MainActivity : AppCompatActivity() {
     /**
      * Demo setup of code folding, breakpoints and the custom action system
      */
+    private fun seekBarListener(onChange: (Int) -> Unit) = object : SeekBar.OnSeekBarChangeListener {
+        override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) = onChange(progress)
+        override fun onStartTrackingTouch(seekBar: SeekBar) {}
+        override fun onStopTrackingTouch(seekBar: SeekBar) {}
+    }
+
+    private fun currentFoldSizeFactor(): Float {
+        val props = binding.editor.props
+        return if (props.foldIndicatorStyle == DirectAccessProps.FOLD_STYLE_MARK) {
+            props.foldMarkSizeFactor
+        } else {
+            props.foldIconSizeFactor
+        }
+    }
+
+    private fun syncFoldStyleControls() {
+        val isIcon = binding.editor.props.foldIndicatorStyle == DirectAccessProps.FOLD_STYLE_ICON
+        binding.foldAlphaRow.visibility = if (isIcon) View.VISIBLE else View.GONE
+        syncFoldSizeSlider()
+    }
+
+    private fun syncFoldSizeSlider() {
+        val progress = (currentFoldSizeFactor() * 100).toInt()
+        binding.foldSizeSlider.progress = progress
+        updateFoldSizeLabel(progress)
+    }
+
+    private fun updateFoldAlphaLabel(progress: Int) {
+        binding.foldAlphaLabel.text = "Icon alpha %.2f".format(progress / 100f)
+    }
+
+    private fun updateFoldSizeLabel(progress: Int) {
+        binding.foldSizeLabel.text = "Fold size %.2f".format(progress / 100f)
+    }
+
+    private fun updateFoldPaddingLabel(progress: Int) {
+        binding.foldPaddingLabel.text = "Fold padding %.2f".format(progress / 100f)
+    }
+
     private fun setupFoldingAndActions() {
         val editor = binding.editor
         editor.setCodeFoldingEnabled(true)
-        editor.setBreakpointMarkerEnabled(true)
         // Extra foldable regions on top of the code blocks of the language
         editor.registerFoldingProvider(createCommentFoldingProvider())
         // Fold contiguous runs of import statements
@@ -975,6 +1043,31 @@ class MainActivity : AppCompatActivity() {
             R.id.breakpoint_markers -> {
                 item.isChecked = !item.isChecked
                 editor.setBreakpointMarkerEnabled(item.isChecked)
+            }
+
+            R.id.fold_sliders -> {
+                item.isChecked = !item.isChecked
+                binding.foldControlsPanel.visibility = if (item.isChecked) View.VISIBLE else View.GONE
+            }
+
+            R.id.fold_mark_icons -> {
+                item.isChecked = !item.isChecked
+                editor.props.foldIndicatorStyle =
+                    if (item.isChecked) DirectAccessProps.FOLD_STYLE_ICON else DirectAccessProps.FOLD_STYLE_MARK
+                editor.invalidate()
+                syncFoldStyleControls()
+            }
+
+            R.id.fold_stroke_enabled -> {
+                item.isChecked = !item.isChecked
+                editor.props.foldStrokeEnabled = item.isChecked
+                editor.invalidate()
+            }
+
+            R.id.fold_stroke_ends_at_content -> {
+                item.isChecked = !item.isChecked
+                editor.props.foldStrokeEndsAtContent = item.isChecked
+                editor.invalidate()
             }
 
             R.id.fold_all -> editor.performAction(

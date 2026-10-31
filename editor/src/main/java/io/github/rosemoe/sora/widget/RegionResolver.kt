@@ -35,7 +35,7 @@ const val REGION_DIVIDER = 4
 const val REGION_TEXT = 5
 
 /**
- * Column right of the line numbers that shows the code folding indicators
+ * Column right of the side icons that shows the code folding marks
  */
 const val REGION_FOLD = 6
 
@@ -69,7 +69,7 @@ private fun CodeEditor.resolveTouchRegionX(x: Float): Int {
     if (gutterRegion != null) {
         return gutterRegion
     }
-    val gutterEnd = breakpointWidth + lineNumberWidth + foldWidth + iconWidth +
+    val gutterEnd = breakpointWidth + lineNumberWidth + iconWidth + foldWidth +
             dividerMarginLeft + dividerWidth + dividerMarginRight
     return when {
         x >= maxOf(textOffset, gutterEnd) && x <= scrollMaxX + width -> REGION_TEXT
@@ -86,17 +86,17 @@ private fun CodeEditor.resolveGutterRegion(
     iconWidth: Float
 ): Int? {
     val lineNumberEnd = breakpointWidth + lineNumberWidth
-    val foldEnd = lineNumberEnd + foldWidth
-    val iconEnd = foldEnd + iconWidth
-    val dividerStart = iconEnd + dividerMarginLeft
+    val iconEnd = lineNumberEnd + iconWidth
+    val foldEnd = iconEnd + foldWidth
+    val dividerStart = foldEnd + dividerMarginLeft
     val dividerEnd = dividerStart + dividerWidth
     val gutterEnd = dividerEnd + dividerMarginRight
     return when {
         breakpointWidth > 0f && localX in 0f..breakpointWidth -> REGION_BREAKPOINT
         localX in breakpointWidth..lineNumberEnd -> REGION_LINE_NUMBER
-        foldWidth > 0f && localX in lineNumberEnd..foldEnd -> REGION_FOLD
-        localX in foldEnd..iconEnd -> REGION_SIDE_ICON
-        localX in iconEnd..dividerStart || localX in dividerEnd..gutterEnd -> REGION_DIVIDER_MARGIN
+        localX in lineNumberEnd..iconEnd -> REGION_SIDE_ICON
+        foldWidth > 0f && localX in iconEnd..foldEnd -> REGION_FOLD
+        localX in foldEnd..dividerStart || localX in dividerEnd..gutterEnd -> REGION_DIVIDER_MARGIN
         localX in dividerStart..dividerEnd -> REGION_DIVIDER
         else -> null
     }

@@ -502,12 +502,13 @@ public class EditorRenderer {
         float lineNumberWidth = editor.measureLineNumber(); // include line number margin
         float foldIndicatorWidth = editor.measureFoldIndicatorWidth();
         float breakpointIndicatorWidth = editor.measureBreakpointIndicatorWidth();
-        float indicatorWidth = foldIndicatorWidth + breakpointIndicatorWidth;
+        float indicatorWidth = breakpointIndicatorWidth;
         var sideIconWidth = editor.measureSideIconWidth();
         float offsetX = -editor.getOffsetX() + editor.measureTextRegionOffset();
         float textOffset = offsetX;
 
-        var gutterWidth = (int) (indicatorWidth + lineNumberWidth + sideIconWidth + editor.getDividerWidth() + editor.getDividerMarginLeft() + editor.getDividerMarginRight());
+        var gutterWidth = (int) (indicatorWidth + lineNumberWidth + sideIconWidth + foldIndicatorWidth + editor.getDividerWidth() + editor.getDividerMarginLeft() + editor.getDividerMarginRight());
+        float dividerLeft = computeDividerLeft(breakpointIndicatorWidth, lineNumberWidth, sideIconWidth, foldIndicatorWidth);
         if (editor.isWordwrap()) {
             if (forcedRecreateLayout) {
                 // Text size changed (e.g. pinch zoom). The old row table was broken at the old
@@ -564,32 +565,35 @@ public class EditorRenderer {
         int currentLineNumber = cursor.isSelected() ? -1 : cursor.getLeftLine();
 
         if (lineNumberNotPinned) {
-            drawLineNumberBackground(canvas, offsetX, indicatorWidth + lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
+            drawLineNumberBackground(canvas, offsetX, dividerLeft, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
             int lineNumberColor = editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER);
             int currentLineBgColor = editor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE);
             if (editor.getCursorAnimator().isRunning() && editor.isHighlightCurrentLine() && editor.isEditable()) {
                 tmpRect.bottom = editor.getCursorAnimator().animatedLineBottom() - editor.getOffsetY();
                 tmpRect.top = tmpRect.bottom - editor.getCursorAnimator().animatedLineHeight();
                 tmpRect.left = 0;
-                tmpRect.right = (int) (textOffset - editor.getDividerMarginRight());
+                tmpRect.right = (int) (offsetX + dividerLeft + editor.getDividerWidth());
                 drawColor(canvas, currentLineBgColor, tmpRect);
             }
 
             canvas.save();
             canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
             for (int i = 0; i < postDrawCurrentLines.count(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight()));
+                drawRowBackground(canvas, currentLineBgColor, postDrawCurrentLines.get(i), (int) (offsetX + dividerLeft + editor.getDividerWidth()));
             }
             // User defined gutter background
-            drawUserGutterBackground(canvas, (int) (textOffset - editor.getDividerMarginRight()));
+            drawUserGutterBackground(canvas, (int) (offsetX + dividerLeft + editor.getDividerWidth()));
             drawSideIcons(canvas, offsetX + indicatorWidth + lineNumberWidth);
             canvas.restore();
 
-            drawDivider(canvas, offsetX + indicatorWidth + lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_DIVIDER));
+            if (editor.getProps().foldIndicatorStyle == DirectAccessProps.FOLD_STYLE_MARK
+                    && editor.getProps().foldStrokeEnabled) {
+                drawDivider(canvas, offsetX + dividerLeft, getGutterStrokeColor(color));
+            }
 
             canvas.save();
             canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
-            drawFoldAndBreakpointIndicator(canvas, offsetX, breakpointIndicatorWidth, lineNumberWidth, foldIndicatorWidth);
+            drawFoldAndBreakpointIndicator(canvas, offsetX, breakpointIndicatorWidth, lineNumberWidth, sideIconWidth, foldIndicatorWidth);
             if (firstLn != null && firstLn.value != -1) {
                 int bottom = editor.getRowBottom(0);
                 float y;
@@ -643,7 +647,7 @@ public class EditorRenderer {
         drawStuckLines(canvas, stuckLines, textOffset);
 
         if (editor.isLineNumberEnabled() && !lineNumberNotPinned) {
-            drawLineNumberBackground(canvas, 0, indicatorWidth + lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
+            drawLineNumberBackground(canvas, 0, dividerLeft, color.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND));
 
             canvas.save();
             canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
@@ -653,21 +657,24 @@ public class EditorRenderer {
                 tmpRect.bottom = editor.getCursorAnimator().animatedLineBottom() - editor.getOffsetY();
                 tmpRect.top = tmpRect.bottom - editor.getCursorAnimator().animatedLineHeight();
                 tmpRect.left = 0;
-                tmpRect.right = (int) (textOffset - editor.getDividerMarginRight());
+                tmpRect.right = (int) (offsetX + dividerLeft + editor.getDividerWidth());
                 drawColor(canvas, currentLineBgColor, tmpRect);
             }
             for (int i = 0; i < postDrawCurrentLines.count(); i++) {
-                drawRowBackground(canvas, currentLineBgColor, postDrawCurrentLines.get(i), (int) (textOffset - editor.getDividerMarginRight() + editor.getOffsetX()));
+                drawRowBackground(canvas, currentLineBgColor, postDrawCurrentLines.get(i), (int) (dividerLeft + editor.getDividerWidth()));
             }
-            drawUserGutterBackground(canvas, (int) (textOffset - editor.getDividerMarginRight() + editor.getOffsetX()));
+            drawUserGutterBackground(canvas, (int) (dividerLeft + editor.getDividerWidth()));
             drawSideIcons(canvas, indicatorWidth + lineNumberWidth);
             canvas.restore();
 
-            drawDivider(canvas, indicatorWidth + lineNumberWidth + sideIconWidth + editor.getDividerMarginLeft(), color.getColor(EditorColorScheme.LINE_DIVIDER));
+            if (editor.getProps().foldIndicatorStyle == DirectAccessProps.FOLD_STYLE_MARK
+                    && editor.getProps().foldStrokeEnabled) {
+                drawDivider(canvas, dividerLeft, getGutterStrokeColor(color));
+            }
 
             canvas.save();
             canvas.clipRect(0, stuckLineBottom, editor.getWidth(), editor.getHeight());
-            drawFoldAndBreakpointIndicator(canvas, 0, breakpointIndicatorWidth, lineNumberWidth, foldIndicatorWidth);
+            drawFoldAndBreakpointIndicator(canvas, 0, breakpointIndicatorWidth, lineNumberWidth, sideIconWidth, foldIndicatorWidth);
             for (int i = 0; i < postDrawLineNumbers.size(); i++) {
                 long packed = postDrawLineNumbers.get(i);
                 drawLineNumber(canvas, IntPair.getFirst(packed), IntPair.getSecond(packed), breakpointIndicatorWidth, lineNumberWidth, IntPair.getFirst(packed) == currentLineNumber ? color.getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
@@ -707,6 +714,7 @@ public class EditorRenderer {
         var currentLine = cursor.isSelected() ? -1 : cursor.getLeftLine();
         float foldIndicatorWidth = editor.measureFoldIndicatorWidth();
         float breakpointIndicatorWidth = editor.measureBreakpointIndicatorWidth();
+        float dividerLocal = computeDividerLeft(breakpointIndicatorWidth, lineNumberWidth, editor.measureSideIconWidth(), foldIndicatorWidth);
         float gutterBase = editor.isLineNumberPinned() ? 0 : offset;
         canvas.save();
         var offsetY = editor.getOffsetY();
@@ -728,13 +736,13 @@ public class EditorRenderer {
                 tmpRect.top = editor.getRowTop(i) - offsetY;
                 tmpRect.bottom = editor.getRowBottom(i) - offsetY - editor.getDpUnit();
                 tmpRect.left = gutterBase;
-                tmpRect.right = tmpRect.left + editor.measureTextRegionOffset();
+                tmpRect.right = tmpRect.left + dividerLocal;
                 if (currentLine == line && editor.isHighlightCurrentLine())
                     drawColor(canvas, editor.getColorScheme().getColor(EditorColorScheme.CURRENT_LINE), tmpRect);
                 if (color != 0)
                     drawColor(canvas, color, tmpRect);
             }
-            drawFoldAndBreakpointIndicatorRow(canvas, gutterBase, line, i, breakpointIndicatorWidth, lineNumberWidth, foldIndicatorWidth);
+            drawFoldAndBreakpointIndicatorRow(canvas, gutterBase, line, i, breakpointIndicatorWidth, lineNumberWidth, editor.measureSideIconWidth(), foldIndicatorWidth);
             drawLineNumber(canvas, line, i,
                     gutterBase + breakpointIndicatorWidth, lineNumberWidth,
                     currentLine == line ? editor.getColorScheme().getColor(EditorColorScheme.LINE_NUMBER_CURRENT) : lineNumberColor);
@@ -906,9 +914,10 @@ public class EditorRenderer {
      * @param base                Left edge of the breakpoint indicator column
      * @param breakpointWidth     Width of the breakpoint indicator column
      * @param lineNumberWidth     Width of the line number column
+     * @param sideIconWidth       Width of the side icon column
      * @param foldIndicatorWidth  Width of the fold indicator column
      */
-    protected void drawFoldAndBreakpointIndicator(Canvas canvas, float base, float breakpointWidth, float lineNumberWidth, float foldIndicatorWidth) {
+    protected void drawFoldAndBreakpointIndicator(Canvas canvas, float base, float breakpointWidth, float lineNumberWidth, float sideIconWidth, float foldIndicatorWidth) {
         if (foldIndicatorWidth <= 0f && breakpointWidth <= 0f) {
             return;
         }
@@ -917,7 +926,7 @@ public class EditorRenderer {
         var itr = editor.getLayout().obtainRowIterator(row);
         while (row <= lastRow && itr.hasNext()) {
             var rowInf = itr.next();
-            drawFoldAndBreakpointIndicatorRow(canvas, base, rowInf.lineIndex, row, breakpointWidth, lineNumberWidth, foldIndicatorWidth);
+            drawFoldAndBreakpointIndicatorRow(canvas, base, rowInf.lineIndex, row, breakpointWidth, lineNumberWidth, sideIconWidth, foldIndicatorWidth);
             row++;
         }
     }
@@ -931,9 +940,10 @@ public class EditorRenderer {
      * @param row                 Displayed row
      * @param breakpointWidth     Width of the breakpoint indicator column
      * @param lineNumberWidth     Width of the line number column
+     * @param sideIconWidth       Width of the side icon column
      * @param foldIndicatorWidth  Width of the fold indicator column
      */
-    protected void drawFoldAndBreakpointIndicatorRow(Canvas canvas, float base, int line, int row, float breakpointWidth, float lineNumberWidth, float foldIndicatorWidth) {
+    protected void drawFoldAndBreakpointIndicatorRow(Canvas canvas, float base, int line, int row, float breakpointWidth, float lineNumberWidth, float sideIconWidth, float foldIndicatorWidth) {
         final var colorScheme = editor.getColorScheme();
         final float centerY = editor.getRowTop(row) + editor.getRowHeight() / 2f - editor.getOffsetY();
         if (breakpointWidth > 0f) {
@@ -959,43 +969,120 @@ public class EditorRenderer {
             }
         }
         if (foldIndicatorWidth > 0f) {
-            var region = editor.getFoldingManager().regionAt(line);
-            if (region != null && region.isFoldable()) {
-                drawFoldIcon(
-                        canvas,
-                        base + breakpointWidth + lineNumberWidth,
-                        foldIndicatorWidth,
-                        centerY,
-                        editor.getFoldingManager().isCollapsed(region),
-                        colorScheme.getColor(EditorColorScheme.FOLD_INDICATOR)
-                );
+            final var foldingManager = editor.getFoldingManager();
+            var header = foldingManager.regionAt(line);
+            if (header != null && header.isFoldable()) {
+                float foldColumnStart = base + breakpointWidth + lineNumberWidth + sideIconWidth;
+                int markColor = colorScheme.getColor(EditorColorScheme.FOLD_INDICATOR);
+                if (editor.getProps().foldIndicatorStyle == DirectAccessProps.FOLD_STYLE_ICON) {
+                    drawFoldIcon(
+                            canvas,
+                            foldColumnStart,
+                            foldIndicatorWidth,
+                            centerY,
+                            foldingManager.isCollapsed(header),
+                            markColor
+                    );
+                } else {
+                    drawFoldMark(
+                            canvas,
+                            foldColumnStart + editor.getRowHeight() * (editor.getProps().foldIndicatorPadding + editor.getProps().foldMarkSizeFactor / 2f),
+                            centerY,
+                            foldingManager.isCollapsed(header),
+                            markColor
+                    );
+                }
             }
         }
     }
 
     /**
-     * Draw the fold icon of a foldable region
+     * Draw the fold mark of a foldable region's header line in the legacy
+     * {@link DirectAccessProps#FOLD_STYLE_MARK} style. The mark is a house-shaped
+     * pentagon - flat top with a pointed bottom while expanded, peaked top with a flat bottom
+     * while collapsed - straddling the gutter stroke so it sits on top of the stroke line,
+     * half in the gutter and half over the code background, and carries a dark grey minus
+     * sign. The interior is filled with the code background so the stroke never shows through,
+     * and the outline is drawn at half opacity like the stroke so the mark stays subtle.
      *
-     * @param canvas          Canvas to draw
-     * @param columnStart     Left edge of the fold indicator column
-     * @param columnWidth     Width of the fold indicator column
-     * @param centerY         Vertical center of the row
-     * @param collapsed       Whether the region is currently collapsed
-     * @param color           Color of the icon
+     * @param canvas    Canvas to draw
+     * @param cx        Horizontal centre of the mark
+     * @param centerY   Vertical centre of the row
+     * @param collapsed Whether the region is currently collapsed
+     * @param color     Color of the mark's outline
+     */
+    protected void drawFoldMark(Canvas canvas, float cx, float centerY, boolean collapsed, int color) {
+        float box = editor.getRowHeight() * editor.getProps().foldMarkSizeFactor;
+        if (box <= 0f) {
+            return;
+        }
+        float half = box / 2f;
+        float stroke = Math.max(1f, editor.getDpUnit() * 1.2f);
+        float sign = box * 0.27f;
+        float roof = box * 0.36f;
+        float shoulder = box - roof;
+        float left = cx - half;
+        float right = cx + half;
+        float top = centerY - half;
+        float bottom = centerY + half;
+        tmpPath.reset();
+        if (collapsed) {
+            tmpPath.moveTo(left, bottom);
+            tmpPath.lineTo(right, bottom);
+            tmpPath.lineTo(right, top + shoulder);
+            tmpPath.lineTo(cx, top);
+            tmpPath.lineTo(left, top + shoulder);
+        } else {
+            tmpPath.moveTo(left, top);
+            tmpPath.lineTo(right, top);
+            tmpPath.lineTo(right, top + shoulder);
+            tmpPath.lineTo(cx, bottom);
+            tmpPath.lineTo(left, top + shoulder);
+        }
+        tmpPath.close();
+        paintOther.setStyle(Paint.Style.FILL);
+        paintOther.setColor(editor.getColorScheme().getColor(EditorColorScheme.WHOLE_BACKGROUND));
+        canvas.drawPath(tmpPath, paintOther);
+        paintOther.setStyle(Paint.Style.STROKE);
+        paintOther.setStrokeWidth(stroke);
+        paintOther.setColor((color & 0x00ffffff) | 0x80000000);
+        canvas.drawPath(tmpPath, paintOther);
+        float signY = collapsed ? centerY + box * 0.18f : centerY - box * 0.18f;
+        paintOther.setColor(0xff555555);
+        canvas.drawLine(cx - sign, signY, cx + sign, signY, paintOther);
+        paintOther.setStyle(Paint.Style.FILL);
+    }
+
+    /**
+     * Draw the xml chevron arrow icon of a foldable region's header line, the default
+     * {@link DirectAccessProps#FOLD_STYLE_ICON} style. The icon is sized by
+     * {@link DirectAccessProps#foldIconSizeFactor} and inset by
+     * {@link DirectAccessProps#foldIndicatorPadding} at the start of the strip, so the
+     * padding moves the icon instead of resizing it; this style draws no gutter stroke -
+     * the chevrons sit on the plain gutter background.
+     *
+     * @param canvas      Canvas to draw
+     * @param columnStart Left edge of the fold indicator column
+     * @param columnWidth Width of the fold indicator column
+     * @param centerY     Vertical centre of the row
+     * @param collapsed   Whether the region is currently collapsed
+     * @param color       Tint colour of the icon
      */
     protected void drawFoldIcon(Canvas canvas, float columnStart, float columnWidth, float centerY, boolean collapsed, int color) {
         var icon = collapsed ? foldCollapseIcon : foldExpandIcon;
         if (icon == null) {
             return;
         }
-        float inset = editor.getRowHeight() * editor.getProps().foldIndicatorPadding;
-        float box = Math.min(columnWidth - 2f * inset, editor.getRowHeight());
+        float pad = editor.getRowHeight() * editor.getProps().foldIndicatorPadding;
+        float box = editor.getRowHeight() * editor.getProps().foldIconSizeFactor;
         if (box <= 0f) {
             return;
         }
         int half = (int) (box / 2f);
-        int cx = (int) (columnStart + columnWidth / 2f);
+        int cx = (int) (columnStart + pad + half);
         int cy = (int) centerY;
+        int alpha = Math.min(255, Math.max(0, (int) (editor.getProps().foldIconAlpha * 255f)));
+        icon.setAlpha(alpha);
         icon.setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
         icon.setBounds(cx - half, cy - half, cx + half, cy + half);
         icon.draw(canvas);
@@ -1134,7 +1221,50 @@ public class EditorRenderer {
     }
 
     /**
+     * Compute the horizontal position of the gutter divider (its left edge, editor offset
+     * not applied). With the pentagon marks the stroke runs through the centre of the mark
+     * (start clearance plus half the mark) so the marks straddle it; with the default
+     * arrow icon style it keeps its usual place after the gutter, and without a fold strip
+     * it stays between the gutter and the text.
+     *
+     * @param breakpointWidth    Width of the breakpoint indicator column
+     * @param lineNumberWidth    Width of the line number column
+     * @param sideIconWidth      Width of the side icon column
+     * @param foldIndicatorWidth Width of the fold indicator column
+     * @return The left edge of the divider
+     */
+    protected float computeDividerLeft(float breakpointWidth, float lineNumberWidth, float sideIconWidth, float foldIndicatorWidth) {
+        float gutterColumns = breakpointWidth + lineNumberWidth + sideIconWidth;
+        if (foldIndicatorWidth > 0f && editor.getProps().foldIndicatorStyle == DirectAccessProps.FOLD_STYLE_MARK) {
+            float markCentre = editor.getRowHeight() * (editor.getProps().foldIndicatorPadding + editor.getProps().foldMarkSizeFactor / 2f);
+            return gutterColumns + markCentre - editor.getDividerWidth() / 2f;
+        }
+        return gutterColumns + (foldIndicatorWidth > 0f ? foldIndicatorWidth : 0f) + editor.getDividerMarginLeft();
+    }
+
+    /**
+     * Colour for the gutter divider and the fold stroke. Falls back to a mid grey at half
+     * opacity when the scheme's divider colour is transparent or equal to the gutter
+     * background (as in the default scheme and TextMate based schemes), so the stroke stays
+     * visible without dominating the editor in every colour scheme.
+     *
+     * @param colorScheme The active color scheme
+     * @return A colour that contrasts with the gutter background
+     */
+    protected int getGutterStrokeColor(EditorColorScheme colorScheme) {
+        int divider = colorScheme.getColor(EditorColorScheme.LINE_DIVIDER);
+        if ((divider >>> 24) == 0 || divider == colorScheme.getColor(EditorColorScheme.LINE_NUMBER_BACKGROUND)) {
+            return 0x80808080;
+        }
+        return divider;
+    }
+
+    /**
      * Draw divider line
+     * <p>
+     * When {@link DirectAccessProps#foldStrokeEndsAtContent} is set, the stroke stops at
+     * the bottom of the last line of the document instead of running over the empty
+     * space below the code.
      *
      * @param canvas  Canvas to draw
      * @param offsetX End x of line number region
@@ -1153,6 +1283,16 @@ public class EditorRenderer {
         if (offY < 0) {
             tmpRect.bottom = tmpRect.bottom - offY;
             tmpRect.top = tmpRect.top - offY;
+        }
+        if (editor.getProps().foldStrokeEndsAtContent) {
+            var layout = editor.getLayout();
+            int lastLine = editor.getText().getLineCount() - 1;
+            float lastLineBottom = layout.getCharLayoutOffset(lastLine, 0)[0]
+                    + (layout.getRowCountForLine(lastLine) - 1) * editor.getRowHeight();
+            tmpRect.bottom = Math.min(tmpRect.bottom, lastLineBottom - offY);
+            if (tmpRect.bottom <= tmpRect.top) {
+                return;
+            }
         }
         tmpRect.left = left;
         tmpRect.right = right;

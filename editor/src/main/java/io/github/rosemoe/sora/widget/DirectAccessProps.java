@@ -328,24 +328,86 @@ public class DirectAccessProps implements Serializable {
     public final float miniMarkerSizeFactor = 0.5f;
 
     /**
-     * Specify the code folding indicator size factor.
-     * result size = row height * foldIndicatorSizeFactor
+     * Specify the code folding icon size factor of {@link #FOLD_STYLE_ICON}.
+     * result box size = row height * foldIconSizeFactor; the strip adds
+     * {@link #foldIndicatorPadding} as start clearance around it.
      *
      * @see CodeEditor#measureFoldIndicatorWidth()
      */
     @InvalidateRequired
     @FloatRange(from = 0.0f, to = 1.0f)
-    public float foldIndicatorSizeFactor = 0.8f;
+    public float foldIconSizeFactor = 0.77f;
 
     /**
-     * Specify the padding around the fold icons.
-     * result column width = row height * (foldIndicatorSizeFactor + 2 * foldIndicatorPadding)
+     * Specify the code folding mark size factor of {@link #FOLD_STYLE_MARK}.
+     * result box size = row height * foldMarkSizeFactor
      *
      * @see CodeEditor#measureFoldIndicatorWidth()
      */
     @InvalidateRequired
     @FloatRange(from = 0.0f, to = 1.0f)
-    public float foldIndicatorPadding = 0f;
+    public float foldMarkSizeFactor = 0.55f;
+
+    /**
+     * Opacity of the chevron icons of {@link #FOLD_STYLE_ICON}, from 0f (invisible)
+     * to 1f (fully opaque). Only affects the icon style.
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float foldIconAlpha = 1f;
+
+    /**
+     * Specify the clearance at the start of the fold indicator column.
+     * result column width = row height * (size factor of the active style +
+     * foldIndicatorPadding).
+     * The padding applies at the start of the column only - it keeps a gap between the
+     * line numbers and the marks (also when no side icons are shown), while the end of the
+     * column needs none because the text keeps its divider margins.
+     *
+     * @see CodeEditor#measureFoldIndicatorWidth()
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float foldIndicatorPadding = 0.25f;
+
+    /**
+     * Fold mark style drawn in the fold indicator strip:
+     * {@link #FOLD_STYLE_MARK} draws the house-shaped pentagon marks, the legacy style
+     * Android Studio used a few years ago, {@link #FOLD_STYLE_ICON} draws the xml chevron
+     * arrows of current Android Studio versions, the default.
+     *
+     * @see CodeEditor#measureFoldIndicatorWidth()
+     */
+    @InvalidateRequired
+    public int foldIndicatorStyle = FOLD_STYLE_ICON;
+
+    /**
+     * Fold marks drawn as house-shaped pentagon marks, the legacy style
+     */
+    public static final int FOLD_STYLE_MARK = 0;
+
+    /**
+     * Fold marks drawn as the xml chevron arrow icons, the default style
+     */
+    public static final int FOLD_STYLE_ICON = 1;
+
+    /**
+     * Whether to draw the fold stroke (the divider at the end of the line numbers
+     * that the {@link #FOLD_STYLE_MARK} pentagons straddle). When false the marks
+     * are drawn without the stroke. Only affects the mark style.
+     *
+     * @see CodeEditor#measureFoldIndicatorWidth()
+     */
+    @InvalidateRequired
+    public boolean foldStrokeEnabled = true;
+
+    /**
+     * Whether the fold stroke of {@link #FOLD_STYLE_MARK} stops at the bottom of the
+     * last line of the document, instead of running over the empty space below the
+     * code. Only affects the mark style; the default keeps the full-height stroke.
+     */
+    @InvalidateRequired
+    public boolean foldStrokeEndsAtContent = false;
 
     /**
      * Specify the breakpoint indicator size factor.
@@ -360,12 +422,13 @@ public class DirectAccessProps implements Serializable {
     /**
      * Specify the padding around the breakpoint markers.
      * result column width = row height * (breakpointIndicatorSizeFactor + 2 * breakpointIndicatorPadding)
+     * The padding at the start of the column keeps the marker clear of the screen edge.
      *
      * @see CodeEditor#measureBreakpointIndicatorWidth()
      */
     @InvalidateRequired
     @FloatRange(from = 0.0f, to = 1.0f)
-    public float breakpointIndicatorPadding = 0f;
+    public float breakpointIndicatorPadding = 0.1f;
 
 
     /**
