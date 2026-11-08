@@ -2352,10 +2352,15 @@ public class EditorRenderer {
         if (mm == -1) {
             mm = 0;
         }
+        var foldingManager = editor.getFoldingManager();
         int cursorIdx = editor.getCurrentCursorBlock();
         for (int curr = mm; curr < blocks.size(); curr++) {
             CodeBlock block = blocks.get(curr);
             if (block == null) {
+                continue;
+            }
+            if (foldingManager != null && (foldingManager.isLineHidden(block.startLine)
+                    || foldingManager.isLineHidden(block.endLine))) {
                 continue;
             }
             if (CodeEditor.hasVisibleRegion(block.startLine, block.endLine, first, last)) {
@@ -2394,6 +2399,11 @@ public class EditorRenderer {
         var current = editor.getCurrentCursorBlock();
         if (current >= 0 && current < blocks.size()) {
             var block = blocks.get(current);
+            var foldingManager = editor.getFoldingManager();
+            if (foldingManager != null && (foldingManager.isLineHidden(block.startLine)
+                    || foldingManager.isLineHidden(block.endLine))) {
+                return;
+            }
             var layout = editor.getLayout();
             try {
                 float top = layout.getCharLayoutOffset(block.startLine, block.startColumn)[0] - editor.getRowHeight() - editor.getOffsetY();

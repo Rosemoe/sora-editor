@@ -867,7 +867,9 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
             return true;
         }
         if (region == RegionResolverKt.REGION_FOLD) {
-            performFoldToggle(position);
+            if (editor.getFoldingManager().regionAt(position.line) != null) {
+                performFoldToggle(position);
+            }
             return true;
         }
         if (region == RegionResolverKt.REGION_BREAKPOINT) {
