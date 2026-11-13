@@ -3559,6 +3559,10 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public void setSelection(int line, int column, boolean makeItVisible, int cause) {
         cursorAnimator.markStartPos();
+        // Never place the caret between the '\r' and the '\n' of a CRLF
+        if (text.isInLineSeparator(line, column)) {
+            column = text.getColumnCount(line);
+        }
         if (column > 0 && Character.isHighSurrogate(text.charAt(line, column - 1))) {
             column++;
             if (column > text.getColumnCount(line)) {
@@ -3657,6 +3661,15 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
             setSelectionRegion(lineRight, columnRight, lineLeft, columnLeft, makeRightVisible, cause);
             Log.w(LOG_TAG, "setSelectionRegion() error: start > end:start = " + start + " end = " + end + " lineLeft = " + lineLeft + " columnLeft = " + columnLeft + " lineRight = " + lineRight + " columnRight = " + columnRight);
             return;
+        }
+        // A selection with either end between the '\r' and the '\n' of a CRLF takes the whole line
+        // separator, as a deletion of it would
+        if (text.isInLineSeparator(lineLeft, columnLeft)) {
+            columnLeft = text.getColumnCount(lineLeft);
+        }
+        if (text.isInLineSeparator(lineRight, columnRight)) {
+            lineRight++;
+            columnRight = 0;
         }
         cursorAnimator.cancel();
         boolean lastState = cursor.isSelected();
