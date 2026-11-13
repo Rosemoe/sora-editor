@@ -600,10 +600,20 @@ public class EditorAutoCompletion extends EditorPopupWindow implements EditorBui
         maxHeight = height;
     }
 
+    /**
+     * Scroll the completion list back to its first item.
+     * <p>
+     * The adapter is set again so that rows of the previous result are dropped. Otherwise,
+     * if the list is resized before its next layout (window height, loading bar, layout
+     * animations), {@code AbsListView} restores the old first visible row.
+     */
+    @SuppressWarnings("unchecked")
     public void resetScrollPosition() {
-        editor.postDelayedInLifecycle(() -> {
-            layout.ensureListPositionVisible(0, 0);
-        },10);
+        var list = layout.getCompletionList();
+        if (list.getFirstVisiblePosition() > 0 || (list.getChildCount() > 0
+                && list.getChildAt(0).getTop() < list.getPaddingTop())) {
+            list.setAdapter(adapter);
+        }
     }
 
     /**
