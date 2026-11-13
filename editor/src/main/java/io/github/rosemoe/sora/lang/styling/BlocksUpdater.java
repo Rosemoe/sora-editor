@@ -50,7 +50,7 @@ public class BlocksUpdater {
             if (block.endLine >= restrict) {
                 block.endLine += delta;
             }
-            if (block.startLine >= block.endLine) {
+            if (block.startLine < 0 || block.endLine < 0 || block.startLine >= block.endLine) {
                 itr.remove();
             }
         }

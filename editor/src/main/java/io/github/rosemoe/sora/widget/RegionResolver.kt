@@ -34,6 +34,16 @@ const val REGION_DIVIDER_MARGIN = 3
 const val REGION_DIVIDER = 4
 const val REGION_TEXT = 5
 
+/**
+ * Column right of the side icons that shows the code folding marks
+ */
+const val REGION_FOLD = 6
+
+/**
+ * Column left of the line numbers that shows the breakpoint markers
+ */
+const val REGION_BREAKPOINT = 7
+
 const val IN_BOUND = 0
 const val OUT_BOUND = 1
 
@@ -42,25 +52,59 @@ fun CodeEditor.resolveTouchRegion(event: MotionEvent) = resolveTouchRegion(event
 fun CodeEditor.resolveTouchRegion(event: MotionEvent, pointerIndex: Int = -1): Long {
     val x = (if (pointerIndex == -1) event.x else event.getX(pointerIndex)) + offsetX
     val y = (if (pointerIndex == -1) event.y else event.getY(pointerIndex)) + offsetY
-    val lineNumberWidth = measureLineNumber()
-    val iconWidth = if (renderer.hasSideHintIcons()) rowHeight else 0
-    val textOffset = measureTextRegionOffset()
-    val region = when {
-        x < 0f -> REGION_OUTBOUND
-        x in 0f..lineNumberWidth -> REGION_LINE_NUMBER
-        x in lineNumberWidth..lineNumberWidth + iconWidth -> REGION_SIDE_ICON
-        x in lineNumberWidth + iconWidth..lineNumberWidth + iconWidth + dividerMarginLeft
-                || x in (lineNumberWidth + iconWidth + dividerMarginLeft + dividerWidth)..(lineNumberWidth + iconWidth + dividerMarginLeft + dividerMarginRight + dividerWidth)
-        -> REGION_DIVIDER_MARGIN
-
-        x in lineNumberWidth + iconWidth + dividerMarginLeft..lineNumberWidth + iconWidth + dividerMarginLeft + dividerWidth -> REGION_DIVIDER
-        x in textOffset..(scrollMaxX + width).toFloat() -> REGION_TEXT
-        else -> if (isWordwrap && x in 0f..width.toFloat()) REGION_TEXT else REGION_OUTBOUND
-    }
-    val bound = if (y >= 0 && y <= scrollMaxY + height / 2) {
-        IN_BOUND
-    } else {
-        OUT_BOUND
-    }
-    return IntPair.pack(region, bound)
+    return IntPair.pack(resolveTouchRegionX(x), resolveTouchBound(y))
 }
+
+private fun CodeEditor.resolveTouchRegionX(x: Float): Int {
+    if (x < 0f) {
+        return REGION_OUTBOUND
+    }
+    val foldWidth = measureFoldIndicatorWidth()
+    val breakpointWidth = measureBreakpointIndicatorWidth()
+    val lineNumberWidth = measureLineNumber()
+    val iconWidth = measureSideIconWidth()
+    val textOffset = measureTextRegionOffset()
+    val localX = x - gutterScreenStart()
+    val gutterRegion = resolveGutterRegion(localX, breakpointWidth, lineNumberWidth, foldWidth, iconWidth)
+    if (gutterRegion != null) {
+        return gutterRegion
+    }
+    val gutterEnd = breakpointWidth + lineNumberWidth + iconWidth + foldWidth +
+            dividerMarginLeft + dividerWidth + dividerMarginRight
+    return when {
+        x >= maxOf(textOffset, gutterEnd) && x <= scrollMaxX + width -> REGION_TEXT
+        isWordwrap && x in 0f..width.toFloat() -> REGION_TEXT
+        else -> REGION_OUTBOUND
+    }
+}
+
+private fun CodeEditor.resolveGutterRegion(
+    localX: Float,
+    breakpointWidth: Float,
+    lineNumberWidth: Float,
+    foldWidth: Float,
+    iconWidth: Float
+): Int? {
+    val lineNumberEnd = breakpointWidth + lineNumberWidth
+    val iconEnd = lineNumberEnd + iconWidth
+    val foldEnd = iconEnd + foldWidth
+    val dividerStart = foldEnd + dividerMarginLeft
+    val dividerEnd = dividerStart + dividerWidth
+    val gutterEnd = dividerEnd + dividerMarginRight
+    return when {
+        breakpointWidth > 0f && localX in 0f..breakpointWidth -> REGION_BREAKPOINT
+        localX in breakpointWidth..lineNumberEnd -> REGION_LINE_NUMBER
+        localX in lineNumberEnd..iconEnd -> REGION_SIDE_ICON
+        foldWidth > 0f && localX in iconEnd..foldEnd -> REGION_FOLD
+        localX in foldEnd..dividerStart || localX in dividerEnd..gutterEnd -> REGION_DIVIDER_MARGIN
+        localX in dividerStart..dividerEnd -> REGION_DIVIDER
+        else -> null
+    }
+}
+
+// A pinned gutter stays on screen while the content scrolls below it
+private fun CodeEditor.gutterScreenStart(): Float =
+    if (isLineNumberEnabled && isLineNumberPinned && !isWordwrap) offsetX.toFloat() else 0f
+
+private fun CodeEditor.resolveTouchBound(y: Float): Int =
+    if (y >= 0 && y <= scrollMaxY + height / 2) IN_BOUND else OUT_BOUND

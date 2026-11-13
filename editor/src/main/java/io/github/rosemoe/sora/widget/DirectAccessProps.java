@@ -312,12 +312,149 @@ public class DirectAccessProps implements Serializable {
     public float sideIconSizeFactor = 0.7f;
 
     /**
+     * Specify the shared padding around side icons, including custom action icons.
+     * This value is retained for compatibility and is added to both side-specific paddings.
+     */
+    @InvalidateRequired
+    @FloatRange(from = -1.0f, to = 1.0f)
+    public float sideIconPadding = 0f;
+
+    /**
+     * Specify the start padding before side icons, including custom action icons.
+     */
+    @InvalidateRequired
+    @FloatRange(from = -1.0f, to = 1.0f)
+    public float sideIconStartPadding = 0f;
+
+    /**
+     * Specify the end padding after side icons, including custom action icons.
+     */
+    @InvalidateRequired
+    @FloatRange(from = -1.0f, to = 1.0f)
+    public float sideIconEndPadding = 0f;
+
+    /**
      * Specify the marker text size factor, such as line-break markers.
      * not available for setting now
      */
     @InvalidateRequired
     @FloatRange(from = 0.0f, to = 1.0f)
     public final float miniMarkerSizeFactor = 0.5f;
+
+    /**
+     * Specify the code folding icon size factor of {@link #FOLD_STYLE_ICON}.
+     * result box size = row height * foldIconSizeFactor; the strip adds
+     * {@link #foldIndicatorPadding} as start clearance around it.
+     *
+     * @see CodeEditor#measureFoldIndicatorWidth()
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float foldIconSizeFactor = 0.77f;
+
+    /**
+     * Specify the code folding mark size factor of {@link #FOLD_STYLE_MARK}.
+     * result box size = row height * foldMarkSizeFactor
+     *
+     * @see CodeEditor#measureFoldIndicatorWidth()
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float foldMarkSizeFactor = 0.55f;
+
+    /**
+     * Opacity of the chevron icons of {@link #FOLD_STYLE_ICON}, from 0f (invisible)
+     * to 1f (fully opaque). Only affects the icon style.
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float foldIconAlpha = 1f;
+
+    /**
+     * Specify the start padding of the fold indicator column. Negative values move the
+     * fold mark towards the preceding side icon or line number column.
+     * Result column width = row height * (size factor of the active style +
+     * foldIndicatorPadding).
+     *
+     * @see CodeEditor#measureFoldIndicatorWidth()
+     */
+    @InvalidateRequired
+    @FloatRange(from = -1.0f, to = 1.0f)
+    public float foldIndicatorPadding = 0.25f;
+
+    /**
+     * Fold mark style drawn in the fold indicator strip:
+     * {@link #FOLD_STYLE_MARK} draws the house-shaped pentagon marks, the legacy style
+     * Android Studio used a few years ago, {@link #FOLD_STYLE_ICON} draws the xml chevron
+     * arrows of current Android Studio versions, the default.
+     *
+     * @see CodeEditor#measureFoldIndicatorWidth()
+     */
+    @InvalidateRequired
+    public int foldIndicatorStyle = FOLD_STYLE_ICON;
+
+    /**
+     * Fold marks drawn as house-shaped pentagon marks, the legacy style
+     */
+    public static final int FOLD_STYLE_MARK = 0;
+
+    /**
+     * Fold marks drawn as the xml chevron arrow icons, the default style
+     */
+    public static final int FOLD_STYLE_ICON = 1;
+
+    /**
+     * Whether to draw the fold stroke (the divider at the end of the line numbers
+     * that the {@link #FOLD_STYLE_MARK} pentagons straddle). When false the marks
+     * are drawn without the stroke. Only affects the mark style.
+     *
+     * @see CodeEditor#measureFoldIndicatorWidth()
+     */
+    @InvalidateRequired
+    public boolean foldStrokeEnabled = true;
+
+    /**
+     * Whether the fold stroke of {@link #FOLD_STYLE_MARK} stops at the bottom of the
+     * last line of the document, instead of running over the empty space below the
+     * code. Only affects the mark style; the default keeps the full-height stroke.
+     */
+    @InvalidateRequired
+    public boolean foldStrokeEndsAtContent = false;
+
+    /**
+     * Specify the breakpoint indicator size factor.
+     * result size = row height * breakpointIndicatorSizeFactor
+     *
+     * @see CodeEditor#measureBreakpointIndicatorWidth()
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float breakpointIndicatorSizeFactor = 0.7f;
+
+    /**
+     * Specify the internal padding around breakpoint markers.
+     *
+     * @see CodeEditor#measureBreakpointIndicatorWidth()
+     */
+    @InvalidateRequired
+    @FloatRange(from = 0.0f, to = 1.0f)
+    public float breakpointIndicatorPadding = 0.1f;
+
+    /**
+     * Specify the start padding before breakpoint markers. Negative values move the markers
+     * towards the edge of the editor.
+     */
+    @InvalidateRequired
+    @FloatRange(from = -1.0f, to = 1.0f)
+    public float breakpointIndicatorStartPadding = 0f;
+
+    /**
+     * Specify the end padding after breakpoint markers. Negative values move the markers
+     * towards the line number column.
+     */
+    @InvalidateRequired
+    @FloatRange(from = -1.0f, to = 1.0f)
+    public float breakpointIndicatorEndPadding = 0f;
 
 
     /**

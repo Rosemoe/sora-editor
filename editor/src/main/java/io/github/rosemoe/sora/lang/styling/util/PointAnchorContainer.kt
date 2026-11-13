@@ -77,7 +77,7 @@ open class PointAnchoredContainer<T : PointAnchoredObject> {
         if (index == objects.size) {
             return index
         }
-        while (index - 1 > 0 && comparator.compare(objects[index], objects[index - 1]) == 0) {
+        while (index > 0 && comparator.compare(objects[index], objects[index - 1]) == 0) {
             index--
         }
         return index
@@ -121,6 +121,13 @@ open class PointAnchoredContainer<T : PointAnchoredObject> {
         while (index < objects.size) {
             val e = objects[index]
             if (e.line == startLine) {
+                if (delta != 0 && e.column == startColumn) {
+                    // The insertion (e.g. a newline pressed at end of line) starts exactly at
+                    // this anchor. Keep the object attached to the preceding text so it stays
+                    // on the original line instead of drifting onto the new one.
+                    index++
+                    continue
+                }
                 e.line = endLine
                 e.column = e.column - startColumn + endColumn
             } else {

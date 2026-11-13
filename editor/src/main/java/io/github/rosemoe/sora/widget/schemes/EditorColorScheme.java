@@ -180,6 +180,16 @@ public class EditorColorScheme {
     public static final int MINIMAP_VIEWPORT_BORDER = 83;
 
     /**
+     * Background of an enabled breakpoint marker in the gutter
+     */
+    public static final int DEBUG_BREAKPOINT = 84;
+
+    /**
+     * Foreground of the code folding indicators in the gutter
+     */
+    public static final int FOLD_INDICATOR = 85;
+
+    /**
      * Min pre-defined color id
      */
     protected static final int START_COLOR_ID = 1;
@@ -187,7 +197,7 @@ public class EditorColorScheme {
     /**
      * Max pre-defined color id
      */
-    protected static final int END_COLOR_ID = 83;
+    protected static final int END_COLOR_ID = 85;
 
 
     /**
@@ -307,6 +317,12 @@ public class EditorColorScheme {
                 break;
             case MINIMAP_VIEWPORT_BORDER:
                 color = isDark() ? 0xb0ffffff : 0xb0333333;
+                break;
+            case DEBUG_BREAKPOINT:
+                color = 0xffe53935;
+                break;
+            case FOLD_INDICATOR:
+                color = isDark() ? 0xffbdbdbd : 0xff757575;
                 break;
             case LINE_NUMBER_PANEL_TEXT:
                 color = 0xffffffff;
