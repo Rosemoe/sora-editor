@@ -24,6 +24,7 @@
 
 package io.github.rosemoe.sora.lsp.utils
 
+import android.net.Uri
 import java.io.File
 import java.net.URI
 import kotlin.io.path.pathString
@@ -53,7 +54,7 @@ value class FileUri(
         return File(path)
     }
 
-    fun toUri(): URI {
-        return toFile().toURI()
+    fun toUri(): Uri {
+        return Uri.fromFile(toFile())
     }
 }

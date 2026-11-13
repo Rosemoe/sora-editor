@@ -332,7 +332,7 @@ class LanguageServerWrapper(
 
     private fun getInitParams(): InitializeParams {
         val initParams = InitializeParams().apply {
-            rootUri = project.projectUri.toUri().toASCIIString()
+            rootUri = project.projectUri.toUri().toString()
         }
 
         val workspaceClientCapabilities = WorkspaceClientCapabilities().apply {
