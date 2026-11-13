@@ -856,7 +856,7 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         int line = visualPosition.line;
         int column = visualPosition.column;
         editor.performClick();
-        if (region == RegionResolverKt.REGION_SIDE_ICON && handleSideIconTap(e)) {
+        if (region == RegionResolverKt.REGION_SIDE_ICON && handleSideIconTap(line)) {
             return true;
         }
         var position = editor.getText().getIndexer().getCharPosition(line, column);
@@ -882,8 +882,8 @@ public final class EditorTouchEventHandler implements GestureDetector.OnGestureL
         return true;
     }
 
-    private boolean handleSideIconTap(@NonNull MotionEvent e) {
-        int row = (int) (e.getY() + editor.getOffsetX()) / editor.getRowHeight();
+    private boolean handleSideIconTap(int line) {
+        int row = editor.getRowIndexOfLine(line);
         row = Math.max(0, Math.min(row, editor.getLayout().getRowCount() - 1));
         var inf = editor.getLayout().getRowAt(row);
         if (!inf.isLeadingRow) {

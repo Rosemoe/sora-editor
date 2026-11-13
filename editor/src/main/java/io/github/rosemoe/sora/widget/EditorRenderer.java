@@ -882,7 +882,9 @@ public class EditorRenderer {
         final var iconSizeFactor = editor.getProps().sideIconSizeFactor;
         var columnWidth = editor.measureSideIconWidth();
         var size = (int) (editor.getRowHeight() * iconSizeFactor);
-        var insetX = (int) ((columnWidth - size) / 2f);
+        var insetX = (int) (editor.getRowHeight() * (editor.getProps().sideIconPadding
+                + editor.getProps().sideIconStartPadding)
+                + (editor.getRowHeight() - size) / 2f);
         var insetY = (int) ((editor.getRowHeight() - size) / 2f);
         while (row <= editor.getLastVisibleRow() && itr.hasNext()) {
             var rowInf = itr.next();
@@ -949,10 +951,11 @@ public class EditorRenderer {
         if (breakpointWidth > 0f) {
             var breakpoint = editor.getBreakpoints().get(line);
             if (breakpoint != null) {
-                float inset = editor.getRowHeight() * editor.getProps().breakpointIndicatorPadding;
-                float box = Math.min(breakpointWidth - 2f * inset, editor.getRowHeight());
+                float rowHeight = editor.getRowHeight();
+                float box = Math.min(rowHeight * editor.getProps().breakpointIndicatorSizeFactor, rowHeight);
                 if (box > 0f) {
-                    float cx = base + breakpointWidth / 2f;
+                    float cx = base + rowHeight * (editor.getProps().breakpointIndicatorStartPadding
+                            + editor.getProps().breakpointIndicatorPadding) + box / 2f;
                     float radius = box * 0.4f;
                     paintOther.setStyle(Paint.Style.FILL);
                     paintOther.setColor(colorScheme.getColor(EditorColorScheme.DEBUG_BREAKPOINT));
@@ -986,7 +989,8 @@ public class EditorRenderer {
                 } else {
                     drawFoldMark(
                             canvas,
-                            foldColumnStart + editor.getRowHeight() * (editor.getProps().foldIndicatorPadding + editor.getProps().foldMarkSizeFactor / 2f),
+                            foldColumnStart + editor.getRowHeight() * (editor.getProps().foldIndicatorPadding
+                                    + editor.getProps().foldMarkSizeFactor / 2f),
                             centerY,
                             foldingManager.isCollapsed(header),
                             markColor

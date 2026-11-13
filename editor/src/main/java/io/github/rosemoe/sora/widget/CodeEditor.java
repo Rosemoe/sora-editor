@@ -557,7 +557,7 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
         float sizeFactor = props.foldIndicatorStyle == DirectAccessProps.FOLD_STYLE_MARK
                 ? props.foldMarkSizeFactor : props.foldIconSizeFactor;
         return codeFoldingEnabled && isLineNumberEnabled() && foldingManager.hasFoldableRegions()
-                ? getRowHeight() * (sizeFactor + props.foldIndicatorPadding) : 0f;
+                ? Math.max(1f, getRowHeight() * (sizeFactor + props.foldIndicatorPadding)) : 0f;
     }
 
     /**
@@ -569,7 +569,9 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      */
     public float measureBreakpointIndicatorWidth() {
         return breakpointMarkerEnabled && isLineNumberEnabled()
-                ? getRowHeight() * (props.breakpointIndicatorSizeFactor + 2f * props.breakpointIndicatorPadding) : 0f;
+                ? Math.max(0f, getRowHeight() * (props.breakpointIndicatorSizeFactor
+                + 2f * props.breakpointIndicatorPadding + props.breakpointIndicatorStartPadding
+                + props.breakpointIndicatorEndPadding)) : 0f;
     }
 
     /**
@@ -579,7 +581,8 @@ public class CodeEditor extends View implements ContentListener, Formatter.Forma
      * @return The width in pixels
      */
     public float measureSideIconWidth() {
-        return renderer.hasSideIcons() ? getRowHeight() * (1f + 2f * props.sideIconPadding) : 0f;
+        return renderer.hasSideIcons() ? Math.max(0f, getRowHeight() * (1f + 2f * props.sideIconPadding
+                + props.sideIconStartPadding + props.sideIconEndPadding)) : 0f;
     }
 
     /**

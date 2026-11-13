@@ -203,8 +203,8 @@ class MainActivity : AppCompatActivity() {
             searchOptions.setOnClickListener(::showSearchOptions)
         }
 
-        // Sliders for the fold mark size and the start clearance in the strip
-        binding.foldPaddingSlider.progress = (binding.editor.props.foldIndicatorPadding * 100).toInt()
+        // Sliders for fold marks, action icons and breakpoint markers
+        binding.foldPaddingSlider.progress = (binding.editor.props.foldIndicatorPadding * 100).toInt() + 100
         syncFoldStyleControls()
         updateFoldPaddingLabel(binding.foldPaddingSlider.progress)
         binding.foldSizeSlider.setOnSeekBarChangeListener(seekBarListener { progress ->
@@ -218,9 +218,56 @@ class MainActivity : AppCompatActivity() {
             updateFoldSizeLabel(progress)
             binding.editor.invalidate()
         })
+        binding.actionIconSizeSlider.progress = (binding.editor.props.sideIconSizeFactor * 100).toInt()
+        updateActionIconSizeLabel(binding.actionIconSizeSlider.progress)
+        binding.actionIconSizeSlider.setOnSeekBarChangeListener(seekBarListener { progress ->
+            binding.editor.props.sideIconSizeFactor = progress / 100f
+            updateActionIconSizeLabel(progress)
+            binding.editor.invalidate()
+        })
+        binding.breakpointSizeSlider.progress =
+            (binding.editor.props.breakpointIndicatorSizeFactor * 100).toInt()
+        updateBreakpointSizeLabel(binding.breakpointSizeSlider.progress)
+        binding.breakpointSizeSlider.setOnSeekBarChangeListener(seekBarListener { progress ->
+            binding.editor.props.breakpointIndicatorSizeFactor = progress / 100f
+            updateBreakpointSizeLabel(progress)
+            binding.editor.invalidate()
+        })
         binding.foldPaddingSlider.setOnSeekBarChangeListener(seekBarListener { progress ->
-            binding.editor.props.foldIndicatorPadding = progress / 100f
+            binding.editor.props.foldIndicatorPadding = (progress - 100) / 100f
             updateFoldPaddingLabel(progress)
+            binding.editor.invalidate()
+        })
+        binding.actionIconStartPaddingSlider.progress =
+            (binding.editor.props.sideIconStartPadding * 100).toInt() + 100
+        updateActionIconStartPaddingLabel(binding.actionIconStartPaddingSlider.progress)
+        binding.actionIconStartPaddingSlider.setOnSeekBarChangeListener(seekBarListener { progress ->
+            binding.editor.props.sideIconStartPadding = (progress - 100) / 100f
+            updateActionIconStartPaddingLabel(progress)
+            binding.editor.invalidate()
+        })
+        binding.actionIconEndPaddingSlider.progress =
+            (binding.editor.props.sideIconEndPadding * 100).toInt() + 100
+        updateActionIconEndPaddingLabel(binding.actionIconEndPaddingSlider.progress)
+        binding.actionIconEndPaddingSlider.setOnSeekBarChangeListener(seekBarListener { progress ->
+            binding.editor.props.sideIconEndPadding = (progress - 100) / 100f
+            updateActionIconEndPaddingLabel(progress)
+            binding.editor.invalidate()
+        })
+        binding.breakpointStartPaddingSlider.progress =
+            (binding.editor.props.breakpointIndicatorStartPadding * 100).toInt() + 100
+        updateBreakpointStartPaddingLabel(binding.breakpointStartPaddingSlider.progress)
+        binding.breakpointStartPaddingSlider.setOnSeekBarChangeListener(seekBarListener { progress ->
+            binding.editor.props.breakpointIndicatorStartPadding = (progress - 100) / 100f
+            updateBreakpointStartPaddingLabel(progress)
+            binding.editor.invalidate()
+        })
+        binding.breakpointEndPaddingSlider.progress =
+            (binding.editor.props.breakpointIndicatorEndPadding * 100).toInt() + 100
+        updateBreakpointEndPaddingLabel(binding.breakpointEndPaddingSlider.progress)
+        binding.breakpointEndPaddingSlider.setOnSeekBarChangeListener(seekBarListener { progress ->
+            binding.editor.props.breakpointIndicatorEndPadding = (progress - 100) / 100f
+            updateBreakpointEndPaddingLabel(progress)
             binding.editor.invalidate()
         })
         binding.foldAlphaSlider.progress = (binding.editor.props.foldIconAlpha * 100).toInt()
@@ -416,8 +463,32 @@ class MainActivity : AppCompatActivity() {
         binding.foldSizeLabel.text = "Fold size %.2f".format(progress / 100f)
     }
 
+    private fun updateActionIconSizeLabel(progress: Int) {
+        binding.actionIconSizeLabel.text = "Action icon size %.2f".format(progress / 100f)
+    }
+
+    private fun updateBreakpointSizeLabel(progress: Int) {
+        binding.breakpointSizeLabel.text = "Breakpoint size %.2f".format(progress / 100f)
+    }
+
     private fun updateFoldPaddingLabel(progress: Int) {
-        binding.foldPaddingLabel.text = "Fold padding %.2f".format(progress / 100f)
+        binding.foldPaddingLabel.text = "Fold start padding %.2f".format((progress - 100) / 100f)
+    }
+
+    private fun updateActionIconStartPaddingLabel(progress: Int) {
+        binding.actionIconStartPaddingLabel.text = "Action icon start padding %.2f".format((progress - 100) / 100f)
+    }
+
+    private fun updateActionIconEndPaddingLabel(progress: Int) {
+        binding.actionIconEndPaddingLabel.text = "Action icon end padding %.2f".format((progress - 100) / 100f)
+    }
+
+    private fun updateBreakpointStartPaddingLabel(progress: Int) {
+        binding.breakpointStartPaddingLabel.text = "Breakpoint start padding %.2f".format((progress - 100) / 100f)
+    }
+
+    private fun updateBreakpointEndPaddingLabel(progress: Int) {
+        binding.breakpointEndPaddingLabel.text = "Breakpoint end padding %.2f".format((progress - 100) / 100f)
     }
 
     private fun setupFoldingAndActions() {

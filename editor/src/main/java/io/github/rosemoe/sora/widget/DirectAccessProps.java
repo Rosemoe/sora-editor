@@ -312,12 +312,26 @@ public class DirectAccessProps implements Serializable {
     public float sideIconSizeFactor = 0.7f;
 
     /**
-     * Specify the padding around the side icons, e.g. the custom action icons.
-     * result column width = row height * (1 + 2 * sideIconPadding)
+     * Specify the shared padding around side icons, including custom action icons.
+     * This value is retained for compatibility and is added to both side-specific paddings.
      */
     @InvalidateRequired
-    @FloatRange(from = 0.0f, to = 1.0f)
+    @FloatRange(from = -1.0f, to = 1.0f)
     public float sideIconPadding = 0f;
+
+    /**
+     * Specify the start padding before side icons, including custom action icons.
+     */
+    @InvalidateRequired
+    @FloatRange(from = -1.0f, to = 1.0f)
+    public float sideIconStartPadding = 0f;
+
+    /**
+     * Specify the end padding after side icons, including custom action icons.
+     */
+    @InvalidateRequired
+    @FloatRange(from = -1.0f, to = 1.0f)
+    public float sideIconEndPadding = 0f;
 
     /**
      * Specify the marker text size factor, such as line-break markers.
@@ -357,17 +371,15 @@ public class DirectAccessProps implements Serializable {
     public float foldIconAlpha = 1f;
 
     /**
-     * Specify the clearance at the start of the fold indicator column.
-     * result column width = row height * (size factor of the active style +
+     * Specify the start padding of the fold indicator column. Negative values move the
+     * fold mark towards the preceding side icon or line number column.
+     * Result column width = row height * (size factor of the active style +
      * foldIndicatorPadding).
-     * The padding applies at the start of the column only - it keeps a gap between the
-     * line numbers and the marks (also when no side icons are shown), while the end of the
-     * column needs none because the text keeps its divider margins.
      *
      * @see CodeEditor#measureFoldIndicatorWidth()
      */
     @InvalidateRequired
-    @FloatRange(from = 0.0f, to = 1.0f)
+    @FloatRange(from = -1.0f, to = 1.0f)
     public float foldIndicatorPadding = 0.25f;
 
     /**
@@ -420,15 +432,29 @@ public class DirectAccessProps implements Serializable {
     public float breakpointIndicatorSizeFactor = 0.7f;
 
     /**
-     * Specify the padding around the breakpoint markers.
-     * result column width = row height * (breakpointIndicatorSizeFactor + 2 * breakpointIndicatorPadding)
-     * The padding at the start of the column keeps the marker clear of the screen edge.
+     * Specify the internal padding around breakpoint markers.
      *
      * @see CodeEditor#measureBreakpointIndicatorWidth()
      */
     @InvalidateRequired
     @FloatRange(from = 0.0f, to = 1.0f)
     public float breakpointIndicatorPadding = 0.1f;
+
+    /**
+     * Specify the start padding before breakpoint markers. Negative values move the markers
+     * towards the edge of the editor.
+     */
+    @InvalidateRequired
+    @FloatRange(from = -1.0f, to = 1.0f)
+    public float breakpointIndicatorStartPadding = 0f;
+
+    /**
+     * Specify the end padding after breakpoint markers. Negative values move the markers
+     * towards the line number column.
+     */
+    @InvalidateRequired
+    @FloatRange(from = -1.0f, to = 1.0f)
+    public float breakpointIndicatorEndPadding = 0f;
 
 
     /**
