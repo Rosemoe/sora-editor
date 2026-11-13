@@ -7,7 +7,7 @@ androidxAnnotation = "1.11.0"
 
 [libraries]
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidxAnnotation" }
-androidx-collection = { module = "androidx.collection:collection", version = "1.6.0" }
+androidx-collection = { module = "androidx.collection:collection", version = "1.7.0" }
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version = "2.2.2" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.19.1" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.8.0" }
@@ -25,7 +25,7 @@ leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version = 
 junit = { module = "junit:junit", version = "4.13.2" }
 gson = { module = "com.google.code.gson:gson", version = "2.14.0" }
 jcodings = { module = "org.jruby.jcodings:jcodings", version = "1.0.64" }
-joni = { module = "org.jruby.joni:joni", version = "2.2.7" }
+joni = { module = "org.jruby.joni:joni", version = "2.2.10" }
 snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version = "3.2" }
 moshi = { module = "com.squareup.moshi:moshi", version = "1.15.2" }
 jdt-annotation = { module = "org.eclipse.jdt:org.eclipse.jdt.annotation", version = "2.4.100" }
