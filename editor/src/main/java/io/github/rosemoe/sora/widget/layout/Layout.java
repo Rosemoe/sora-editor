@@ -29,7 +29,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Size;
 
+import java.util.Collections;
+import java.util.List;
+
 import io.github.rosemoe.sora.lang.analysis.StyleUpdateRange;
+import io.github.rosemoe.sora.lang.styling.inlayHint.InlayHint;
 import io.github.rosemoe.sora.text.ContentLine;
 import io.github.rosemoe.sora.text.ContentListener;
 import io.github.rosemoe.sora.util.IntPair;
@@ -173,6 +177,26 @@ public interface Layout extends ContentListener {
      * Notify the layout that the given lines have external changes and their layout should be re-calculated.
      */
     void invalidateLines(StyleUpdateRange range);
+
+    /**
+     * Get the inlay hints to display on the given logical line, including
+     * editor-generated hints such as the fold ellipsis chip of collapsed regions.
+     *
+     * @param line The logical line index
+     * @return The hints to draw on the line. Never null.
+     */
+    @NonNull
+    default List<InlayHint> getInlayHints(int line) {
+        return Collections.emptyList();
+    }
+
+    /**
+     * Called by the editor when the set of lines hidden by code folding changed.
+     * Implementations that cache derived tables must mark them as out of date here.
+     */
+    default void onFoldingRegionsChanged() {
+        // Intentionally empty
+    }
 
     class VisualLocation {
 

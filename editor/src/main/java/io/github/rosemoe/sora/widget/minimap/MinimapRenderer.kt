@@ -31,6 +31,7 @@ import io.github.rosemoe.sora.annotations.Experimental
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EditorReleaseEvent
+import io.github.rosemoe.sora.event.FoldingChangeEvent
 import io.github.rosemoe.sora.event.SubscriptionReceipt
 import io.github.rosemoe.sora.event.TextSizeChangeEvent
 import io.github.rosemoe.sora.graphics.Paint
@@ -77,10 +78,11 @@ class MinimapRenderer(val editor: CodeEditor) : AutoCloseable {
     private var closed = false
     private var lastMinimapConfig: MinimapConfig? = null
 
-    private val subscriptions = ArrayList<SubscriptionReceipt<*>>(4).apply {
+    private val subscriptions = ArrayList<SubscriptionReceipt<*>>(5).apply {
         add(editor.subscribeAlways<ContentChangeEvent> { dirty = true })
         add(editor.subscribeAlways<ColorSchemeUpdateEvent> { dirty = true })
         add(editor.subscribeAlways<TextSizeChangeEvent> { dirty = true })
+        add(editor.subscribeAlways<FoldingChangeEvent> { dirty = true })
         add(editor.subscribeAlways<EditorReleaseEvent> { close() })
     }
 

@@ -106,4 +106,8 @@ class RenderCache {
         cache.clear()
     }
 
+    fun invalidateStyleHashes() {
+        lines.indices.forEach { lines[it] = 0 }
+    }
+
 }
